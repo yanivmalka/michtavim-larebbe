@@ -86,3 +86,17 @@ data/volumes.json     קטלוג הכרכים
 - המודל: `claude-opus-5-5` (ניתן לשינוי ב-`CLAUDE_MODEL`). מופעל fallback בצד השרת (`fallbacks: "default"`) כך שבמקרה של סירוב הבקשה ממשיכה במודל חלופי.
 - ההסבר מוצג כהצעה להבנה בלבד ואינו פסק הלכה; ההנחיה למודל היא לא להמציא תוכן שאינו בעמוד ולסמן קטעים לא קריאים.
 - היסטוריית השיחה נשמרת רק במכשיר המשתמש (localStorage).
+
+## אפליקציית אנדרואיד (APK)
+
+תיקיית `android/` היא פרויקט Capacitor שעוטף את ממשק הצ'אט. האפליקציה פונה לשרת שכתובתו `API_BASE_URL`, ולכן קודם צריך להעלות את השרת לכתובת HTTPS ציבורית.
+
+**בנייה אוטומטית ב-GitHub:** בכל push ל-`main` רץ ה-workflow `Android APK` ומעלה את הקובץ `app-debug.apk` ל-Artifacts של הריצה (לשונית Actions). את כתובת השרת מגדירים ב-Settings ← Secrets and variables ← Actions ← Variables, במשתנה `API_BASE_URL`.
+
+**בנייה מקומית** (דורש Android SDK ו-JDK 21):
+
+```bash
+API_BASE_URL=https://your-server.example npm run apk
+```
+
+הקובץ נוצר ב-`android/app/build/outputs/apk/debug/app-debug.apk`. זהו APK לניפוי שגיאות (debug) שניתן להתקין ישירות בטלפון. להפצה בחנות Google Play צריך לבנות גרסת release חתומה.

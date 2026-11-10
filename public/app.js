@@ -1,6 +1,8 @@
 const $ = (id) => document.getElementById(id);
 const chat = $('chat'), form = $('composer'), input = $('input'), send = $('send'), lang = $('lang');
 const STORE = 'mlr-history-v1';
+const API = (window.MLR_API_BASE || '').replace(/\/$/, '');
+const isNativeApp = !!window.Capacitor?.isNativePlatform?.();
 const isMobile = matchMedia('(max-width: 600px)').matches;
 
 const store = {
@@ -24,11 +26,11 @@ function renderMine(item) {
 
 function renderAnswer(item) {
   const a = item.answer;
-  const pdfLink = el('a', { href: a.pdfPath, target: '_blank', rel: 'noopener', textContent: '📄 פתיחת ה-PDF' });
+  const pdfLink = el('a', { href: API + a.pdfPath, target: '_blank', rel: 'noopener', textContent: '📄 פתיחת ה-PDF' });
   const links = el('div', { className: 'links' }, pdfLink,
     a.viewerUrl && el('a', { href: a.viewerUrl, target: '_blank', rel: 'noopener', textContent: '🔗 העמוד במאגר' }));
-  const frame = !isMobile && item.fresh
-    ? el('iframe', { className: 'pdf', src: a.pdfPath, title: `כרך ${a.volume} עמוד ${a.page}`, loading: 'lazy' })
+  const frame = !isMobile && !isNativeApp && item.fresh
+    ? el('iframe', { className: 'pdf', src: API + a.pdfPath, title: `כרך ${a.volume} עמוד ${a.page}`, loading: 'lazy' })
     : null;
   const translation = a.translation
     ? el('details', { open: true }, el('summary', { textContent: a.sourceLanguage === 'yiddish' ? 'תרגום מאידיש' : 'תרגום' }), el('p', { textContent: a.translation }))
@@ -62,7 +64,7 @@ async function submit(text) {
   chat.append(typing); scroll();
   send.disabled = true; $('status').textContent = 'מקליד…';
   try {
-    const res = await fetch('/api/letters', {
+    const res = await fetch(`${API}/api/letters`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ letter: text, replyLanguage: lang.value || undefined }),
     });
@@ -98,4 +100,4 @@ $('clear').addEventListener('click', () => {
 });
 
 renderAll();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+if (!isNativeApp && 'serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});

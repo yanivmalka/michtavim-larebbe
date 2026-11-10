@@ -2,6 +2,7 @@ import express from 'express';
 import { answerLetter, getAnswerPdf } from './letters.js';
 import { userMessage } from './errors.js';
 import { whatsappRouter } from './whatsapp/webhook.js';
+import { cors } from './cors.js';
 
 export function createApp(deps = {}) {
   const app = express();
@@ -10,6 +11,8 @@ export function createApp(deps = {}) {
     limit: '100kb',
     verify: (req, _res, buf) => { req.rawBody = buf; },
   }));
+
+  app.use('/api', cors());
 
   app.post('/api/letters', async (req, res) => {
     try {
