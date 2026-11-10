@@ -25,10 +25,11 @@ function validSignature(req) {
 }
 
 export function formatWhatsAppReply(a) {
-  const parts = [`✉️ מענה מאגרות קודש – כרך ${a.volume}, עמוד ${a.page}`];
+  const parts = [`✉️ מענה מאגרות קודש – ${a.volumeHeading}, אגרת ${a.letterNumber}`];
   if (a.keyQuote) parts.push(`«${a.keyQuote}»`);
   if (a.translation) parts.push(`*תרגום:*\n${a.translation}`);
   parts.push(`*הסבר:*\n${a.explanation}`);
+  if (a.viewerUrl) parts.push(a.viewerUrl);
   return parts.join('\n\n');
 }
 
@@ -43,8 +44,8 @@ async function handleMessage(msg) {
       type: 'document',
       document: {
         link: `${config.publicBaseUrl}${a.pdfPath}`,
-        filename: `igrot-kodesh-vol${a.volume}-p${a.page}.pdf`,
-        caption: `אגרות קודש, כרך ${a.volume}, עמוד ${a.page}`,
+        filename: `igrot-kodesh-${a.volume}-${a.id.slice(0, 8)}.pdf`,
+        caption: a.title,
       },
     });
     await sendText(msg.from, formatWhatsAppReply(a));

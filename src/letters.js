@@ -1,11 +1,13 @@
 import { randomUUID } from 'node:crypto';
-import { loadVolumes, drawPage } from './igrot/catalog.js';
-import { fetchPage } from './igrot/source.js';
+import { loadCatalog, drawLetter } from './igrot/catalog.js';
+import { fetchLetter } from './igrot/chabadlibrary.js';
+import { renderLetterPdf } from './pdf/letterPdf.js';
 import { explainAnswer } from './ai/explain.js';
 
 const MAX_STORED = 500;
-/** In-memory store of answered pages so the PDF can be served by id (web + WhatsApp). */
+/** In-memory store of answered letters so the PDF can be served by id (web + WhatsApp). */
 const answers = new Map();
+let catalog;
 
 export const getAnswerPdf = (id) => answers.get(id)?.pdf;
 
@@ -14,14 +16,29 @@ export const getAnswerPdf = (id) => answers.get(id)?.pdf;
  * deps can be overridden in tests.
  */
 export async function answerLetter({ letter, replyLanguage }, deps = {}) {
-  const { volumes = loadVolumes(), fetch: fetchFn = fetchPage, explain = explainAnswer, random } = deps;
+  const {
+    volumes = (catalog ??= loadCatalog()),
+    fetch: fetchFn = fetchLetter,
+    explain = explainAnswer,
+    renderPdf = renderLetterPdf,
+    random,
+  } = deps;
   const trimmed = String(letter || '').trim();
   if (trimmed.length < 2) throw new Error('LETTER_EMPTY');
   if (trimmed.length > 8000) throw new Error('LETTER_TOO_LONG');
 
-  const pick = drawPage(volumes, random);
-  const { pdf, viewerUrl } = await fetchFn(pick);
-  const ai = await explain({ letter: trimmed, pdf, replyLanguage, volume: pick.volume, page: pick.page });
+  const pick = drawLetter(volumes, random);
+  const igeret = await fetchFn(pick.id);
+  const meta = {
+    ...igeret,
+    volumeHeading: igeret.volumeHeading || pick.volumeHeading,
+    letterHeading: igeret.letterHeading || pick.letterHeading,
+  };
+  const title = `אגרות קודש, ${meta.volumeHeading}, אגרת ${meta.letterHeading}`;
+  const [pdf, ai] = await Promise.all([
+    renderPdf(meta),
+    explain({ letter: trimmed, igeret: meta.text, replyLanguage, title }),
+  ]);
 
   const id = randomUUID();
   answers.set(id, { pdf, at: Date.now() });
@@ -30,9 +47,12 @@ export async function answerLetter({ letter, replyLanguage }, deps = {}) {
   return {
     id,
     volume: pick.volume,
-    page: pick.page,
+    volumeHeading: meta.volumeHeading,
+    letterNumber: meta.letterHeading,
+    title,
     pdfPath: `/api/answers/${id}.pdf`,
-    viewerUrl,
+    viewerUrl: meta.viewerUrl,
+    original: meta.text,
     ...ai,
   };
 }

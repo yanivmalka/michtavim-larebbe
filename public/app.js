@@ -41,17 +41,17 @@ function renderAnswer(item) {
   const a = item.answer;
   const pdfLink = el('a', { href: API + a.pdfPath, target: '_blank', rel: 'noopener', textContent: '📄 פתיחת ה-PDF' });
   const links = el('div', { className: 'links' }, pdfLink,
-    a.viewerUrl && el('a', { href: a.viewerUrl, target: '_blank', rel: 'noopener', textContent: '🔗 העמוד במאגר' }));
+    a.viewerUrl && el('a', { href: a.viewerUrl, target: '_blank', rel: 'noopener', textContent: '🔗 האגרת בספריית ליובאוויטש' }));
   const frame = !isMobile && !isNativeApp && item.fresh
-    ? el('iframe', { className: 'pdf', src: API + a.pdfPath, title: `כרך ${a.volume} עמוד ${a.page}`, loading: 'lazy' })
+    ? el('iframe', { className: 'pdf', src: API + a.pdfPath, title: a.title, loading: 'lazy' })
     : null;
   const translation = a.translation
     ? el('details', { open: true }, el('summary', { textContent: a.sourceLanguage === 'yiddish' ? 'תרגום מאידיש' : 'תרגום' }), el('p', { textContent: a.translation }))
     : null;
-  const original = el('details', {}, el('summary', { textContent: 'נוסח המקור' }), el('p', { textContent: a.transcription }));
+  const original = el('details', {}, el('summary', { textContent: 'נוסח המקור' }), el('p', { textContent: a.original }));
 
   chat.append(el('div', { className: 'msg them' },
-    el('h3', { textContent: `✉️ אגרות קודש · כרך ${a.volume} · עמוד ${a.page}` }),
+    el('h3', { textContent: `✉️ אגרות קודש · ${a.volumeHeading} · אגרת ${a.letterNumber}` }),
     frame, links,
     a.keyQuote && el('div', { className: 'quote', textContent: a.keyQuote }),
     el('h4', { textContent: 'כיצד המענה מתייחס למכתב' }),

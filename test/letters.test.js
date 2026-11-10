@@ -1,33 +1,61 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { drawPage } from '../src/igrot/catalog.js';
-import { fetchPage } from '../src/igrot/source.js';
+import { drawLetter, loadCatalog } from '../src/igrot/catalog.js';
+import { parseLetterHtml, fetchLetter } from '../src/igrot/chabadlibrary.js';
+import { renderLetterPdf } from '../src/pdf/letterPdf.js';
 import { createApp } from '../src/app.js';
 import { formatWhatsAppReply } from '../src/whatsapp/webhook.js';
 
 const volumes = [
-  { volume: 1, sourceId: 'A', firstLetterPage: 10, lastLetterPage: 11 },
-  { volume: 2, sourceId: 'B', firstLetterPage: 5, lastLetterPage: 5 },
+  { volume: 1, heading: 'כרך א', letters: [[11, 'א'], [12, 'ב']] },
+  { volume: 2, heading: 'כרך ב', letters: [[21, 'קסט']] },
 ];
 
-test('drawPage spreads picks over all configured pages', () => {
-  assert.deepEqual(drawPage(volumes, () => 0), { volume: 1, sourceId: 'A', page: 10 });
-  assert.deepEqual(drawPage(volumes, () => 0.5), { volume: 1, sourceId: 'A', page: 11 });
-  assert.deepEqual(drawPage(volumes, () => 0.99), { volume: 2, sourceId: 'B', page: 5 });
-  assert.throws(() => drawPage([]), /CATALOG_EMPTY/);
+const SAMPLE_HTML = `<div class=pagenumber>א</div>\r\n<p class=igroys_bsd>כ"א אדר פ"ח</p>\r\n<p class=igroys_city>ריגא</p>
+<p class=igroys_address>כבוד הרה"ג<br>\r\nמוהרר"י ראזין שליט"א</p>
+<p class=igroys_text>שלום וברכה!</p><p class=igroys_text>מכתבו הגיעני (ברכות נ"ח) &quot;בזה&quot;.</p>
+<p class=igroys_signature><b>מנחם שניאורסאהן</b></p><p class=igroys_text>M. Schneersohn</p>
+<h4 class=igroys_comment_number><i><b>א</b></i></h4><p class=igroys_text>הערה ראשונה.</p>`;
+
+test('drawLetter picks every letter with equal weight', () => {
+  assert.equal(drawLetter(volumes, () => 0).id, 11);
+  assert.equal(drawLetter(volumes, () => 0.5).id, 12);
+  assert.deepEqual(drawLetter(volumes, () => 0.99), { volume: 2, volumeHeading: 'כרך ב', id: 21, letterHeading: 'קסט' });
+  assert.throws(() => drawLetter([]), /CATALOG_EMPTY/);
 });
 
-test('fetchPage builds URLs from templates and rejects non-PDF bodies', async () => {
+test('the bundled catalog covers the Rebbe\'s Igrot Kodesh', () => {
+  const cat = loadCatalog();
+  assert.ok(cat.length >= 28);
+  assert.ok(cat.reduce((n, v) => n + v.letters.length, 0) > 10000);
+});
+
+test('parseLetterHtml classifies blocks and decodes entities', () => {
+  const { blocks, pages } = parseLetterHtml(SAMPLE_HTML);
+  assert.deepEqual(pages, ['א']);
+  assert.deepEqual(blocks.map((b) => b.kind), ['date', 'city', 'address', 'text', 'text', 'signature', 'text', 'footnote']);
+  assert.equal(blocks[2].text, 'כבוד הרה"ג\nמוהרר"י ראזין שליט"א');
+  assert.match(blocks[4].text, /"בזה"/);
+});
+
+test('fetchLetter reads the library API', async () => {
   let asked;
-  const fakeFetch = async (url) => { asked = url; return new Response('%PDF-1.4 fake'); };
-  const r = await fetchPage({ volume: 1, sourceId: '123', page: 7 }, {
-    source: 'remote', pagePdfUrl: 'https://x.test/{id}/{page}.pdf', viewerUrl: 'https://x.test/v?r={id}&p={page}', fetch: fakeFetch,
-  });
-  assert.equal(asked, 'https://x.test/123/7.pdf');
-  assert.equal(r.viewerUrl, 'https://x.test/v?r=123&p=7');
-  await assert.rejects(fetchPage({ volume: 1, sourceId: '1', page: 1 }, {
-    source: 'remote', pagePdfUrl: 'https://x.test/{id}', viewerUrl: '', fetch: async () => new Response('<html>'),
-  }), /SOURCE_NOT_PDF/);
+  const fakeFetch = async (url) => {
+    asked = url;
+    return Response.json({ content: { type: 'page', tree: [{ heading: 'x' }, { heading: 'כרך א' }, { heading: 'א' }], data: { text: SAMPLE_HTML } } });
+  };
+  const l = await fetchLetter(1200750002, fakeFetch);
+  assert.match(asked, /api\/main\?path=1200750002$/);
+  assert.equal(l.volumeHeading, 'כרך א');
+  assert.equal(l.letterHeading, 'א');
+  assert.match(l.text, /\[הערה\] הערה ראשונה/);
+  await assert.rejects(fetchLetter(1, async () => new Response('x', { status: 500 })), /SOURCE_HTTP_500/);
+});
+
+test('renderLetterPdf produces a PDF', async () => {
+  const { blocks } = parseLetterHtml(SAMPLE_HTML);
+  const pdf = await renderLetterPdf({ blocks, volumeHeading: 'כרך א', letterHeading: 'א', viewerUrl: 'https://x.test/1' });
+  assert.equal(pdf.subarray(0, 5).toString(), '%PDF-');
 });
 
 test('POST /api/letters returns the answer and serves its PDF', async () => {
@@ -36,23 +64,27 @@ test('POST /api/letters returns the answer and serves its PDF', async () => {
   const app = createApp({
     volumes,
     random: () => 0,
-    fetch: async () => ({ pdf, viewerUrl: 'https://x.test/v' }),
+    fetch: async (id) => ({ id, volumeHeading: 'כרך א', letterHeading: 'א', blocks: [], text: 'נוסח', viewerUrl: 'https://x.test/v' }),
+    renderPdf: async () => pdf,
     explain: async (input) => {
       seen = input;
-      return { sourceLanguage: 'yiddish', replyLanguage: 'he', transcription: 't', translation: 'tr', explanation: 'ex', keyQuote: 'q' };
+      return { sourceLanguage: 'yiddish', replyLanguage: 'he', translation: 'tr', explanation: 'ex', keyQuote: 'q' };
     },
   });
   const server = app.listen(0);
   const base = `http://127.0.0.1:${server.address().port}`;
   try {
     const res = await fetch(`${base}/api/letters`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json', Origin: 'https://localhost' },
       body: JSON.stringify({ letter: 'שלום, אבקש ברכה', replyLanguage: 'he' }),
     });
     assert.equal(res.status, 200);
+    assert.equal(res.headers.get('access-control-allow-origin'), 'https://localhost');
     const body = await res.json();
-    assert.equal(body.volume, 1);
-    assert.equal(body.page, 10);
+    assert.equal(body.volumeHeading, 'כרך א');
+    assert.equal(body.letterNumber, 'א');
+    assert.equal(body.original, 'נוסח');
+    assert.equal(seen.igeret, 'נוסח');
     assert.equal(seen.replyLanguage, 'he');
     const pdfRes = await fetch(base + body.pdfPath);
     assert.equal(pdfRes.headers.get('content-type'), 'application/pdf');
@@ -69,8 +101,8 @@ test('POST /api/letters returns the answer and serves its PDF', async () => {
 });
 
 test('WhatsApp reply text includes source, translation and explanation', () => {
-  const text = formatWhatsAppReply({ volume: 3, page: 40, keyQuote: 'q', translation: 'tr', explanation: 'ex' });
-  assert.match(text, /כרך 3, עמוד 40/);
+  const text = formatWhatsAppReply({ volumeHeading: 'כרך ג', letterNumber: 'תו', keyQuote: 'q', translation: 'tr', explanation: 'ex', viewerUrl: 'https://x.test' });
+  assert.match(text, /כרך ג, אגרת תו/);
   assert.match(text, /tr/);
   assert.match(text, /ex/);
 });
