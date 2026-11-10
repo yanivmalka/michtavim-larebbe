@@ -1,8 +1,21 @@
 const $ = (id) => document.getElementById(id);
 const chat = $('chat'), form = $('composer'), input = $('input'), send = $('send'), lang = $('lang');
 const STORE = 'mlr-history-v1';
-const API = (window.MLR_API_BASE || '').replace(/\/$/, '');
 const isNativeApp = !!window.Capacitor?.isNativePlatform?.();
+const SERVER_KEY = 'mlr-server';
+const savedServer = () => { try { return localStorage.getItem(SERVER_KEY) || ''; } catch { return ''; } };
+let API = (savedServer() || window.MLR_API_BASE || '').replace(/\/$/, '');
+
+/** In the Android app the server address can be set (or changed) by the user. */
+function askServer() {
+  const value = prompt('כתובת השרת (לדוגמה https://example.com):', API);
+  if (value === null) return false;
+  const v = value.trim().replace(/\/$/, '');
+  if (!/^https?:\/\/[^\s]+$/.test(v)) { alert('כתובת לא תקינה'); return false; }
+  API = v;
+  try { localStorage.setItem(SERVER_KEY, v); } catch { /* ignore */ }
+  return true;
+}
 const isMobile = matchMedia('(max-width: 600px)').matches;
 
 const store = {
@@ -58,6 +71,7 @@ function renderAll() {
 }
 
 async function submit(text) {
+  if (isNativeApp && !API && !askServer()) return;
   const mine = { text, ts: Date.now() };
   history.push(mine); renderMine(mine); scroll();
   const typing = el('div', { className: 'msg them typing', textContent: 'פותחים את אגרות הקודש…' });
@@ -100,4 +114,10 @@ $('clear').addEventListener('click', () => {
 });
 
 renderAll();
+if (isNativeApp) {
+  const btn = el('button', { className: 'icon-btn', title: 'כתובת השרת', textContent: '⚙' });
+  btn.setAttribute('aria-label', 'כתובת השרת');
+  btn.addEventListener('click', askServer);
+  $('clear').before(btn);
+}
 if (!isNativeApp && 'serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});

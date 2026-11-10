@@ -3,7 +3,7 @@ import { cpSync, rmSync, writeFileSync, existsSync } from 'node:fs';
 
 const api = (process.env.API_BASE_URL || '').replace(/\/$/, '');
 if (!api) {
-  console.warn('⚠️  API_BASE_URL is not set – the app will not be able to reach the server.');
+  console.warn('ℹ️  API_BASE_URL is not set – the app will ask for the server address on first use.');
 }
 if (existsSync('www')) rmSync('www', { recursive: true });
 cpSync('public', 'www', { recursive: true });
