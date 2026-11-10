@@ -96,6 +96,7 @@ test('POST /api/letters returns the page, its letters and serves image and PDFs'
   let seen;
   const app = createApp({
     volumes: bookVolumes,
+    pages: { volumes: bookVolumes, fetchLetter: fakeFetch },
     open: (vols, opts) => openBook(vols, { ...opts, random: (() => { const q = [0.4, 0, 0.5]; return () => q.shift() ?? 0; })(), fetchLetter: fakeFetch }),
     explain: async (input) => {
       seen = input;
@@ -123,7 +124,16 @@ test('POST /api/letters returns the page, its letters and serves image and PDFs'
     assert.equal(pagePdf.headers.get('content-type'), 'application/pdf');
     const letterPdf = await fetch(base + body.letters[1].pdfPath);
     assert.equal(Buffer.from(await letterPdf.arrayBuffer()).subarray(0, 5).toString(), '%PDF-');
-    assert.equal((await fetch(`${base}/api/answers/nope/page.png`)).status, 404);
+    assert.equal((await fetch(`${base}/api/page/nope.png`)).status, 404);
+    // a page that is not cached any more (e.g. after a restart) is drawn again from its link
+    const fresh = createApp({ pages: { volumes: bookVolumes, fetchLetter: fakeFetch } }).listen(0);
+    try {
+      const again = await fetch(`http://127.0.0.1:${fresh.address().port}${body.imagePath}`);
+      assert.equal(again.status, 200);
+      assert.equal(Buffer.from(await again.arrayBuffer()).subarray(1, 4).toString(), 'PNG');
+    } finally {
+      fresh.close();
+    }
 
     const bad = await fetch(`${base}/api/letters`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"letter":""}' });
     assert.equal(bad.status, 400);
@@ -145,7 +155,7 @@ test('the page is still returned when the explanation is unavailable', async () 
   assert.equal(a.explained, false);
   assert.equal(a.explanation, '');
   assert.ok(a.letters.length >= 1);
-  assert.match(a.imagePath, /page\.png$/);
+  assert.match(a.imagePath, /^\/api\/page\/[\w-]+\.png$/);
 });
 
 test('GET /api/igrot/:id/:dir pages to the neighbouring letter', async () => {
@@ -161,6 +171,16 @@ test('GET /api/igrot/:id/:dir pages to the neighbouring letter', async () => {
   } finally {
     server.close();
   }
+});
+
+test('a page is drawn from its spec alone, and bad specs are refused', async () => {
+  const { getPageImage } = await import('../src/letters.js');
+  const { encodeSpec } = await import('../src/igrot/openBook.js');
+  const deps = { volumes: bookVolumes, fetchLetter: fakeFetch };
+  const png = await getPageImage(encodeSpec({ v: 0, i: 1, n: 2, s: 0 }), deps); // never rendered before
+  assert.equal(png.subarray(1, 4).toString(), 'PNG');
+  assert.equal(await getPageImage(encodeSpec({ v: 0, i: 2, n: 5, s: 0 }), deps), null); // past the volume
+  assert.equal(await getPageImage('not-a-spec', deps), null);
 });
 
 test('WhatsApp reply text includes source, translation and explanation', () => {

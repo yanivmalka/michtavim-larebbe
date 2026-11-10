@@ -44,11 +44,13 @@
     <dialog id="settings" class="settings">
       <form method="dialog">
         <h2>הגדרות</h2>
-        <label>כתובת השרת
-          <input id="server-input" type="url" placeholder="https://example.com" dir="ltr">
-        </label>
-        <button type="button" id="server-save">שמירה</button>
-        <hr>
+        <div id="server-section">
+          <label>כתובת השרת
+            <input id="server-input" type="url" placeholder="https://example.com" dir="ltr">
+          </label>
+          <button type="button" id="server-save">שמירה</button>
+          <hr>
+        </div>
         <div class="version-row">
           <span>גרסת האפליקציה: <b id="app-version" dir="ltr">–</b></span>
         </div>
@@ -62,12 +64,14 @@
     </dialog>
 
     <div id="hl-bar" class="hl-bar" hidden>
-      <button type="button" id="hl-add">🖍 הדגשה</button>
+      <button type="button" id="hl-add" hidden>🖍 הדגשת הטקסט המסומן</button>
+      <button type="button" id="hl-mode">🖍 מצב מרקר</button>
     </div>
 
     <div id="lightbox" class="lightbox" hidden>
       <button type="button" id="lightbox-close" aria-label="סגירה">✕</button>
       <div class="lightbox-scroll"><img id="lightbox-img" alt=""></div>
+      <button type="button" id="lightbox-close-bottom" class="lightbox-close-bottom">✕ סגירה</button>
     </div>
 
     <form id="composer" class="composer">

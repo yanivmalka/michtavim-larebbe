@@ -1,42 +1,52 @@
 import { randomUUID } from 'node:crypto';
 import { loadCatalog } from './igrot/catalog.js';
-import { openBook } from './igrot/openBook.js';
+import { openBook, renderSpec, decodeSpec } from './igrot/openBook.js';
 import { fetchLetter } from './igrot/chabadlibrary.js';
 import { layout, pngsToPdf } from './render/bookPage.js';
 import { explainAnswer } from './ai/explain.js';
 
-const MAX_STORED = 300;
-/** Answers kept in memory so their image/PDFs can be served by id (web + WhatsApp). */
-const answers = new Map();
+/** Small LRU of rendered page images (they can always be drawn again). */
+const pageCache = {
+  max: 200,
+  map: new Map(),
+  get(k) { const v = this.map.get(k); if (v) { this.map.delete(k); this.map.set(k, v); } return v; },
+  set(k, v) { this.map.set(k, v); if (this.map.size > this.max) this.map.delete(this.map.keys().next().value); },
+};
 let catalog;
+const getCatalog = () => (catalog ??= loadCatalog());
 
-function remember(id, entry) {
-  answers.set(id, entry);
-  if (answers.size > MAX_STORED) answers.delete(answers.keys().next().value);
+/** PNG of the page described by `spec`, drawn again if needed. null if the spec is invalid. */
+export async function getPageImage(specStr, deps = {}) {
+  const cached = pageCache.get(specStr);
+  if (cached) return cached;
+  const volumes = deps.volumes || getCatalog();
+  const spec = decodeSpec(specStr, volumes);
+  if (!spec) return null;
+  const page = await renderSpec(volumes, spec, deps);
+  pageCache.set(specStr, page.png);
+  return page.png;
 }
 
-export const getPagePng = (id) => answers.get(id)?.png;
-
-export async function getPagePdf(id) {
-  const a = answers.get(id);
-  if (!a) return null;
-  a.pdf ??= await pngsToPdf([a.png], a.title);
-  return a.pdf;
+export async function getPagePdf(specStr, deps = {}) {
+  const png = await getPageImage(specStr, deps);
+  if (!png) return null;
+  const volumes = deps.volumes || getCatalog();
+  return pngsToPdf([png], `אגרות קודש, ${volumes[decodeSpec(specStr, volumes).v].heading}`);
 }
 
-/** The full text of one letter from the page, rendered on as many pages as it needs. */
-export async function getLetterPdf(id, n) {
-  const l = answers.get(id)?.letters[n];
-  if (!l) return null;
-  if (!l.pdf) {
-    const flow = [{ kind: 'number', text: l.number, letter: 0 }, ...l.full.blocks.map((b) => ({ ...b, letter: 0 }))];
-    const { pages } = layout(flow, {
-      header: { right: `אגרות קודש · אגרת ${l.number}`, left: answers.get(id).volumeHeading },
-      footer: (i, count) => `מקור: ספריית ליובאוויטש · ${l.viewerUrl}${count > 1 ? ` · ${i + 1}/${count}` : ''}`,
-    });
-    l.pdf = await pngsToPdf(pages, `אגרות קודש, ${answers.get(id).volumeHeading}, אגרת ${l.number}`);
-  }
-  return l.pdf;
+/** The full text of one letter, rendered on as many pages as it needs. */
+export async function getLetterPdf(id, deps = {}) {
+  const volumes = deps.volumes || getCatalog();
+  const vol = volumes.find((v) => v.letters.some(([lid]) => lid === id));
+  if (!vol) return null;
+  const l = await (deps.fetchLetter || fetchLetter)(id);
+  const number = l.letterHeading || vol.letters.find(([lid]) => lid === id)[1];
+  const flow = [{ kind: 'number', text: number, letter: 0 }, ...l.blocks.map((b) => ({ ...b, letter: 0 }))];
+  const { pages } = layout(flow, {
+    header: { right: `אגרות קודש · אגרת ${number}`, left: vol.heading },
+    footer: (i, count) => `מקור: ספריית ליובאוויטש · ${l.viewerUrl}${count > 1 ? ` · ${i + 1}/${count}` : ''}`,
+  });
+  return pngsToPdf(pages, `אגרות קודש, ${vol.heading}, אגרת ${number}`);
 }
 
 /** What Claude reads: the page as it opened, letter by letter. */
@@ -52,7 +62,7 @@ export function pageAsText(letters) {
  * deps can be overridden in tests.
  */
 export async function answerLetter({ letter, replyLanguage }, deps = {}) {
-  const { volumes = (catalog ??= loadCatalog()), open = openBook, explain = explainAnswer, random } = deps;
+  const { volumes = getCatalog(), open = openBook, explain = explainAnswer, random } = deps;
   const trimmed = String(letter || '').trim();
   if (trimmed.length < 2) throw new Error('LETTER_EMPTY');
   if (trimmed.length > 8000) throw new Error('LETTER_TOO_LONG');
@@ -71,16 +81,17 @@ export async function answerLetter({ letter, replyLanguage }, deps = {}) {
   }
 
   const id = randomUUID();
-  remember(id, { png: page.png, title, volumeHeading: page.volumeHeading, letters });
+  pageCache.set(page.spec, page.png);
 
   return {
     id,
     volume: page.volume,
     volumeHeading: page.volumeHeading,
     title,
-    imagePath: `/api/answers/${id}/page.png`,
-    pdfPath: `/api/answers/${id}/page.pdf`,
-    letters: letters.map((l, n) => ({
+    // stable links: the page can always be drawn again from its spec
+    imagePath: `/api/page/${page.spec}.png`,
+    pdfPath: `/api/page/${page.spec}.pdf`,
+    letters: letters.map((l) => ({
       id: l.id,
       number: l.number,
       startsOnPage: l.startsOnPage,
@@ -88,7 +99,7 @@ export async function answerLetter({ letter, replyLanguage }, deps = {}) {
       pageText: l.pageText,
       fullText: l.full.text,
       viewerUrl: l.viewerUrl,
-      pdfPath: `/api/answers/${id}/letters/${n}.pdf`,
+      pdfPath: `/api/igrot/${l.id}.pdf`,
     })),
     ...ai,
   };
@@ -100,7 +111,7 @@ let positions;
  * for paging beyond the letters of the opened page. Returns null at the ends of the book.
  */
 export async function getNeighborLetter(id, offset, deps = {}) {
-  const { volumes = (catalog ??= loadCatalog()), fetch: fetchFn = fetchLetter } = deps;
+  const { volumes = getCatalog(), fetch: fetchFn = fetchLetter } = deps;
   const flat = deps.volumes ? null : positions;
   const list = flat || volumes.flatMap((v) => v.letters.map(([lid, heading]) => ({ id: lid, heading, volumeHeading: v.heading })));
   if (!deps.volumes) positions = list;

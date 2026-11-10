@@ -2,5 +2,8 @@
   "appId": "com.michtavim.larebbe",
   "appName": "מכתבים לרבי",
   "webDir": "www",
-  "android": { "allowMixedContent": false }
+  "android": {
+    "allowMixedContent": false,
+    "adjustMarginsForEdgeToEdge": "auto"
+  }
 }

@@ -12,13 +12,6 @@ export const PAGE_CHARS = 1500;
 
 const lengthOf = (blocks) => blocks.reduce((n, b) => n + b.text.length + 1, 0);
 
-/** Index of every letter id → { v, i } (volume index, letter index). */
-function indexCatalog(volumes) {
-  const idx = new Map();
-  volumes.forEach((vol, v) => vol.letters.forEach(([id], i) => idx.set(id, { v, i })));
-  return idx;
-}
-
 /** Cuts a block list at character offset `at` (snapped forward to a word start). */
 function sliceFrom(blocks, at) {
   let pos = 0;
@@ -38,7 +31,65 @@ function sliceFrom(blocks, at) {
 }
 
 /**
- * @returns {Promise<{ volume: number, volumeHeading: string, png: Buffer,
+ * A page is fully described by a small "spec" – volume, first letter, number of letters
+ * and the character offset where the page starts – so its image can be drawn again at any
+ * time (after a server restart, for sharing, for the full-screen view).
+ */
+export const encodeSpec = ({ v, i, n, s }) => Buffer.from(JSON.stringify([v, i, n, s])).toString('base64url');
+export function decodeSpec(str, volumes) {
+  try {
+    const [v, i, n, s] = JSON.parse(Buffer.from(String(str), 'base64url').toString());
+    const ok = [v, i, n, s].every(Number.isInteger) && volumes[v] && i >= 0 && n >= 1 && n <= 12
+      && i + n <= volumes[v].letters.length && s >= 0 && s < 500000;
+    return ok ? { v, i, n, s } : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Draws the page described by `spec`. */
+export async function renderSpec(volumes, spec, { fetchLetter = defaultFetch } = {}) {
+  const vol = volumes[spec.v];
+  const chain = await Promise.all(Array.from({ length: spec.n }, async (_, k) => {
+    const [id, heading] = vol.letters[spec.i + k];
+    const l = await fetchLetter(id);
+    return { id, heading: l.letterHeading || heading, letter: l, body: bodyOf(l.blocks) };
+  }));
+  const start = spec.s;
+
+  // the first letter from `start`, the others whole, each headed by its number
+  const flow = [];
+  chain.forEach((c, k) => {
+    const blocks = k === 0 ? sliceFrom(c.body, start) : c.body;
+    const fromTop = k > 0 || start === 0;
+    if (fromTop) flow.push({ kind: 'number', text: c.heading, letter: k });
+    for (const b of blocks) flow.push({ ...b, letter: k, continued: b.continued || (!fromTop && b === blocks[0]) });
+  });
+
+  const { pages, shown } = layout(flow, { header: { right: 'אגרות קודש', left: vol.heading }, maxPages: 1 });
+
+  const letters = [];
+  chain.forEach((c, k) => {
+    const s = shown.get(k);
+    if (!s) return;
+    const fromTop = k > 0 || start === 0;
+    letters.push({
+      id: c.id,
+      number: c.heading,
+      viewerUrl: c.letter.viewerUrl,
+      startsOnPage: fromTop,
+      endsOnPage: s.complete,
+      // the letter-number line is not part of the text
+      pageText: fromTop ? s.text.split('\n').slice(1).join('\n') : s.text,
+      full: c.letter,
+    });
+  });
+  return { volume: vol.volume, volumeHeading: vol.heading, png: pages[0], letters, spec: encodeSpec(spec) };
+}
+
+/**
+ * Opens the book at a random spot.
+ * @returns {Promise<{ volume: number, volumeHeading: string, png: Buffer, spec: string,
  *   letters: { id, number, viewerUrl, startsOnPage: boolean, endsOnPage: boolean, pageText: string, full: object }[] }>}
  */
 export async function openBook(volumes, { random = Math.random, fetchLetter = defaultFetch } = {}) {
@@ -50,15 +101,14 @@ export async function openBook(volumes, { random = Math.random, fetchLetter = de
   const vol = volumes[v];
 
   const load = async (i) => {
-    const [id, heading] = vol.letters[i];
-    const l = await fetchLetter(id);
-    return { i, id, heading: l.letterHeading || heading, letter: l, body: bodyOf(l.blocks) };
+    const l = await fetchLetter(vol.letters[i][0]);
+    return { i, body: bodyOf(l.blocks) };
   };
 
   // 1. a random point inside the chosen letter, and a page start up to ~one page before it
   const anchor = await load(pick);
   const point = Math.floor(random() * Math.max(1, lengthOf(anchor.body)));
-  let back = Math.floor(random() * PAGE_CHARS * 0.85);
+  const back = Math.floor(random() * PAGE_CHARS * 0.85);
 
   // 2. walk back into previous letters (same volume) if the page starts before this letter
   const chain = [anchor];
@@ -78,36 +128,5 @@ export async function openBook(volumes, { random = Math.random, fetchLetter = de
     ahead += lengthOf(next.body);
   }
 
-  // 4. build the flow: the first letter from `start`, the others whole, each headed by its number
-  const flow = [];
-  chain.forEach((c, k) => {
-    const blocks = k === 0 ? sliceFrom(c.body, start) : c.body;
-    const fromTop = k > 0 || start === 0;
-    if (fromTop) flow.push({ kind: 'number', text: c.heading, letter: k });
-    for (const b of blocks) flow.push({ ...b, letter: k, continued: b.continued || (!fromTop && b === blocks[0]) });
-  });
-
-  const { pages, shown } = layout(flow, {
-    header: { right: 'אגרות קודש', left: vol.heading },
-    maxPages: 1,
-  });
-
-  const letters = [];
-  chain.forEach((c, k) => {
-    const s = shown.get(k);
-    if (!s) return;
-    const fromTop = k > 0 || start === 0;
-    letters.push({
-      id: c.id,
-      number: c.heading,
-      viewerUrl: c.letter.viewerUrl,
-      startsOnPage: fromTop,
-      endsOnPage: s.complete,
-      // the letter-number line is not part of the text
-      pageText: fromTop ? s.text.split('\n').slice(1).join('\n') : s.text,
-      full: c.letter,
-    });
-  });
-
-  return { volume: vol.volume, volumeHeading: vol.heading, png: pages[0], letters };
+  return renderSpec(volumes, { v, i: chain[0].i, n: chain.length, s: start }, { fetchLetter });
 }

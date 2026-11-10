@@ -135,17 +135,38 @@ function selectedRange() {
   return [p, start, start + range.toString().length];
 }
 
-document.addEventListener('selectionchange', () => { $('hl-bar').hidden = !selectedRange(); });
-$('hl-add').addEventListener('pointerdown', (e) => e.preventDefault()); // keep the selection alive
-$('hl-add').addEventListener('click', () => {
-  const found = selectedRange();
-  if (!found) return;
+function applyMark(found) {
   const [p, start, end] = found;
+  if (end <= start) return;
   state.marks[p.dataset.key] = mergeRanges([...(state.marks[p.dataset.key] || []), [start, end]]);
   save();
   getSelection().removeAllRanges();
   paintMarks(p);
+  $('hl-bar').hidden = true;
+}
+
+// Marker mode: every finished selection is highlighted at once (no button needed).
+let markerMode = false;
+let lastRange = null;
+let markTimer = null;
+function setMarkerMode(on) {
+  markerMode = on;
+  document.body.classList.toggle('marker-mode', on);
+  $('hl-mode').textContent = on ? '🖍 מרקר פעיל – לסיום' : '🖍 מצב מרקר';
+  $('hl-mode').classList.toggle('on', on);
+  $('hl-bar').hidden = !on && !selectedRange();
+}
+document.addEventListener('selectionchange', () => {
+  const found = selectedRange();
+  if (found) lastRange = found;
+  $('hl-add').hidden = !found;
+  $('hl-bar').hidden = !found && !markerMode;
+  clearTimeout(markTimer);
+  if (markerMode && found) markTimer = setTimeout(() => { const f = selectedRange(); if (f) applyMark(f); }, 900);
 });
+for (const id of ['hl-add', 'hl-mode']) $(id).addEventListener('pointerdown', (e) => e.preventDefault()); // keep the selection
+$('hl-add').addEventListener('click', () => { const f = selectedRange() || lastRange; if (f) applyMark(f); lastRange = null; });
+$('hl-mode').addEventListener('click', () => setMarkerMode(!markerMode));
 
 // ---------- full-screen image ----------
 function openLightbox(src, alt) {
@@ -154,14 +175,74 @@ function openLightbox(src, alt) {
   img.alt = alt;
   img.className = 'fit';
   $('lightbox').hidden = false;
+  if (!isNativeApp) history.pushState({ lightbox: true }, ''); // browser "back" closes it
 }
-const closeLightbox = () => { $('lightbox').hidden = true; $('lightbox-img').removeAttribute('src'); };
+function closeLightbox(fromHistory = false) {
+  if ($('lightbox').hidden) return false;
+  $('lightbox').hidden = true;
+  $('lightbox-img').removeAttribute('src');
+  if (!isNativeApp && !fromHistory && history.state?.lightbox) history.back();
+  return true;
+}
+window.addEventListener('popstate', () => closeLightbox(true));
+$('lightbox').addEventListener('click', (e) => { if (e.target === e.currentTarget || e.target.classList.contains('lightbox-scroll')) closeLightbox(); });
+$('lightbox-close-bottom').addEventListener('click', () => closeLightbox());
 $('lightbox-img').addEventListener('click', (e) => {
   const img = e.currentTarget;
   img.className = img.className === 'fit' ? '' : img.className === '' ? 'zoom' : 'fit'; // fit → page width → zoomed
 });
-$('lightbox-close').addEventListener('click', closeLightbox);
+$('lightbox-close').addEventListener('click', () => closeLightbox());
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('lightbox').hidden) closeLightbox(); });
+
+// ---------- device authentication, for hidden letters ----------
+const b64 = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf)));
+const unb64 = (str) => Uint8Array.from(atob(str), (c) => c.charCodeAt(0));
+const unlocked = new Set(); // entries revealed in this session
+document.addEventListener('visibilitychange', () => { // leaving the app hides them again
+  if (document.hidden && unlocked.size) { unlocked.clear(); render(); }
+});
+
+/** True if this device can confirm the user (fingerprint, face or screen lock). */
+async function canAuthenticate() {
+  if (isNativeApp) {
+    try { return (await window.Capacitor.registerPlugin('DeviceAuth').isAvailable()).available; } catch { return false; }
+  }
+  return !!(window.PublicKeyCredential && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable?.().catch(() => false));
+}
+
+/** Asks for fingerprint / device code. Resolves true on success. */
+async function authenticate(reason) {
+  if (isNativeApp) {
+    try {
+      await window.Capacitor.registerPlugin('DeviceAuth').authenticate({ title: 'מכתבים לרבי', subtitle: reason });
+      return true;
+    } catch { return false; }
+  }
+  // Browser: the device's own lock (Windows Hello, Touch ID, Android screen lock) through WebAuthn.
+  try {
+    let id = localStorage.getItem('mlr-webauthn-id');
+    if (!id) {
+      const cred = await navigator.credentials.create({ publicKey: {
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        rp: { name: 'מכתבים לרבי' },
+        user: { id: crypto.getRandomValues(new Uint8Array(16)), name: 'michtavim', displayName: 'מכתבים לרבי' },
+        pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+        authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'discouraged' },
+        timeout: 60000,
+      } });
+      id = b64(cred.rawId);
+      localStorage.setItem('mlr-webauthn-id', id);
+      return true; // creating it already required the device lock
+    }
+    await navigator.credentials.get({ publicKey: {
+      challenge: crypto.getRandomValues(new Uint8Array(32)),
+      allowCredentials: [{ type: 'public-key', id: unb64(id) }],
+      userVerification: 'required',
+      timeout: 60000,
+    } });
+    return true;
+  } catch { return false; }
+}
 
 // ---------- sharing ----------
 const blobToBase64 = (blob) => new Promise((resolve, reject) => {
@@ -174,31 +255,54 @@ const blobToBase64 = (blob) => new Promise((resolve, reject) => {
 /** Shares the question text together with the image of the page that answered it. */
 async function shareAnswer(entry) {
   const a = entry.a;
-  const text = `${entry.q ? `מכתב לרבי:\n${entry.q}\n\n` : ''}המענה: ${a.title}`;
-  const res = await fetch(API + a.imagePath);
-  if (!res.ok) throw new Error('IMAGE_GONE');
-  const blob = await res.blob();
+  const question = entry.locked && !unlocked.has(entry.id) ? '' : entry.q;
+  const imageUrl = API ? `${API}${a.imagePath}` : new URL(a.imagePath, location.href).href;
+  const text = `${question ? `מכתב לרבי:\n${question}\n\n` : ''}המענה: ${a.title}`;
+
+  let blob = null;
+  try {
+    const res = await fetch(imageUrl);
+    if (res.ok) blob = await res.blob();
+  } catch { /* share without the image */ }
 
   if (isNativeApp) {
-    const Filesystem = window.Capacitor.registerPlugin('Filesystem');
     const Share = window.Capacitor.registerPlugin('Share');
-    const { uri } = await Filesystem.writeFile({
-      path: 'share/igrot-kodesh.png', data: await blobToBase64(blob), directory: 'CACHE', recursive: true,
-    });
-    await Share.share({ title: 'מכתבים לרבי', text, files: [uri], dialogTitle: 'שיתוף המענה' });
+    if (blob) {
+      try {
+        const Filesystem = window.Capacitor.registerPlugin('Filesystem');
+        const { uri } = await Filesystem.writeFile({
+          path: `share/igrot-kodesh-${Date.now()}.png`, data: await blobToBase64(blob), directory: 'CACHE', recursive: true,
+        });
+        await Share.share({ title: 'מכתבים לרבי', text, files: [uri], dialogTitle: 'שיתוף המענה' });
+        return;
+      } catch (e) {
+        if (/cancel/i.test(e?.message || '')) return;
+        console.warn('image share failed, sharing text and link', e);
+      }
+    }
+    await Share.share({ title: 'מכתבים לרבי', text: `${text}\n${imageUrl}`, dialogTitle: 'שיתוף המענה' });
     return;
   }
-  const file = new File([blob], 'igrot-kodesh.png', { type: 'image/png' });
-  if (navigator.canShare?.({ files: [file] })) {
-    await navigator.share({ title: 'מכתבים לרבי', text, files: [file] });
+
+  if (blob) {
+    const file = new File([blob], 'igrot-kodesh.png', { type: 'image/png' });
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ title: 'מכתבים לרבי', text, files: [file] });
+      return;
+    }
+  }
+  if (navigator.share) {
+    await navigator.share({ title: 'מכתבים לרבי', text, url: imageUrl });
     return;
   }
-  // Desktop browsers without file sharing: copy the text and download the image.
-  try { await navigator.clipboard.writeText(text); } catch { /* ignore */ }
-  const link = el('a', { href: URL.createObjectURL(blob), download: 'igrot-kodesh.png' });
-  link.click();
-  URL.revokeObjectURL(link.href);
-  alert('הטקסט הועתק והתמונה ירדה למכשיר – אפשר להדביק ולצרף אותם בכל אפליקציה.');
+  // Desktop browsers without sharing: copy the text and download the image.
+  try { await navigator.clipboard.writeText(`${text}\n${imageUrl}`); } catch { /* ignore */ }
+  if (blob) {
+    const link = el('a', { href: URL.createObjectURL(blob), download: 'igrot-kodesh.png' });
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }
+  alert(blob ? 'הטקסט הועתק והתמונה ירדה למכשיר – אפשר להדביק ולצרף אותם בכל אפליקציה.' : 'הטקסט והקישור לתמונה הועתקו.');
 }
 
 function shareButton(entry) {
@@ -208,9 +312,7 @@ function shareButton(entry) {
     try {
       await shareAnswer(entry);
     } catch (e) {
-      if (e?.name !== 'AbortError' && !/cancel/i.test(e?.message || '')) {
-        alert(e?.message === 'IMAGE_GONE' ? 'תמונת העמוד אינה זמינה עוד בשרת.' : 'השיתוף נכשל. נסו שוב.');
-      }
+      if (e?.name !== 'AbortError' && !/cancel/i.test(e?.message || '')) alert(`השיתוף נכשל: ${e?.message || e}`);
     } finally {
       btn.disabled = false;
     }
@@ -264,35 +366,37 @@ function lettersPager(a) {
   let at = 0;
   const ends = { prev: false, next: false }; // reached the beginning / end of the book
 
-  const prev = el('button', { type: 'button', textContent: '→ הקודם' });
-  const next = el('button', { type: 'button', textContent: 'הבא ←' });
-  const where = el('div', { className: 'where' });
-  const body = el('div');
+  const prev = el('button', { type: 'button', className: 'nav-btn', textContent: '→', title: 'האגרת הקודמת' });
+  const next = el('button', { type: 'button', className: 'nav-btn', textContent: '←', title: 'האגרת הבאה' });
+  const where = el('span', { className: 'where' });
+  const body = el('div', { className: 'letter-body' });
   const box = el('details', { className: 'letters' },
-    el('summary', { textContent: `האגרות בעמוד (${list.length}) – קריאה ודפדוף` }),
+    el('summary', { textContent: `📜 האגרות בעמוד (${list.length})` }),
     el('div', { className: 'pager' }, prev, where, next), // RTL: first = right
     body);
 
   const paint = () => {
     const l = list[at];
-    where.textContent = `אגרת ${l.number}`;
-    where.append(el('span', { textContent: partLabel(l) }));
+    where.textContent = `אגרת ${l.number} · ${partLabel(l)}`;
     body.textContent = '';
     body.append(
       markable(l.fullText, `L:${l.id ?? l.number}`),
       el('div', { className: 'links' },
-        l.pdfPath && el('a', { href: API + l.pdfPath, target: '_blank', rel: 'noopener', textContent: '📄 PDF של האגרת' }),
+        l.id != null && el('a', { href: `${API}/api/igrot/${l.id}.pdf`, target: '_blank', rel: 'noopener', textContent: '📄 PDF' }),
         el('a', { href: l.viewerUrl, target: '_blank', rel: 'noopener', textContent: '🔗 במקור' })));
     const canFetch = (dir) => list[dir === 'prev' ? 0 : list.length - 1].id != null && !ends[dir];
     prev.disabled = at === 0 && !canFetch('prev');
     next.disabled = at === list.length - 1 && !canFetch('next');
   };
 
+  let busy = false;
   async function step(dir) {
+    if (busy || (dir === 'prev' ? prev : next).disabled) return;
     const edge = dir === 'prev' ? at === 0 : at === list.length - 1;
     if (!edge) { at += dir === 'prev' ? -1 : 1; paint(); return; }
     const from = list[dir === 'prev' ? 0 : list.length - 1];
-    prev.disabled = next.disabled = true;
+    busy = true; prev.disabled = next.disabled = true;
+    where.textContent = 'טוען…';
     try {
       const res = await fetch(`${API}/api/igrot/${from.id}/${dir}`);
       const { letter } = res.ok ? await res.json() : {};
@@ -307,12 +411,36 @@ function lettersPager(a) {
     } catch {
       alert('אין חיבור לשרת.');
     }
+    busy = false;
     paint();
   }
   prev.addEventListener('click', () => step('prev'));
   next.addEventListener('click', () => step('next'));
+
+  // swipe: finger to the right = next (the next letter is on the left), to the left = previous
+  let touch = null;
+  body.addEventListener('touchstart', (e) => {
+    touch = getSelection().isCollapsed ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
+  }, { passive: true });
+  body.addEventListener('touchend', (e) => {
+    if (!touch || markerMode) return;
+    const dx = e.changedTouches[0].clientX - touch.x;
+    const dy = e.changedTouches[0].clientY - touch.y;
+    touch = null;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) step(dx > 0 ? 'next' : 'prev');
+  }, { passive: true });
+
   paint();
   return box;
+}
+
+function markerButton() {
+  const b = el('button', { type: 'button', className: 'link-btn', textContent: '🖍 מרקר' });
+  b.addEventListener('click', () => {
+    setMarkerMode(true);
+    alert('מצב מרקר: סמנו טקסט באגרת, בהסבר או בתרגום – הוא יודגש. לסיום לחצו על הכפתור הצהוב למעלה.');
+  });
+  return b;
 }
 
 // ---------- rendering ----------
@@ -326,8 +454,9 @@ function answerBubble(entry) {
     el('h3', { textContent: `✉️ אגרות קודש · ${a.volumeHeading}` }),
     img,
     el('div', { className: 'links' },
-      el('a', { href: API + a.pdfPath, target: '_blank', rel: 'noopener', textContent: '📄 הורדת העמוד כ-PDF' }),
-      shareButton(entry)),
+      el('a', { href: API + a.pdfPath, target: '_blank', rel: 'noopener', textContent: '📄 PDF' }),
+      shareButton(entry),
+      markerButton()),
     favRow(entry),
     a.keyQuote && el('div', { className: 'quote', textContent: a.keyQuote }),
     ...(a.explained === false
@@ -341,9 +470,48 @@ function answerBubble(entry) {
     time(entry.ts));
 }
 
+function questionBubble(entry) {
+  const hidden = entry.locked && !unlocked.has(entry.id);
+  const tools = el('div', { className: 'q-tools' });
+  const tool = (label, title, fn) => {
+    const b = el('button', { type: 'button', className: 'q-tool', textContent: label, title });
+    b.setAttribute('aria-label', title);
+    b.addEventListener('click', fn);
+    tools.append(b);
+  };
+  tool(entry.collapsed ? '▸' : '▾', entry.collapsed ? 'הרחבת המענה' : 'כיווץ המענה', () => {
+    entry.collapsed = !entry.collapsed; save(); render();
+  });
+  tool(entry.locked ? '🔓' : '🔒', entry.locked ? 'ביטול ההסתרה' : 'הסתרת המכתב', async () => {
+    if (!entry.locked) {
+      if (!(await canAuthenticate())) {
+        alert('במכשיר זה לא הוגדרו טביעת אצבע או נעילת מסך, ולכן אי אפשר להסתיר מכתבים.');
+        return;
+      }
+      entry.locked = true; unlocked.delete(entry.id); save(); render();
+    } else if (await authenticate('ביטול הסתרת המכתב')) {
+      delete entry.locked; save(); render();
+    }
+  });
+
+  const content = hidden
+    ? el('button', { type: 'button', className: 'locked-q', textContent: '🔒 מכתב מוסתר – לחצו לפתיחה' })
+    : el('p', { textContent: entry.q });
+  if (hidden) {
+    content.addEventListener('click', async () => {
+      if (await authenticate('פתיחת מכתב מוסתר')) { unlocked.add(entry.id); render(); }
+    });
+  }
+  return el('div', { className: 'msg me' }, tools, content, time(entry.ts));
+}
+
 function entryNodes(entry) {
-  const nodes = [el('div', { className: 'msg me' }, el('p', { textContent: entry.q }), time(entry.ts))];
-  if (entry.a) nodes.push(answerBubble(entry));
+  const nodes = [questionBubble(entry)];
+  if (entry.a && entry.collapsed) {
+    const chip = el('button', { type: 'button', className: 'msg them collapsed-a', textContent: `✉️ ${entry.a.title}${entry.fav ? ' ★' : ''} – הרחבה` });
+    chip.addEventListener('click', () => { entry.collapsed = false; save(); render(); });
+    nodes.push(chip);
+  } else if (entry.a) nodes.push(answerBubble(entry));
   else if (entry.pending) nodes.push(el('div', { className: 'msg them typing', textContent: 'פותחים את אגרות הקודש…' }));
   else nodes.push(el('div', { className: 'msg them error', textContent: entry.error || 'לא התקבל מענה למכתב זה.' }));
   return nodes;
@@ -488,6 +656,16 @@ async function setupNativeApp() {
   const btn = el('button', { className: 'icon-btn', title: 'הגדרות ועדכונים', textContent: '⚙' });
   btn.setAttribute('aria-label', 'הגדרות ועדכונים');
   btn.addEventListener('click', () => { $('server-input').value = API; dialog.showModal(); });
+  // the server address is built into the app; the field is only shown if it is missing
+  $('server-section').hidden = !!window.MLR_API_BASE;
+
+  // Android back button: close what is open before leaving the app
+  AppInfo.addListener('backButton', () => {
+    if (closeLightbox()) return;
+    if (dialog.open) { dialog.close(); return; }
+    if (markerMode) { setMarkerMode(false); return; }
+    AppInfo.minimizeApp();
+  });
   $('view-fav').before(btn);
   $('server-save').addEventListener('click', () => { if (setServer($('server-input').value)) status('הכתובת נשמרה.'); });
 

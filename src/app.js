@@ -1,5 +1,5 @@
 import express from 'express';
-import { answerLetter, getPagePng, getPagePdf, getLetterPdf, getNeighborLetter } from './letters.js';
+import { answerLetter, getPageImage, getPagePdf, getLetterPdf, getNeighborLetter } from './letters.js';
 import { userMessage } from './errors.js';
 import { whatsappRouter } from './whatsapp/webhook.js';
 import { cors } from './cors.js';
@@ -44,21 +44,26 @@ export function createApp(deps = {}) {
     }
   });
 
-  app.get('/api/answers/:id/page.png', (req, res) => {
-    const png = getPagePng(req.params.id);
-    if (!png) return res.sendStatus(404);
-    res.type('image/png').set('Cache-Control', 'private, max-age=86400').send(png);
-  });
-
   const sendPdf = (res, pdf, name) => {
     if (!pdf) return res.sendStatus(404);
     res.type('application/pdf').set('Content-Disposition', `inline; filename="${name}"`).send(pdf);
   };
-  app.get('/api/answers/:id/page.pdf', async (req, res, next) => {
-    try { sendPdf(res, await getPagePdf(req.params.id), 'igrot-kodesh-page.pdf'); } catch (e) { next(e); }
+  // Pages are addressed by their spec, so these links keep working after restarts.
+  app.get('/api/page/:spec.png', async (req, res, next) => {
+    try {
+      const png = await getPageImage(req.params.spec, deps.pages);
+      if (!png) return res.sendStatus(404);
+      res.type('image/png').set('Cache-Control', 'public, max-age=604800').send(png);
+    } catch (e) { next(e); }
   });
-  app.get('/api/answers/:id/letters/:n.pdf', async (req, res, next) => {
-    try { sendPdf(res, await getLetterPdf(req.params.id, Number(req.params.n)), 'igrot-kodesh-letter.pdf'); } catch (e) { next(e); }
+  app.get('/api/page/:spec.pdf', async (req, res, next) => {
+    try { sendPdf(res, await getPagePdf(req.params.spec, deps.pages), 'igrot-kodesh-page.pdf'); } catch (e) { next(e); }
+  });
+  app.get('/api/igrot/:id.pdf', async (req, res, next) => {
+    try {
+      if (!/^\d+$/.test(req.params.id)) return res.sendStatus(400);
+      sendPdf(res, await getLetterPdf(Number(req.params.id), deps.pages), 'igrot-kodesh-letter.pdf');
+    } catch (e) { next(e); }
   });
 
   app.use('/api/app', appUpdateRouter(deps.appUpdate));
