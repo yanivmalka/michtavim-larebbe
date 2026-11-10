@@ -84,7 +84,81 @@ export async function renderSpec(volumes, spec, { fetchLetter = defaultFetch } =
       full: c.letter,
     });
   });
-  return { volume: vol.volume, volumeHeading: vol.heading, png: pages[0], letters, spec: encodeSpec(spec) };
+  // where this page ends, and how much text it holds – for turning to the next / previous page
+  let end = null;
+  let consumed = 0;
+  chain.forEach((c, k) => {
+    const sh = shown.get(k);
+    if (!sh) return;
+    const fromTop = k > 0 || start === 0;
+    const body = fromTop ? sh.text.split('\n').slice(1).join('\n') : sh.text;
+    consumed += body.length + 1;
+    end = sh.complete
+      ? { i: spec.i + k + 1, s: 0 }
+      : { i: spec.i + k, s: (k === 0 ? start : 0) + body.length + 1 };
+  });
+
+  return { volume: vol.volume, volumeHeading: vol.heading, png: pages[0], letters, spec: encodeSpec(spec), end, consumed };
+}
+
+/** Spec of a page starting at letter `i`, offset `s`, with enough letters after it to fill a page. */
+async function specFrom(volumes, v, i, s, fetchLetter) {
+  const vol = volumes[v];
+  if (i >= vol.letters.length) return null;
+  const len = async (k) => lengthOf(bodyOf((await fetchLetter(vol.letters[k][0])).blocks));
+  let n = 1;
+  let ahead = (await len(i)) - s;
+  while (ahead < PAGE_CHARS * 2 && i + n < vol.letters.length) {
+    ahead += await len(i + n);
+    n += 1;
+  }
+  return { v, i, n, s: Math.max(0, s) };
+}
+
+/**
+ * The page after (dir = 1) or before (dir = -1) the one described by `spec`, within its volume.
+ * The previous page is estimated from how much text this page holds, so the two can overlap
+ * by a line or two. Returns null at the start / end of the volume.
+ */
+export async function turnPage(volumes, spec, dir, { fetchLetter = defaultFetch } = {}) {
+  const page = await renderSpec(volumes, spec, { fetchLetter });
+  const vol = volumes[spec.v];
+  if (dir > 0) {
+    if (!page.end || page.end.i >= vol.letters.length) return null;
+    return specFrom(volumes, spec.v, page.end.i, page.end.s, fetchLetter);
+  }
+  if (spec.i === 0 && spec.s === 0) return null;
+
+  // Positions relative to the start of letter spec.i (negative = in earlier letters).
+  const HEADER = 40; // the space a letter number takes, in characters
+  const len = async (k) => lengthOf(bodyOf((await fetchLetter(vol.letters[k][0])).blocks)) + HEADER;
+  const toRel = async (i, s) => {
+    let rel = s;
+    for (let k = i; k < spec.i; k++) rel -= await len(k);
+    for (let k = spec.i; k < i; k++) rel += await len(k);
+    return rel;
+  };
+  const fromRel = async (rel) => {
+    let i = spec.i;
+    while (rel < 0 && i > 0) { i -= 1; rel += await len(i); }
+    return { i, s: Math.max(0, rel) };
+  };
+
+  // Guess a start one page-length back, then correct it until that page ends where this one starts.
+  const target = spec.s;
+  let guess = target - page.consumed;
+  let best = null;
+  for (let round = 0; round < 4; round++) {
+    const at = await fromRel(guess);
+    const candidate = await specFrom(volumes, spec.v, at.i, at.s, fetchLetter);
+    const drawn = await renderSpec(volumes, candidate, { fetchLetter });
+    const endRel = drawn.end ? await toRel(drawn.end.i, drawn.end.s) : target;
+    best = candidate;
+    const diff = target - endRel;
+    if (Math.abs(diff) < 25 || (at.i === 0 && at.s === 0 && diff < 0)) break;
+    guess += diff;
+  }
+  return best;
 }
 
 /**

@@ -184,14 +184,77 @@ $('hl-add').addEventListener('click', () => { const f = selectedRange() || lastR
 $('hl-mode').addEventListener('click', () => setMarkerMode(!markerMode));
 
 // ---------- full-screen image ----------
-function openLightbox(src, alt) {
+// Pages seen in the full-screen view: going back shows exactly the page you came from;
+// only pages beyond those are asked from the server.
+const lb = { pages: [], at: 0, opened: 0, busy: false };
+const specOf = (imagePath) => (/\/api\/page\/([\w-]+)\.png$/.exec(imagePath || '') || [])[1];
+
+function paintLightbox() {
   const img = $('lightbox-img');
-  img.src = src;
-  img.alt = alt;
+  const page = lb.pages[lb.at];
+  img.src = API + page.imagePath;
   img.className = 'fit';
+  $('lightbox').querySelector('.lightbox-scroll').scrollTo(0, 0);
+  const offset = lb.at - lb.opened;
+  $('lb-where').textContent = lb.busy ? 'טוען…' : offset === 0 ? 'העמוד שנפתח' : offset > 0 ? `${offset} עמודים קדימה` : `${-offset} עמודים אחורה`;
+  if (Math.abs(offset) === 1) $('lb-where').textContent = offset > 0 ? 'העמוד הבא' : 'העמוד הקודם';
+  $('lb-prev').disabled = lb.busy || (lb.at === 0 && lb.pages[0].first);
+  $('lb-next').disabled = lb.busy || (lb.at === lb.pages.length - 1 && lb.pages.at(-1).last);
+}
+
+async function turnLightbox(dir) {
+  if (lb.busy || !lb.pages.length || !lb.pages[0].spec) return;
+  const edge = dir > 0 ? lb.at === lb.pages.length - 1 : lb.at === 0;
+  if (!edge) { lb.at += dir; paintLightbox(); return; }
+  const from = dir > 0 ? lb.pages.at(-1) : lb.pages[0];
+  if (dir > 0 ? from.last : from.first) return;
+  lb.busy = true; paintLightbox();
+  try {
+    const res = await fetch(`${API}/api/page/${from.spec}/${dir > 0 ? 'next' : 'prev'}`);
+    const { page } = res.ok ? await res.json() : {};
+    if (page) {
+      if (dir > 0) { lb.pages.push(page); lb.at += 1; } else { lb.pages.unshift(page); lb.opened += 1; }
+    } else if (res.ok) {
+      from[dir > 0 ? 'last' : 'first'] = true;
+    } else {
+      alert('לא ניתן היה לטעון את העמוד. נסו שוב.');
+    }
+  } catch {
+    alert('אין חיבור לשרת.');
+  }
+  lb.busy = false;
+  paintLightbox();
+}
+
+function openLightbox(imagePath, alt) {
+  const spec = specOf(imagePath);
+  lb.pages = [{ spec, imagePath }];
+  lb.at = 0; lb.opened = 0; lb.busy = false;
+  $('lightbox-img').alt = alt;
+  $('lightbox-nav').hidden = !spec; // older answers have no page link to turn from
+  paintLightbox();
   $('lightbox').hidden = false;
   if (!isNativeApp) history.pushState({ lightbox: true }, ''); // browser "back" closes it
 }
+$('lb-prev').addEventListener('click', () => turnLightbox(-1));
+$('lb-next').addEventListener('click', () => turnLightbox(1));
+{ // swipe on the page: finger to the right = next page (Hebrew book), to the left = previous
+  let t = null;
+  const area = $('lightbox');
+  area.addEventListener('touchstart', (e) => { t = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null; }, { passive: true });
+  area.addEventListener('touchend', (e) => {
+    if (!t || $('lightbox-img').className !== 'fit') { t = null; return; } // zoomed: the finger scrolls
+    const dx = e.changedTouches[0].clientX - t.x, dy = e.changedTouches[0].clientY - t.y;
+    t = null;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) turnLightbox(dx > 0 ? 1 : -1);
+  }, { passive: true });
+}
+document.addEventListener('keydown', (e) => {
+  if ($('lightbox').hidden) return;
+  if (e.key === 'ArrowLeft') turnLightbox(1);
+  if (e.key === 'ArrowRight') turnLightbox(-1);
+});
+
 function closeLightbox(fromHistory = false) {
   if ($('lightbox').hidden) return false;
   $('lightbox').hidden = true;
@@ -466,12 +529,11 @@ function markerButton() {
 function answerBubble(entry) {
   const a = entry.a;
   const img = el('img', { className: 'page-img', src: API + a.imagePath, alt: `עמוד מאגרות קודש, ${a.volumeHeading}`, loading: 'lazy' });
-  img.addEventListener('click', () => openLightbox(img.src, img.alt));
+  img.addEventListener('click', () => openLightbox(a.imagePath, img.alt));
   img.addEventListener('error', () => img.replaceWith(el('div', { className: 'note', textContent: 'תמונת העמוד אינה זמינה עוד (נשמרת בשרת לזמן מוגבל). האגרות עצמן שמורות כאן למטה.' })));
 
-  return el('div', { className: 'msg them' },
-    el('h3', { textContent: `✉️ אגרות קודש · ${a.volumeHeading}` }),
-    img,
+  const more = el('details', { className: 'more' },
+    el('summary', { textContent: a.explained === false ? 'פעולות והאגרות שבעמוד' : 'הסבר, תרגום והאגרות שבעמוד' }),
     el('div', { className: 'links' },
       el('a', { href: API + a.pdfPath, target: '_blank', rel: 'noopener', textContent: '📄 PDF' }),
       shareButton(entry),
@@ -485,7 +547,14 @@ function answerBubble(entry) {
       el('summary', { textContent: a.sourceLanguage === 'yiddish' ? 'תרגום מאידיש' : 'תרגום' }),
       markable(a.translation, `T:${entry.id}`)),
     lettersPager(a),
-    el('div', { className: 'note', textContent: 'העמוד מורכב מהטקסט המקוון של אגרות הקודש, ועימודו אינו זהה לעימוד הספר המודפס. ההסבר הוא הצעה להבנה בלבד ואינו פסק הלכה; לשאלות מעשיות – יש להתייעץ עם רב.' }),
+    el('div', { className: 'note', textContent: 'העמוד מורכב מהטקסט המקוון של אגרות הקודש, ועימודו אינו זהה לעימוד הספר המודפס. ההסבר הוא הצעה להבנה בלבד ואינו פסק הלכה; לשאלות מעשיות – יש להתייעץ עם רב.' }));
+  more.open = !!entry.showMore;
+  more.addEventListener('toggle', () => { entry.showMore = more.open; save(); });
+
+  return el('div', { className: 'msg them' },
+    el('h3', { textContent: `✉️ אגרות קודש · ${a.volumeHeading}${entry.fav ? ' ★' : ''}` }),
+    img,
+    more,
     time(entry.ts));
 }
 
@@ -756,7 +825,16 @@ form.addEventListener('submit', (e) => {
   input.value = ''; input.style.height = '';
   submit(text);
 });
-input.addEventListener('input', () => { input.style.height = 'auto'; input.style.height = `${input.scrollHeight}px`; });
+const growInput = () => { input.style.height = 'auto'; input.style.height = `${input.scrollHeight}px`; };
+input.addEventListener('input', growInput);
+input.addEventListener('focus', () => setTimeout(() => { growInput(); scrollDown(); }, 300)); // after the keyboard opens
+if (window.visualViewport) {
+  // browsers that do not resize the page for the keyboard: keep the composer above it
+  visualViewport.addEventListener('resize', () => {
+    document.documentElement.style.setProperty('--vvh', `${visualViewport.height}px`);
+    if (document.activeElement === input) scrollDown();
+  });
+}
 input.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey && !matchMedia('(pointer: coarse)').matches) { e.preventDefault(); form.requestSubmit(); }
 });

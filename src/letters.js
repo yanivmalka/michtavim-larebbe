@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { loadCatalog } from './igrot/catalog.js';
-import { openBook, renderSpec, decodeSpec } from './igrot/openBook.js';
+import { openBook, renderSpec, decodeSpec, encodeSpec, turnPage } from './igrot/openBook.js';
 import { fetchLetter } from './igrot/chabadlibrary.js';
 import { layout, pngsToPdf } from './render/bookPage.js';
 import { explainAnswer } from './ai/explain.js';
@@ -25,6 +25,17 @@ export async function getPageImage(specStr, deps = {}) {
   const page = await renderSpec(volumes, spec, deps);
   pageCache.set(specStr, page.png);
   return page.png;
+}
+
+/** The neighbouring page (dir 1 = next, -1 = previous) as links, or null at the end of the volume. */
+export async function getTurnedPage(specStr, dir, deps = {}) {
+  const volumes = deps.volumes || getCatalog();
+  const spec = decodeSpec(specStr, volumes);
+  if (!spec) return undefined;
+  const next = await turnPage(volumes, spec, dir, deps);
+  if (!next) return null;
+  const s = encodeSpec(next);
+  return { spec: s, imagePath: `/api/page/${s}.png`, pdfPath: `/api/page/${s}.pdf`, volumeHeading: volumes[next.v].heading };
 }
 
 export async function getPagePdf(specStr, deps = {}) {

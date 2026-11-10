@@ -1,5 +1,5 @@
 import express from 'express';
-import { answerLetter, getPageImage, getPagePdf, getLetterPdf, getNeighborLetter } from './letters.js';
+import { answerLetter, getPageImage, getPagePdf, getLetterPdf, getNeighborLetter, getTurnedPage } from './letters.js';
 import { userMessage } from './errors.js';
 import { whatsappRouter } from './whatsapp/webhook.js';
 import { cors } from './cors.js';
@@ -54,6 +54,16 @@ export function createApp(deps = {}) {
       const png = await getPageImage(req.params.spec, deps.pages);
       if (!png) return res.sendStatus(404);
       res.type('image/png').set('Cache-Control', 'public, max-age=604800').send(png);
+    } catch (e) { next(e); }
+  });
+  // turning the page: GET /api/page/<spec>/next or /prev
+  app.get('/api/page/:spec/:dir', async (req, res, next) => {
+    try {
+      const dir = { next: 1, prev: -1 }[req.params.dir];
+      if (!dir) return res.sendStatus(400);
+      const page = await getTurnedPage(req.params.spec, dir, deps.pages);
+      if (page === undefined) return res.sendStatus(404);
+      res.json({ page });
     } catch (e) { next(e); }
   });
   app.get('/api/page/:spec.pdf', async (req, res, next) => {

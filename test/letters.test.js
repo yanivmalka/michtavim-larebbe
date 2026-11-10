@@ -183,6 +183,21 @@ test('a page is drawn from its spec alone, and bad specs are refused', async () 
   assert.equal(await getPageImage('not-a-spec', deps), null);
 });
 
+test('turning pages forward then back stays in the same volume and returns to the start', async () => {
+  const { getTurnedPage } = await import('../src/letters.js');
+  const { encodeSpec, decodeSpec } = await import('../src/igrot/openBook.js');
+  const deps = { volumes: bookVolumes, fetchLetter: fakeFetch };
+  const first = encodeSpec({ v: 0, i: 0, n: 3, s: 0 });
+  assert.equal(await getTurnedPage(first, -1, deps), null, 'no page before the first one');
+  const next = await getTurnedPage(first, 1, deps);
+  const spec = decodeSpec(next.spec, bookVolumes);
+  assert.ok(spec.i > 0 || spec.s > 0, 'the next page starts further on');
+  assert.match(next.imagePath, /^\/api\/page\/[\w-]+\.png$/);
+  const back = decodeSpec((await getTurnedPage(next.spec, -1, deps)).spec, bookVolumes);
+  assert.deepEqual([back.i, back.s], [0, 0]);
+  assert.equal(await getTurnedPage('bad', 1, deps), undefined);
+});
+
 test('WhatsApp reply text includes source, translation and explanation', () => {
   const text = formatWhatsAppReply({ title: 'אגרות קודש, כרך ג, אגרות תו, תז', keyQuote: 'q', translation: 'tr', explanation: 'ex', pdfUrl: 'https://x.test/p.pdf' });
   assert.match(text, /כרך ג, אגרות תו, תז/);

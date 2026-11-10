@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="theme-color" content="#1f3a5f">
   <title>מכתבים לרבי</title>
   <link rel="manifest" href="manifest.webmanifest">
@@ -19,17 +19,6 @@
         <h1 id="title-text">מכתבים לרבי</h1>
         <span class="sub" id="status">מענה מתוך אגרות הקודש</span>
       </div>
-      <label class="lang chat-only">
-        <span class="sr">שפת המענה</span>
-        <select id="lang" aria-label="שפת המענה">
-          <option value="">שפת המכתב</option>
-          <option value="he">עברית</option>
-          <option value="en">English</option>
-          <option value="ru">Русский</option>
-          <option value="fr">Français</option>
-          <option value="es">Español</option>
-        </select>
-      </label>
       <button id="chat-menu" class="icon-btn chat-only" title="אפשרויות השיחה" aria-label="אפשרויות השיחה">⋮</button>
     </header>
 
@@ -75,6 +64,11 @@
     <div id="lightbox" class="lightbox" hidden>
       <button type="button" id="lightbox-close" aria-label="סגירה">✕</button>
       <div class="lightbox-scroll"><img id="lightbox-img" alt=""></div>
+      <div class="lightbox-nav" id="lightbox-nav">
+        <button type="button" id="lb-prev" title="העמוד הקודם" aria-label="העמוד הקודם">→</button>
+        <span id="lb-where"></span>
+        <button type="button" id="lb-next" title="העמוד הבא" aria-label="העמוד הבא">←</button>
+      </div>
       <button type="button" id="lightbox-close-bottom" class="lightbox-close-bottom">✕ סגירה</button>
     </div>
 
@@ -83,6 +77,17 @@
     <dialog id="conv-menu" class="settings conv-menu">
       <form method="dialog">
         <h2 id="menu-title"></h2>
+<label class="lang-row">
+        <span>שפת המענה</span>
+        <select id="lang" aria-label="שפת המענה">
+          <option value="">שפת המכתב</option>
+          <option value="he">עברית</option>
+          <option value="en">English</option>
+          <option value="ru">Русский</option>
+          <option value="fr">Français</option>
+          <option value="es">Español</option>
+        </select>
+      </label>
         <button type="button" id="menu-rename">✎ שינוי שם</button>
         <button type="button" id="menu-archive">🗄 העברה לארכיון</button>
         <button type="button" id="menu-lock">🔒 נעילת השיחה</button>

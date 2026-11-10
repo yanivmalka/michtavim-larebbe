@@ -4,6 +4,6 @@
   "webDir": "www",
   "android": {
     "allowMixedContent": false,
-    "adjustMarginsForEdgeToEdge": "auto"
+    "adjustMarginsForEdgeToEdge": "disable"
   }
 }
