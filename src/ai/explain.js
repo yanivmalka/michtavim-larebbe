@@ -31,6 +31,9 @@ const SYSTEM = `אתה מסייע לאדם שכתב מכתב לרבי מליוב
 3. שמור על כבוד ודרך ארץ. ההסבר באורך של 2–4 פסקאות קצרות.
 החזר JSON בלבד לפי הסכמה.`;
 
+/** Skip the call entirely when no Claude credentials are configured. */
+const hasCredentials = () => Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN);
+
 let client;
 const getClient = () => (client ??= new Anthropic());
 
@@ -39,6 +42,7 @@ const getClient = () => (client ??= new Anthropic());
  * @param {{ letter: string, igeret: string, replyLanguage?: string, title: string }} input
  */
 export async function explainAnswer({ letter, igeret, replyLanguage, title }) {
+  if (!hasCredentials()) throw new Error('AI_NOT_CONFIGURED');
   const langLine = replyLanguage ? `שפת המענה: ${replyLanguage}.` : 'שפת המענה: השפה שבה נכתב המכתב.';
 
   const response = await getClient().beta.messages.create({

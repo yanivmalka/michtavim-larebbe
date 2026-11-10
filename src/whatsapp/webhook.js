@@ -28,7 +28,8 @@ export function formatWhatsAppReply(a) {
   const parts = [`✉️ ${a.title}`];
   if (a.keyQuote) parts.push(`«${a.keyQuote}»`);
   if (a.translation) parts.push(`*תרגום:*\n${a.translation}`);
-  parts.push(`*הסבר:*\n${a.explanation}`);
+  if (a.explanation) parts.push(`*הסבר:*\n${a.explanation}`);
+  else parts.push('התרגום וההסבר אינם זמינים כרגע.');
   if (a.pdfUrl) parts.push(`📄 PDF: ${a.pdfUrl}`);
   return parts.join('\n\n');
 }

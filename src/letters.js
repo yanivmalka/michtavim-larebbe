@@ -59,7 +59,15 @@ export async function answerLetter({ letter, replyLanguage }, deps = {}) {
   const page = await open(volumes, { random });
   const letters = page.letters.filter((l) => l.pageText.trim());
   const title = `אגרות קודש, ${page.volumeHeading}, אגרות ${letters.map((l) => l.number).join(', ')}`;
-  const ai = await explain({ letter: trimmed, igeret: pageAsText(letters), replyLanguage, title });
+  // The page itself never depends on Claude: if the explanation is unavailable
+  // (no key, no credit, outage) the answer is still returned, without it.
+  let ai;
+  try {
+    ai = { ...(await explain({ letter: trimmed, igeret: pageAsText(letters), replyLanguage, title })), explained: true };
+  } catch (err) {
+    console.warn('explanation unavailable:', err?.status || '', err?.message || err);
+    ai = { explained: false, sourceLanguage: null, replyLanguage: replyLanguage || null, translation: '', explanation: '', keyQuote: '' };
+  }
 
   const id = randomUUID();
   remember(id, { png: page.png, title, volumeHeading: page.volumeHeading, letters });

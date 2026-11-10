@@ -65,8 +65,9 @@ function renderAnswer(item) {
     img,
     el('div', { className: 'links' }, el('a', { href: API + a.pdfPath, target: '_blank', rel: 'noopener', textContent: '📄 הורדת העמוד כ-PDF' })),
     a.keyQuote && el('div', { className: 'quote', textContent: a.keyQuote }),
-    el('h4', { textContent: 'כיצד המענה מתייחס למכתב' }),
-    el('p', { textContent: a.explanation }),
+    ...(a.explained === false
+      ? [el('div', { className: 'note', textContent: 'התרגום וההסבר אינם זמינים כרגע. העמוד והאגרות שבו מוצגים במלואם.' })]
+      : [el('h4', { textContent: 'כיצד המענה מתייחס למכתב' }), el('p', { textContent: a.explanation })]),
     translation,
     letters,
     el('div', { className: 'note', textContent: 'העמוד מורכב מהטקסט המקוון של אגרות הקודש, ועימודו אינו זהה לעימוד הספר המודפס. ההסבר הוא הצעה להבנה בלבד ואינו פסק הלכה; לשאלות מעשיות – יש להתייעץ עם רב.' }),

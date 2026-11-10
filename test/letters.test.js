@@ -135,6 +135,19 @@ test('POST /api/letters returns the page, its letters and serves image and PDFs'
   }
 });
 
+test('the page is still returned when the explanation is unavailable', async () => {
+  const { answerLetter } = await import('../src/letters.js');
+  const a = await answerLetter({ letter: 'שלום וברכה' }, {
+    volumes: bookVolumes,
+    open: (vols, opts) => openBook(vols, { ...opts, random: () => 0, fetchLetter: fakeFetch }),
+    explain: async () => { throw new Error('credit balance too low'); },
+  });
+  assert.equal(a.explained, false);
+  assert.equal(a.explanation, '');
+  assert.ok(a.letters.length >= 1);
+  assert.match(a.imagePath, /page\.png$/);
+});
+
 test('WhatsApp reply text includes source, translation and explanation', () => {
   const text = formatWhatsAppReply({ title: 'אגרות קודש, כרך ג, אגרות תו, תז', keyQuote: 'q', translation: 'tr', explanation: 'ex', pdfUrl: 'https://x.test/p.pdf' });
   assert.match(text, /כרך ג, אגרות תו, תז/);
