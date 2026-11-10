@@ -1,6 +1,6 @@
 const $ = (id) => document.getElementById(id);
 const chat = $('chat'), form = $('composer'), input = $('input'), send = $('send'), lang = $('lang');
-const STORE = 'mlr-history-v1';
+const STORE = 'mlr-history-v2';
 const isNativeApp = !!window.Capacitor?.isNativePlatform?.();
 const SERVER_KEY = 'mlr-server';
 const savedServer = () => { try { return localStorage.getItem(SERVER_KEY) || ''; } catch { return ''; } };
@@ -16,7 +16,6 @@ function askServer() {
   try { localStorage.setItem(SERVER_KEY, v); } catch { /* ignore */ }
   return true;
 }
-const isMobile = matchMedia('(max-width: 600px)').matches;
 
 const store = {
   load() { try { return JSON.parse(localStorage.getItem(STORE)) || []; } catch { return []; } },
@@ -37,27 +36,38 @@ function renderMine(item) {
   chat.append(el('div', { className: 'msg me' }, el('p', { textContent: item.text }), time(item.ts)));
 }
 
+const partLabel = (l) => (l.startsOnPage && l.endsOnPage ? 'אגרת שלמה'
+  : l.startsOnPage ? 'תחילת האגרת (ממשיכה בעמוד הבא)'
+    : l.endsOnPage ? 'סוף האגרת (התחילה בעמוד הקודם)' : 'קטע מהאגרת');
+
 function renderAnswer(item) {
   const a = item.answer;
-  const pdfLink = el('a', { href: API + a.pdfPath, target: '_blank', rel: 'noopener', textContent: '📄 פתיחת ה-PDF' });
-  const links = el('div', { className: 'links' }, pdfLink,
-    a.viewerUrl && el('a', { href: a.viewerUrl, target: '_blank', rel: 'noopener', textContent: '🔗 האגרת בספריית ליובאוויטש' }));
-  const frame = !isMobile && !isNativeApp && item.fresh
-    ? el('iframe', { className: 'pdf', src: API + a.pdfPath, title: a.title, loading: 'lazy' })
-    : null;
+  const img = el('img', { className: 'page-img', src: API + a.imagePath, alt: `עמוד מאגרות קודש, ${a.volumeHeading}`, loading: 'lazy' });
+  img.addEventListener('click', () => window.open(API + a.imagePath, '_blank', 'noopener'));
+  img.addEventListener('error', () => img.replaceWith(el('div', { className: 'note', textContent: 'תמונת העמוד אינה זמינה עוד (נשמרת בשרת לזמן מוגבל).' })));
+
   const translation = a.translation
     ? el('details', { open: true }, el('summary', { textContent: a.sourceLanguage === 'yiddish' ? 'תרגום מאידיש' : 'תרגום' }), el('p', { textContent: a.translation }))
     : null;
-  const original = el('details', {}, el('summary', { textContent: 'נוסח המקור' }), el('p', { textContent: a.original }));
+
+  const letters = el('div', { className: 'letters' }, el('h4', { textContent: 'האגרות בעמוד' }),
+    ...(a.letters || []).map((l) => el('div', { className: 'letter' },
+      el('div', { className: 'letter-head' }, el('b', { textContent: `אגרת ${l.number}` }), el('span', { textContent: ` · ${partLabel(l)}` })),
+      el('details', {}, el('summary', { textContent: 'הצגת האגרת המלאה' }), el('p', { textContent: l.fullText })),
+      el('div', { className: 'links' },
+        el('a', { href: API + l.pdfPath, target: '_blank', rel: 'noopener', textContent: '📄 PDF של האגרת' }),
+        el('a', { href: l.viewerUrl, target: '_blank', rel: 'noopener', textContent: '🔗 במקור' })))));
 
   chat.append(el('div', { className: 'msg them' },
-    el('h3', { textContent: `✉️ אגרות קודש · ${a.volumeHeading} · אגרת ${a.letterNumber}` }),
-    frame, links,
+    el('h3', { textContent: `✉️ אגרות קודש · ${a.volumeHeading}` }),
+    img,
+    el('div', { className: 'links' }, el('a', { href: API + a.pdfPath, target: '_blank', rel: 'noopener', textContent: '📄 הורדת העמוד כ-PDF' })),
     a.keyQuote && el('div', { className: 'quote', textContent: a.keyQuote }),
     el('h4', { textContent: 'כיצד המענה מתייחס למכתב' }),
     el('p', { textContent: a.explanation }),
-    translation, original,
-    el('div', { className: 'note', textContent: 'ההסבר הוא הצעה להבנה בלבד ואינו פסק הלכה. לשאלות מעשיות – יש להתייעץ עם רב.' }),
+    translation,
+    letters,
+    el('div', { className: 'note', textContent: 'העמוד מורכב מהטקסט המקוון של אגרות הקודש, ועימודו אינו זהה לעימוד הספר המודפס. ההסבר הוא הצעה להבנה בלבד ואינו פסק הלכה; לשאלות מעשיות – יש להתייעץ עם רב.' }),
     time(item.ts)));
 }
 
@@ -86,7 +96,7 @@ async function submit(text) {
     typing.remove();
     if (!res.ok) return renderError(data.message || 'אירעה שגיאה. נסו שוב.');
     const item = { answer: data, ts: Date.now() };
-    history.push(item); renderAnswer({ ...item, fresh: true });
+    history.push(item); renderAnswer(item);
   } catch {
     typing.remove(); renderError('אין חיבור לשרת. בדקו את החיבור ונסו שוב.');
   } finally {
@@ -104,7 +114,7 @@ form.addEventListener('submit', (e) => {
 });
 input.addEventListener('input', () => { input.style.height = 'auto'; input.style.height = `${input.scrollHeight}px`; });
 input.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey && !isMobile) { e.preventDefault(); form.requestSubmit(); }
+  if (e.key === 'Enter' && !e.shiftKey && !matchMedia('(pointer: coarse)').matches) { e.preventDefault(); form.requestSubmit(); }
 });
 lang.addEventListener('change', () => { try { localStorage.setItem('mlr-lang', lang.value); } catch { /* ignore */ } });
 $('clear').addEventListener('click', () => {

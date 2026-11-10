@@ -25,11 +25,11 @@ function validSignature(req) {
 }
 
 export function formatWhatsAppReply(a) {
-  const parts = [`✉️ מענה מאגרות קודש – ${a.volumeHeading}, אגרת ${a.letterNumber}`];
+  const parts = [`✉️ ${a.title}`];
   if (a.keyQuote) parts.push(`«${a.keyQuote}»`);
   if (a.translation) parts.push(`*תרגום:*\n${a.translation}`);
   parts.push(`*הסבר:*\n${a.explanation}`);
-  if (a.viewerUrl) parts.push(a.viewerUrl);
+  if (a.pdfUrl) parts.push(`📄 PDF: ${a.pdfUrl}`);
   return parts.join('\n\n');
 }
 
@@ -41,14 +41,10 @@ async function handleMessage(msg) {
   try {
     const a = await answerLetter({ letter: msg.text.body });
     await send(msg.from, {
-      type: 'document',
-      document: {
-        link: `${config.publicBaseUrl}${a.pdfPath}`,
-        filename: `igrot-kodesh-${a.volume}-${a.id.slice(0, 8)}.pdf`,
-        caption: a.title,
-      },
+      type: 'image',
+      image: { link: `${config.publicBaseUrl}${a.imagePath}`, caption: a.title },
     });
-    await sendText(msg.from, formatWhatsAppReply(a));
+    await sendText(msg.from, formatWhatsAppReply({ ...a, pdfUrl: `${config.publicBaseUrl}${a.pdfPath}` }));
   } catch (err) {
     console.error(err);
     await sendText(msg.from, userMessage(err).message);

@@ -27,13 +27,17 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
 .msg { max-width: min(85%, 640px); padding: 8px 10px 4px; border-radius: 8px; line-height: 1.55;
   white-space: pre-wrap; overflow-wrap: anywhere; box-shadow: 0 1px .5px rgba(0,0,0,.13); }
 .msg.me { align-self: flex-start; background: var(--me); border-start-start-radius: 0; }
-.msg.them { width: min(85%, 640px); align-self: flex-end; background: var(--them); border-start-end-radius: 0; white-space: normal; }
+.msg.them { width: min(92%, 560px); align-self: flex-end; background: var(--them); border-start-end-radius: 0; white-space: normal; }
 .msg .time { display: block; text-align: left; font-size: .7rem; color: var(--muted); margin-top: 2px; }
 .msg h3 { margin: 4px 0 6px; font-size: .95rem; color: var(--accent); }
 .msg h4 { margin: 10px 0 4px; font-size: .85rem; color: var(--muted); }
 .msg p { margin: 0; white-space: pre-wrap; }
 .quote { border-inline-start: 3px solid var(--accent); padding-inline-start: 8px; font-style: italic; margin: 6px 0; }
-.pdf { width: 100%; height: 420px; border: 1px solid var(--border); border-radius: 6px; background: #fff; }
+.page-img { display: block; width: 100%; height: auto; border-radius: 4px; cursor: zoom-in; margin: 4px 0 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.25); background: #fbf6ea; }
+.letters { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 4px; }
+.letter { padding: 6px 0; border-bottom: 1px dashed var(--border); }
+.letter-head span { color: var(--muted); font-size: .85rem; }
 .links { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; }
 .links a { color: var(--accent); font-size: .85rem; }
 details summary { cursor: pointer; color: var(--muted); font-size: .85rem; margin-top: 8px; }
@@ -46,4 +50,4 @@ details summary { cursor: pointer; color: var(--muted); font-size: .85rem; margi
 .send { width: 46px; height: 46px; border-radius: 50%; border: 0; background: var(--accent);
   color: #fff; font-size: 1.1rem; cursor: pointer; transform: scaleX(-1); }
 .send:disabled { opacity: .5; }
-@media (max-width: 600px) { .pdf { height: 320px; } .msg { max-width: 92%; } .msg.them { width: auto; } }
+@media (max-width: 600px) { .msg { max-width: 92%; } .msg.them { width: auto; } }

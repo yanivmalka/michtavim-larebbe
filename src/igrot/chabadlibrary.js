@@ -33,45 +33,64 @@ const decode = (s) => s
   .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
   .replace(/&(\w+);/g, (m, n) => ENTITIES[n] ?? m);
 
+const clean = (html) => decode(html.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, ''))
+  .replace(/\r/g, '').replace(/[ \t]+/g, ' ').replace(/ *\n */g, '\n').replace(/\n{2,}/g, '\n').trim();
+
+// Two markup generations exist on the site: igroys_* classes (volumes 1–26) and
+// <p class=bodytext><div class=…> (later volumes).
+function kindOf(cls) {
+  if (/bsd|^bh$/.test(cls)) return 'date';
+  if (/city|brooklyn/.test(cls)) return 'city';
+  if (/address|lichvod/.test(cls)) return 'address';
+  if (/signature/.test(cls)) return 'signature';
+  if (/comment(?!_number)/.test(cls)) return 'note';
+  return 'text';
+}
+
 /**
  * Turns the letter HTML into blocks: { kind, text } where kind is one of
- * date | city | address | text | signature | note | footnote.
+ * date | city | address | text | signature | note (editorial note / footnote).
  */
-export function parseLetterHtml(html) {
+export function parseLetterHtml(html, haoros = '') {
   const blocks = [];
-  let pages = [];
+  const pages = [];
+  const flat = html.replace(/<p\b[^>]*>\s*(<div\b[^>]*>[\s\S]*?<\/div>)\s*<\/p>/gi, '$1');
   const re = /<(p|div|h\d)\b([^>]*)>([\s\S]*?)<\/\1>/gi;
   let m;
-  let inFootnotes = false;
-  while ((m = re.exec(html))) {
+  let inNotes = false;
+  while ((m = re.exec(flat))) {
     const cls = (m[2].match(/class=["']?([\w-]+)/) || [])[1] || '';
-    const text = decode(m[3].replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, ''))
-      .replace(/\r/g, '').replace(/[ \t]+/g, ' ').replace(/ *\n */g, '\n').replace(/\n{2,}/g, '\n').trim();
+    const text = clean(m[3]);
     if (!text) continue;
     if (cls === 'pagenumber') { pages.push(text); continue; }
-    if (/comment_number/.test(cls)) { inFootnotes = true; continue; }
-    const kind = inFootnotes ? 'footnote'
-      : /bsd/.test(cls) ? 'date'
-        : /city/.test(cls) ? 'city'
-          : /address/.test(cls) ? 'address'
-            : /signature/.test(cls) ? 'signature'
-              : 'text';
-    blocks.push({ kind, text });
+    if (/comment_number/.test(cls)) { inNotes = true; continue; }
+    blocks.push({ kind: inNotes ? 'note' : kindOf(cls), text });
+  }
+  const notes = haoros.replace(/<div class=oysbehaoro>[\s\S]*?<\/div>/gi, '');
+  for (const [, inner] of notes.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/gi)) {
+    const text = clean(inner);
+    if (text) blocks.push({ kind: 'note', text });
   }
   return { blocks, pages };
 }
 
+export const bodyOf = (blocks) => blocks.filter((b) => b.kind !== 'note');
+
 export const blocksToText = (blocks) => blocks
-  .map((b) => (b.kind === 'footnote' ? `[הערה] ${b.text}` : b.text)).join('\n\n');
+  .map((b) => (b.kind === 'note' ? `[הערה] ${b.text}` : b.text)).join('\n\n');
+
+const cache = new Map();
+const CACHE_MAX = 3000;
 
 /** Fetches one letter. */
 export async function fetchLetter(id, fetchFn) {
+  if (!fetchFn && cache.has(id)) return cache.get(id);
   const c = await main(id, fetchFn);
   if (c.type !== 'page' || typeof c.data?.text !== 'string') throw new Error('SOURCE_BAD_RESPONSE');
-  const { blocks, pages } = parseLetterHtml(c.data.text);
+  const { blocks, pages } = parseLetterHtml(c.data.text, c.data.haoros || '');
   if (!blocks.length) throw new Error('SOURCE_EMPTY_LETTER');
   const tree = c.tree || [];
-  return {
+  const letter = {
     id,
     volumeHeading: tree.at(-2)?.heading || '',
     letterHeading: tree.at(-1)?.heading || '',
@@ -80,4 +99,9 @@ export async function fetchLetter(id, fetchFn) {
     text: blocksToText(blocks),
     viewerUrl: viewerUrl(id),
   };
+  if (!fetchFn) {
+    cache.set(id, letter);
+    if (cache.size > CACHE_MAX) cache.delete(cache.keys().next().value);
+  }
+  return letter;
 }

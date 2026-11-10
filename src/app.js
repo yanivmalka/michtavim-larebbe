@@ -1,5 +1,5 @@
 import express from 'express';
-import { answerLetter, getAnswerPdf } from './letters.js';
+import { answerLetter, getPagePng, getPagePdf, getLetterPdf } from './letters.js';
 import { userMessage } from './errors.js';
 import { whatsappRouter } from './whatsapp/webhook.js';
 import { cors } from './cors.js';
@@ -26,10 +26,21 @@ export function createApp(deps = {}) {
     }
   });
 
-  app.get('/api/answers/:id.pdf', (req, res) => {
-    const pdf = getAnswerPdf(req.params.id);
+  app.get('/api/answers/:id/page.png', (req, res) => {
+    const png = getPagePng(req.params.id);
+    if (!png) return res.sendStatus(404);
+    res.type('image/png').set('Cache-Control', 'private, max-age=86400').send(png);
+  });
+
+  const sendPdf = (res, pdf, name) => {
     if (!pdf) return res.sendStatus(404);
-    res.type('application/pdf').set('Content-Disposition', 'inline').send(pdf);
+    res.type('application/pdf').set('Content-Disposition', `inline; filename="${name}"`).send(pdf);
+  };
+  app.get('/api/answers/:id/page.pdf', async (req, res, next) => {
+    try { sendPdf(res, await getPagePdf(req.params.id), 'igrot-kodesh-page.pdf'); } catch (e) { next(e); }
+  });
+  app.get('/api/answers/:id/letters/:n.pdf', async (req, res, next) => {
+    try { sendPdf(res, await getLetterPdf(req.params.id, Number(req.params.n)), 'igrot-kodesh-letter.pdf'); } catch (e) { next(e); }
   });
 
   app.get('/healthz', (_req, res) => res.json({ ok: true }));

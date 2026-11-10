@@ -15,18 +15,19 @@ const jsonSchema = {
   additionalProperties: false,
   required: ['sourceLanguage', 'replyLanguage', 'translation', 'explanation', 'keyQuote'],
   properties: {
-    sourceLanguage: { type: 'string', enum: ['hebrew', 'yiddish', 'english', 'russian', 'other'], description: 'השפה העיקרית של האגרת' },
+    sourceLanguage: { type: 'string', enum: ['hebrew', 'yiddish', 'english', 'russian', 'other'], description: 'השפה העיקרית של העמוד' },
     replyLanguage: { type: 'string', description: 'קוד השפה (ISO 639-1) שבה נכתבו translation, explanation ו-keyQuote' },
-    translation: { type: 'string', description: 'תרגום מלא של האגרת לשפת המענה. אם האגרת כבר בשפת המענה – מחרוזת ריקה' },
-    explanation: { type: 'string', description: 'הסבר כיצד האגרת עשויה להתייחס למה שנכתב במכתב' },
-    keyQuote: { type: 'string', description: 'משפט קצר מתוך האגרת (בשפת המענה) שהוא לב המענה' },
+    translation: { type: 'string', description: 'תרגום מלא של כל מה שבעמוד לשפת המענה, אגרת אחר אגרת, עם כותרת "אגרת <מספר>" לפני כל אחת. אם הכול כבר בשפת המענה – מחרוזת ריקה' },
+    explanation: { type: 'string', description: 'הסבר כיצד מה שבעמוד עשוי להתייחס למה שנכתב במכתב' },
+    keyQuote: { type: 'string', description: 'משפט קצר מתוך העמוד (בשפת המענה) שהוא לב המענה' },
   },
 };
 
-const SYSTEM = `אתה מסייע לאדם שכתב מכתב לרבי מליובאוויטש. בתשובה נפתחה עבורו באקראי אגרת מתוך "אגרות קודש", והיא מצורפת.
+const SYSTEM = `אתה מסייע לאדם שכתב מכתב לרבי מליובאוויטש. כמנהג, המכתב הונח בכרך של "אגרות קודש" והספר נפתח באקראי; העמוד שנפתח מצורף.
+בעמוד יכולות להופיע כמה אגרות: סוף אגרת שהתחילה בעמוד הקודם, אגרות שלמות, ותחילת אגרת שממשיכה בעמוד הבא. כל מה שבעמוד הוא חלק מהמענה.
 המשימה:
-1. אם האגרת אינה בשפת המענה (בפרט כשהיא באידיש) – תרגם אותה במלואה, בנאמנות ובלשון מכובדת. ראשי תיבות – פתח אותם בתרגום.
-2. כתוב הסבר חם, ענייני ולא מפריז: אילו נקודות באגרת עשויות להתייחס למה שהכותב שיתף, ואיזה כיוון מעשי עולה מהן. התבסס רק על מה שכתוב באגרת, ואם הקשר אינו ישיר – אמור זאת בפשטות והצע איזו נקודה כללית אפשר לקחת. אל תציג פרשנות כנבואה ואל תפסוק הלכה; בשאלה הלכתית, רפואית או משפטית – הפנה בעדינות לרב, לרופא או לאיש מקצוע.
+1. אם העמוד אינו בשפת המענה (בפרט כשהוא באידיש) – תרגם את כל מה שבו, בנאמנות ובלשון מכובדת. ראשי תיבות – פתח אותם בתרגום.
+2. כתוב הסבר חם, ענייני ולא מפריז: אילו נקודות בעמוד – מכל אחת מהאגרות שבו – עשויות להתייחס למה שהכותב שיתף, ואיזה כיוון מעשי עולה מהן. התבסס רק על מה שכתוב בעמוד, ואם הקשר אינו ישיר – אמור זאת בפשטות והצע איזו נקודה כללית אפשר לקחת. אל תציג פרשנות כנבואה ואל תפסוק הלכה; בשאלה הלכתית, רפואית או משפטית – הפנה בעדינות לרב, לרופא או לאיש מקצוע.
 3. שמור על כבוד ודרך ארץ. ההסבר באורך של 2–4 פסקאות קצרות.
 החזר JSON בלבד לפי הסכמה.`;
 
@@ -34,7 +35,7 @@ let client;
 const getClient = () => (client ??= new Anthropic());
 
 /**
- * Translates the letter when needed and explains how it may answer what was written.
+ * Translates the opened page when needed and explains how it may answer what was written.
  * @param {{ letter: string, igeret: string, replyLanguage?: string, title: string }} input
  */
 export async function explainAnswer({ letter, igeret, replyLanguage, title }) {
