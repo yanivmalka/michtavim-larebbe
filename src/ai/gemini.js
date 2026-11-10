@@ -2,11 +2,44 @@
 import { GoogleGenAI } from '@google/genai';
 import { SYSTEM, FOLLOWUP_SYSTEM, jsonSchema, AnswerSchema } from './explain.js';
 
-const MODEL = () => process.env.GEMINI_MODEL || 'gemini-flash-latest';
 export const geminiAvailable = () => Boolean(process.env.GEMINI_API_KEY);
 
+/**
+ * Models to try, in order. On the free tier a model is often "experiencing high demand"
+ * (503) or out of quota (429), so the next one is tried instead of waiting.
+ * GEMINI_MODELS overrides the list (comma-separated); GEMINI_MODEL puts one model first.
+ */
+export function modelChain() {
+  const list = (process.env.GEMINI_MODELS || 'gemini-flash-latest,gemini-flash-lite-latest,gemini-2.5-flash,gemini-2.5-flash-lite')
+    .split(',').map((m) => m.trim()).filter(Boolean);
+  const first = process.env.GEMINI_MODEL;
+  return first ? [first, ...list.filter((m) => m !== first)] : list;
+}
+
 let client;
-const getClient = () => (client ??= new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }));
+const getClient = () => (client ??= new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
+  // one attempt of at most 40 s per model – the fallback below replaces the SDK's long retries
+  httpOptions: { timeout: 40000, retryOptions: { attempts: 1 } },
+}));
+
+const RETRYABLE = new Set([404, 429, 500, 503, 504]);
+/** Runs `call(model)` on each model in turn until one answers. */
+export async function withFallback(call, models = modelChain()) {
+  let lastError;
+  for (const model of models) {
+    try {
+      return await call(model);
+    } catch (err) {
+      lastError = err;
+      const status = Number(err?.status);
+      const timedOut = err?.name === 'AbortError' || /timeout|timed out|aborted/i.test(err?.message || '');
+      if (!RETRYABLE.has(status) && !timedOut) throw err;
+      console.warn(`gemini: ${model} unavailable (${status || 'timeout'}), trying the next model`);
+    }
+  }
+  throw lastError;
+}
 
 // Gemini's schema dialect has no additionalProperties
 const { additionalProperties, ...schema } = jsonSchema;
@@ -14,11 +47,11 @@ const { additionalProperties, ...schema } = jsonSchema;
 export async function explainWithGemini({ letter, igeret, replyLanguage, title }) {
   if (!geminiAvailable()) throw new Error('AI_NOT_CONFIGURED');
   const langLine = replyLanguage ? `שפת המענה: ${replyLanguage}.` : 'שפת המענה: השפה שבה נכתב המכתב.';
-  const response = await getClient().models.generateContent({
-    model: MODEL(),
+  const response = await withFallback((model) => getClient().models.generateContent({
+    model,
     contents: [{ role: 'user', parts: [{ text: `${title}:\n"""\n${igeret}\n"""\n\n${langLine}\n\nהמכתב שנכתב לרבי:\n"""\n${letter}\n"""` }] }],
     config: { systemInstruction: SYSTEM, responseMimeType: 'application/json', responseJsonSchema: schema, temperature: 0.4 },
-  });
+  }));
   const text = response.text;
   if (!text) throw new Error(response.promptFeedback?.blockReason ? 'AI_REFUSED' : 'AI_EMPTY');
   return AnswerSchema.parse(JSON.parse(text));
@@ -32,9 +65,9 @@ export async function followUpWithGemini({ context, history, question }) {
   ];
   for (const h of history) contents.push({ role: 'user', parts: [{ text: h.q }] }, { role: 'model', parts: [{ text: h.a }] });
   contents.push({ role: 'user', parts: [{ text: question }] });
-  const response = await getClient().models.generateContent({
-    model: MODEL(), contents, config: { systemInstruction: FOLLOWUP_SYSTEM, temperature: 0.5 },
-  });
+  const response = await withFallback((model) => getClient().models.generateContent({
+    model, contents, config: { systemInstruction: FOLLOWUP_SYSTEM, temperature: 0.5 },
+  }));
   if (!response.text) throw new Error(response.promptFeedback?.blockReason ? 'AI_REFUSED' : 'AI_EMPTY');
   return response.text.trim();
 }

@@ -30,8 +30,10 @@ export function userMessage(err) {
     const hint = providerStatus === 400 && /api key|API_KEY/i.test(detail) ? 'מפתח ה-API של Gemini אינו תקין. '
       : providerStatus === 403 ? 'אין הרשאה לשירות ה-AI (בדקו את המפתח וההגדרות). '
         : providerStatus === 404 ? 'מודל ה-AI שהוגדר לא נמצא. '
-          : providerStatus === 429 ? 'מכסת הבקשות החינמית נוצלה זמנית. ' : '';
-    return { status: providerStatus === 429 ? 429 : 502, code: 'AI_PROVIDER_ERROR', message: `${hint}שגיאה משירות ה-AI (${providerStatus}): ${detail}` };
+          : providerStatus === 429 ? 'מכסת הבקשות החינמית נוצלה זמנית. '
+            : providerStatus === 503 ? 'שירות ה-AI עמוס כרגע (בכל המודלים שנוסו). נסו שוב בעוד כמה דקות. ' : '';
+    const message = hint && providerStatus >= 429 ? hint.trim() : `${hint}שגיאה משירות ה-AI (${providerStatus}): ${detail}`;
+    return { status: providerStatus === 429 ? 429 : 502, code: 'AI_PROVIDER_ERROR', message };
   }
   return { status: 500, code: 'INTERNAL', message: 'אירעה שגיאה. נסו שוב בעוד רגע.' };
 }
