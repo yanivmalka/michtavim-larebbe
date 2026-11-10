@@ -32,12 +32,37 @@
       <button id="clear" class="icon-btn" title="ניקוי השיחה" aria-label="ניקוי השיחה">🗑</button>
     </header>
 
+    <div id="update-banner" class="update-banner" hidden>
+      <span id="update-text"></span>
+      <button type="button" id="update-now">עדכון</button>
+    </div>
+
     <main id="chat" class="chat" aria-live="polite">
       <div class="intro">
         כתבו לרבי כפי שכותבים מכתב – מה על הלב, בקשה לברכה או שאלה.<br>
         בתשובה ייפתח עמוד מאגרות הקודש – עם כל האגרות שבו, תרגום (כשהמענה באידיש) והסבר.
       </div>
     </main>
+
+    <dialog id="settings" class="settings">
+      <form method="dialog">
+        <h2>הגדרות</h2>
+        <label>כתובת השרת
+          <input id="server-input" type="url" placeholder="https://example.com" dir="ltr">
+        </label>
+        <button type="button" id="server-save">שמירה</button>
+        <hr>
+        <div class="version-row">
+          <span>גרסת האפליקציה: <b id="app-version" dir="ltr">–</b></span>
+        </div>
+        <label class="check"><input type="checkbox" id="auto-check" checked> בדיקת עדכונים אוטומטית בפתיחה</label>
+        <button type="button" id="check-update">בדיקת עדכונים</button>
+        <p id="update-status" class="status" aria-live="polite"></p>
+        <button type="button" id="install-update" hidden>הורדה והתקנה</button>
+        <progress id="update-progress" max="100" value="0" hidden></progress>
+        <div class="dialog-actions"><button value="close">סגירה</button></div>
+      </form>
+    </dialog>
 
     <form id="composer" class="composer">
       <textarea id="input" rows="1" placeholder="כתבו את המכתב…" maxlength="8000" required></textarea>

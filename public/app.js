@@ -7,14 +7,16 @@ const savedServer = () => { try { return localStorage.getItem(SERVER_KEY) || '';
 let API = (savedServer() || window.MLR_API_BASE || '').replace(/\/$/, '');
 
 /** In the Android app the server address can be set (or changed) by the user. */
-function askServer() {
-  const value = prompt('כתובת השרת (לדוגמה https://example.com):', API);
-  if (value === null) return false;
-  const v = value.trim().replace(/\/$/, '');
+function setServer(value) {
+  const v = String(value || '').trim().replace(/\/$/, '');
   if (!/^https?:\/\/[^\s]+$/.test(v)) { alert('כתובת לא תקינה'); return false; }
   API = v;
   try { localStorage.setItem(SERVER_KEY, v); } catch { /* ignore */ }
   return true;
+}
+function askServer() {
+  const value = prompt('כתובת השרת (לדוגמה https://example.com):', API);
+  return value !== null && setServer(value);
 }
 
 const store = {
@@ -124,10 +126,85 @@ $('clear').addEventListener('click', () => {
 });
 
 renderAll();
-if (isNativeApp) {
-  const btn = el('button', { className: 'icon-btn', title: 'כתובת השרת', textContent: '⚙' });
-  btn.setAttribute('aria-label', 'כתובת השרת');
-  btn.addEventListener('click', askServer);
-  $('clear').before(btn);
-}
+if (isNativeApp) setupNativeApp();
 if (!isNativeApp && 'serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+
+// ---------- Android app: settings and updates ----------
+async function setupNativeApp() {
+  const Cap = window.Capacitor;
+  const AppInfo = Cap.registerPlugin('App');
+  const Updater = Cap.registerPlugin('AppUpdater');
+  const dialog = $('settings');
+  const status = (t) => { $('update-status').textContent = t; };
+  let current = { build: 0, version: '' };
+  let latest = null;
+
+  try {
+    const info = await AppInfo.getInfo();
+    current = { build: Number(info.build) || 0, version: info.version };
+    $('app-version').textContent = info.version;
+  } catch { /* plugin missing – keep defaults */ }
+
+  const btn = el('button', { className: 'icon-btn', title: 'הגדרות ועדכונים', textContent: '⚙' });
+  btn.setAttribute('aria-label', 'הגדרות ועדכונים');
+  btn.addEventListener('click', () => { $('server-input').value = API; dialog.showModal(); });
+  $('clear').before(btn);
+  $('server-save').addEventListener('click', () => { if (setServer($('server-input').value)) status('הכתובת נשמרה.'); });
+
+  try { $('auto-check').checked = localStorage.getItem('mlr-auto-update') !== 'off'; } catch { /* ignore */ }
+  $('auto-check').addEventListener('change', (e) => {
+    try { localStorage.setItem('mlr-auto-update', e.target.checked ? 'on' : 'off'); } catch { /* ignore */ }
+  });
+
+  async function check({ quiet = false } = {}) {
+    if (!API) { if (!quiet) status('יש להגדיר קודם את כתובת השרת.'); return; }
+    if (!quiet) status('בודק…');
+    try {
+      const res = await fetch(`${API}/api/app/latest`, { cache: 'no-store' });
+      const v = await res.json();
+      if (!v.available) { if (!quiet) status('לא נמצאה גרסה בשרת.'); return; }
+      if (v.versionCode > current.build) {
+        latest = v;
+        status(`גרסה חדשה זמינה: ${v.versionName} (מותקנת: ${current.version || current.build}).`);
+        $('install-update').hidden = false;
+        $('update-text').textContent = `גרסה חדשה ${v.versionName} זמינה`;
+        $('update-banner').hidden = false;
+      } else if (!quiet) {
+        status(`האפליקציה מעודכנת (${current.version}).`);
+        $('install-update').hidden = true;
+      }
+    } catch {
+      if (!quiet) status('לא ניתן היה לבדוק עדכונים. בדקו את החיבור ואת כתובת השרת.');
+    }
+  }
+
+  async function install() {
+    if (!latest) return;
+    const { allowed } = await Updater.canInstall();
+    if (!allowed) {
+      status('יש לאשר לאפליקציה להתקין עדכונים, ואז ללחוץ שוב על "הורדה והתקנה".');
+      await Updater.openInstallSettings();
+      return;
+    }
+    const bar = $('update-progress');
+    bar.hidden = false; bar.value = 0;
+    $('install-update').disabled = true;
+    status('מוריד את העדכון…');
+    const sub = await Updater.addListener('progress', ({ percent }) => { bar.value = percent; status(`מוריד… ${percent}%`); });
+    try {
+      await Updater.downloadAndInstall({ url: `${API}${latest.downloadPath}` });
+      status('ההורדה הסתיימה – אשרו את ההתקנה בחלון שנפתח.');
+    } catch (e) {
+      status(e?.code === 'INSTALL_NOT_ALLOWED' ? 'יש לאשר התקנת עדכונים להגדרות האפליקציה.' : 'ההורדה נכשלה. נסו שוב.');
+    } finally {
+      sub.remove();
+      $('install-update').disabled = false;
+    }
+  }
+
+  $('check-update').addEventListener('click', () => check());
+  $('install-update').addEventListener('click', install);
+  $('update-now').addEventListener('click', () => { $('server-input').value = API; dialog.showModal(); install(); });
+
+  if ($('auto-check').checked) check({ quiet: true });
+}

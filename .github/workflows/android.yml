@@ -5,9 +5,15 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write # publish the signed APK as a GitHub Release
+
 jobs:
   apk:
     runs-on: ubuntu-latest
+    env:
+      APP_VERSION_CODE: ${{ github.run_number }}
+      HAS_SIGNING_KEY: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,10 +31,44 @@ jobs:
         env:
           # Settings → Secrets and variables → Actions → Variables → API_BASE_URL
           API_BASE_URL: ${{ vars.API_BASE_URL }}
+
+      # --- with the permanent signing key: signed release, published for in-app updates ---
+      - name: Build signed APK
+        if: env.HAS_SIGNING_KEY == 'true'
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/release.jks"
+          export ANDROID_KEYSTORE_FILE="$RUNNER_TEMP/release.jks"
+          ./gradlew assembleRelease --no-daemon
+          cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/michtavim-larebbe-1.0.${APP_VERSION_CODE}.apk"
+      - name: Publish release
+        if: env.HAS_SIGNING_KEY == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NOTES: ${{ github.event.head_commit.message }}
+        run: |
+          gh release create "app-v${APP_VERSION_CODE}" \
+            "$RUNNER_TEMP/michtavim-larebbe-1.0.${APP_VERSION_CODE}.apk" \
+            --title "גרסה 1.0.${APP_VERSION_CODE}" \
+            --notes "${NOTES:-עדכון}" \
+            --target "${GITHUB_SHA}"
+      - uses: actions/upload-artifact@v4
+        if: env.HAS_SIGNING_KEY == 'true'
+        with:
+          name: michtavim-larebbe-apk
+          path: ${{ runner.temp }}/michtavim-larebbe-1.0.${{ github.run_number }}.apk
+
+      # --- without it: a debug APK only (cannot update an installed app) ---
       - name: Build debug APK
+        if: env.HAS_SIGNING_KEY != 'true'
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
+        if: env.HAS_SIGNING_KEY != 'true'
         with:
           name: michtavim-larebbe-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk

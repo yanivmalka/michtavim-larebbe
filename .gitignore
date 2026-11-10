@@ -4,3 +4,6 @@ data/pdfs/*.pdf
 .cache/
 www/
 dist/
+signing/
+*.jks
+*.keystore

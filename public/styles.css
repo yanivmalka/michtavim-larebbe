@@ -51,3 +51,21 @@ details summary { cursor: pointer; color: var(--muted); font-size: .85rem; margi
   color: #fff; font-size: 1.1rem; cursor: pointer; transform: scaleX(-1); }
 .send:disabled { opacity: .5; }
 @media (max-width: 600px) { .msg { max-width: 92%; } .msg.them { width: auto; } }
+.update-banner { display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  background: #fff4c2; color: #3d3200; padding: 8px 12px; font-size: .9rem; }
+.update-banner[hidden] { display: none; }
+.update-banner button, .settings button { font: inherit; border: 0; border-radius: 6px; padding: 6px 12px;
+  background: var(--accent); color: #fff; cursor: pointer; }
+.settings { border: 0; border-radius: 12px; padding: 16px; width: min(92vw, 420px);
+  background: var(--them); color: var(--text); }
+.settings::backdrop { background: rgba(0,0,0,.45); }
+.settings h2 { margin: 0 0 12px; font-size: 1.1rem; }
+.settings label { display: block; margin: 8px 0; }
+.settings input[type=url] { width: 100%; margin-top: 4px; padding: 8px; font: inherit; border: 1px solid var(--border);
+  border-radius: 6px; background: var(--input); color: var(--text); }
+.settings .check { display: flex; gap: 6px; align-items: center; }
+.settings .status { min-height: 1.2em; color: var(--muted); font-size: .9rem; }
+.settings progress { width: 100%; }
+.settings hr { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
+.dialog-actions { text-align: left; margin-top: 10px; }
+.dialog-actions button { background: transparent; color: var(--accent); }

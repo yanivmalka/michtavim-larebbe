@@ -5,6 +5,7 @@ import { whatsappRouter } from './whatsapp/webhook.js';
 import { cors } from './cors.js';
 import { lengthStats } from './igrot/lengths.js';
 import { loadCatalog } from './igrot/catalog.js';
+import { appUpdateRouter } from './appUpdate.js';
 
 export function createApp(deps = {}) {
   const app = express();
@@ -44,6 +45,8 @@ export function createApp(deps = {}) {
   app.get('/api/answers/:id/letters/:n.pdf', async (req, res, next) => {
     try { sendPdf(res, await getLetterPdf(req.params.id, Number(req.params.n)), 'igrot-kodesh-letter.pdf'); } catch (e) { next(e); }
   });
+
+  app.use('/api/app', appUpdateRouter(deps.appUpdate));
 
   app.get('/healthz', (_req, res) => res.json({ ok: true }));
   app.get('/api/stats', (_req, res) => {

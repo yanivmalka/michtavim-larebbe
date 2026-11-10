@@ -100,6 +100,19 @@ assets/fonts/         גופן Frank Ruhl Libre (OFL)
 
 **בנייה אוטומטית ב-GitHub:** בכל push ל-`main` רץ ה-workflow `Android APK` ומעלה את הקובץ `app-debug.apk` ל-Artifacts של הריצה (לשונית Actions). את כתובת השרת מגדירים ב-Settings ← Secrets and variables ← Actions ← Variables, במשתנה `API_BASE_URL`.
 
+**עדכון אוטומטי מתוך האפליקציה:** בכל push ל-`main`, אם מוגדר מפתח החתימה הקבוע, ה-workflow בונה APK חתום עם מספר גרסה עולה (מספר הריצה) ומפרסם אותו כ-GitHub Release בתגית `app-v<מספר>`. השרת מדווח על הגרסה האחרונה ב-`GET /api/app/latest` ומגיש אותה ב-`GET /api/app/download`. האפליקציה בודקת בפתיחה (ניתן לכבות), ובמסך ההגדרות (⚙) יש "בדיקת עדכונים" ו"הורדה והתקנה" – ההורדה וההתקנה נעשות מתוך האפליקציה.
+
+הגדרת מפתח החתימה (פעם אחת) – ב-Settings ← Secrets and variables ← Actions ← Secrets:
+
+| Secret | ערך |
+|---|---|
+| `ANDROID_KEYSTORE_BASE64` | קובץ ה-keystore בקידוד base64 |
+| `ANDROID_KEYSTORE_PASSWORD` | סיסמת ה-keystore |
+| `ANDROID_KEY_ALIAS` | שם המפתח |
+| `ANDROID_KEY_PASSWORD` | סיסמת המפתח |
+
+> חשוב: Android מתקין עדכון רק אם הוא חתום באותו מפתח כמו האפליקציה המותקנת. **אין לאבד את קובץ ה-keystore ואת הסיסמאות** – בלעדיהם כל המשתמשים יצטרכו להסיר את האפליקציה ולהתקין מחדש. לעולם אין להכניס אותם ל-git. אם המאגר פרטי, יש להגדיר בשרת `APP_RELEASES_TOKEN`.
+
 **בנייה מקומית** (דורש Android SDK ו-JDK 21):
 
 ```bash

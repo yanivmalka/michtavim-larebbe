@@ -7,8 +7,9 @@ android {
         applicationId "com.michtavim.larebbe"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        // CI sets APP_VERSION_CODE (the GitHub run number) so every build is newer than the last.
+        versionCode((System.getenv("APP_VERSION_CODE") ?: "1") as int)
+        versionName "1.0." + (System.getenv("APP_VERSION_CODE") ?: "1")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,8 +17,23 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // One permanent key for every build – Android installs an update only if it is
+    // signed with the same key as the installed app. Never commit the keystore.
+    signingConfigs {
+        release {
+            if (System.getenv("ANDROID_KEYSTORE_FILE")) {
+                storeFile file(System.getenv("ANDROID_KEYSTORE_FILE"))
+                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+            }
+        }
+    }
     buildTypes {
         release {
+            if (System.getenv("ANDROID_KEYSTORE_FILE")) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
