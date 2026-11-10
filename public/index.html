@@ -93,6 +93,7 @@
         <div id="menu-members" class="members" hidden></div>
         <button type="button" id="menu-rename">✎ שינוי שם</button>
         <button type="button" id="menu-share">👥 שיתוף עם אנשי קשר</button>
+        <button type="button" id="menu-copy-link">🔗 העתקת קישור לשיחה</button>
         <button type="button" id="menu-stop-share" hidden>✋ הפסקת השיתוף</button>
         <button type="button" id="menu-archive">🗄 העברה לארכיון</button>
         <button type="button" id="menu-lock">🔒 נעילת השיחה</button>
@@ -117,6 +118,8 @@
         <div class="dialog-actions"><button value="close">סגירה</button></div>
       </form>
     </dialog>
+
+    <div id="toast" class="toast" role="status" hidden></div>
 
     <div id="reply-bar" class="reply-bar" hidden>
       <span id="reply-text"></span>

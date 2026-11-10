@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
 import { config } from '../config.js';
 
+export { SYSTEM, jsonSchema };
 export const AnswerSchema = z.object({
   sourceLanguage: z.enum(['hebrew', 'yiddish', 'english', 'russian', 'other']),
   replyLanguage: z.string(),
@@ -9,6 +10,8 @@ export const AnswerSchema = z.object({
   explanation: z.string(),
   keyQuote: z.string(),
 });
+
+export const FOLLOWUP_SYSTEM = `אתה ממשיך שיחה עם אדם שכתב מכתב לרבי מליובאוויטש ופתח עמוד ב"אגרות קודש". לפניך המכתב, העמוד שנפתח והניתוח שכבר נכתב. ענה על שאלת ההמשך שלו בחום ובענייניות, בשפה שבה שאל, בקצרה (עד 3 פסקאות קצרות). התבסס על מה שכתוב בעמוד; אם אינך יודע – אמור זאת. אל תפסוק הלכה; בשאלה הלכתית, רפואית או משפטית הפנה לרב או לאיש מקצוע. החזר טקסט רגיל.`;
 
 const jsonSchema = {
   type: 'object',
@@ -41,6 +44,8 @@ const getClient = () => (client ??= new Anthropic());
  * Translates the opened page when needed and explains how it may answer what was written.
  * @param {{ letter: string, igeret: string, replyLanguage?: string, title: string }} input
  */
+export const claudeAvailable = () => hasCredentials();
+
 export async function explainAnswer({ letter, igeret, replyLanguage, title }) {
   if (!hasCredentials()) throw new Error('AI_NOT_CONFIGURED');
   const langLine = replyLanguage ? `שפת המענה: ${replyLanguage}.` : 'שפת המענה: השפה שבה נכתב המכתב.';
@@ -68,4 +73,19 @@ export async function explainAnswer({ letter, igeret, replyLanguage, title }) {
   if (response.stop_reason === 'max_tokens') throw new Error('AI_TRUNCATED');
   const text = response.content.filter((b) => b.type === 'text').map((b) => b.text).join('');
   return AnswerSchema.parse(JSON.parse(text));
+}
+
+/** Claude: a follow-up question about an analysis. history = [{ q, a }, ...] */
+export async function followUpClaude({ context, history, question }) {
+  if (!hasCredentials()) throw new Error('AI_NOT_CONFIGURED');
+  const messages = [{ role: 'user', content: context }, { role: 'assistant', content: 'הבנתי. אשמח לענות על שאלות על הניתוח.' }];
+  for (const h of history) messages.push({ role: 'user', content: h.q }, { role: 'assistant', content: h.a });
+  messages.push({ role: 'user', content: question });
+  const response = await getClient().beta.messages.create({
+    model: config.claude.model, max_tokens: 4000,
+    betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default',
+    output_config: { effort: 'low' }, system: FOLLOWUP_SYSTEM, messages,
+  });
+  if (response.stop_reason === 'refusal') throw new Error('AI_REFUSED');
+  return response.content.filter((b) => b.type === 'text').map((b) => b.text).join('').trim();
 }

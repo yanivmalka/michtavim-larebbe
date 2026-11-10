@@ -1,5 +1,5 @@
 import express from 'express';
-import { answerLetter, getPageImage, getPagePdf, getLetterPdf, getNeighborLetter, getTurnedPage } from './letters.js';
+import { answerLetter, getPageImage, getPagePdf, getLetterPdf, getNeighborLetter, getTurnedPage, analyze, askFollowUp } from './letters.js';
 import { userMessage } from './errors.js';
 import { whatsappRouter } from './whatsapp/webhook.js';
 import { cors } from './cors.js';
@@ -7,9 +7,23 @@ import { lengthStats } from './igrot/lengths.js';
 import { loadCatalog } from './igrot/catalog.js';
 import { appUpdateRouter } from './appUpdate.js';
 
+/** Tiny in-memory limiter: at most `max` calls per key per window. */
+function rateLimit({ max, windowMs }) {
+  const hits = new Map();
+  return (key) => {
+    const now = Date.now();
+    const list = (hits.get(key) || []).filter((t) => now - t < windowMs);
+    if (list.length >= max) { hits.set(key, list); return false; }
+    list.push(now); hits.set(key, list);
+    if (hits.size > 5000) hits.delete(hits.keys().next().value);
+    return true;
+  };
+}
+
 export function createApp(deps = {}) {
   const app = express();
   app.disable('x-powered-by');
+  app.set('trust proxy', 1); // behind Render's proxy: req.ip is the user's address
   app.use(express.json({
     limit: '100kb',
     verify: (req, _res, buf) => { req.rawBody = buf; },
@@ -43,6 +57,21 @@ export function createApp(deps = {}) {
       res.status(e.status).json({ error: e.code, message: e.message });
     }
   });
+
+  // explanation + follow-up questions, only when the user asks (protects the free AI quota)
+  const aiLimit = rateLimit({ max: Number(process.env.AI_RATE_PER_HOUR || 40), windowMs: 3600e3 });
+  const aiRoute = (fn) => async (req, res) => {
+    try {
+      if (!aiLimit(req.ip)) throw new Error('AI_RATE_LIMIT');
+      res.json(await fn(req.body || {}, deps.ai));
+    } catch (err) {
+      const e = userMessage(err);
+      if (e.status >= 500) console.error(err);
+      res.status(e.status).json({ error: e.code, message: e.message });
+    }
+  };
+  app.post('/api/analysis', aiRoute((b, d) => analyze(b, d)));
+  app.post('/api/analysis/followup', aiRoute((b, d) => askFollowUp(b, d)));
 
   const sendPdf = (res, pdf, name) => {
     if (!pdf) return res.sendStatus(404);

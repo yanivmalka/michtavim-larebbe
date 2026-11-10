@@ -195,3 +195,17 @@ details.more[open] > summary::before { content: '▾ '; }
 .reply-bar button { background: none; border: 0; cursor: pointer; color: var(--muted); font-size: 1rem; }
 .mode-btn { flex: none; width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--border); background: var(--input); font-size: 1.2rem; cursor: pointer; }
 .mode-btn[hidden] { display: none; }
+
+/* ---------- analysis on request, follow-ups, toast ---------- */
+.analysis { margin-top: 6px; }
+.analyze-btn { font: inherit; border: 0; border-radius: 18px; padding: 8px 16px; background: var(--accent); color: #fff; cursor: pointer; margin: 6px 0; }
+.analyze-btn:disabled { opacity: .6; cursor: default; }
+.analyze-btn.small { padding: 6px 14px; margin: 0; flex: none; }
+.followups .fq { margin: 8px 0 2px; padding: 6px 10px; border-radius: 8px; background: var(--me); align-self: flex-start; font-size: .92rem; }
+.followups .fa { padding: 2px 4px 6px; }
+.fu-row { display: flex; gap: 8px; align-items: flex-end; margin-top: 8px; }
+.fu-input { flex: 1; resize: none; font: inherit; font-size: .92rem; padding: 8px 12px; border-radius: 16px; border: 1px solid var(--border);
+  background: var(--input); color: var(--text); max-height: 140px; }
+.toast { position: fixed; bottom: calc(env(safe-area-inset-bottom) + 90px); left: 50%; transform: translateX(-50%); z-index: 40;
+  background: rgba(20,20,20,.9); color: #fff; padding: 9px 18px; border-radius: 20px; font-size: .9rem; }
+.toast[hidden] { display: none; }

@@ -13,8 +13,15 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "22"
+      # explanation and analysis (on request): Gemini by default, Claude as an alternative
+      - key: GEMINI_API_KEY
+        sync: false # from https://aistudio.google.com/apikey – entered in the Render dashboard, never committed
+      - key: GEMINI_MODEL
+        value: gemini-flash-latest
+      - key: AI_RATE_PER_HOUR
+        value: "40"
       - key: ANTHROPIC_API_KEY
-        sync: false # entered in the Render dashboard, never committed
+        sync: false # optional
       - key: CLAUDE_MODEL
         value: claude-opus-5-5
       - key: CLAUDE_EFFORT

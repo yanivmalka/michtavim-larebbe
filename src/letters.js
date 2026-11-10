@@ -3,7 +3,7 @@ import { loadCatalog } from './igrot/catalog.js';
 import { openBook, renderSpec, decodeSpec, encodeSpec, turnPage } from './igrot/openBook.js';
 import { fetchLetter } from './igrot/chabadlibrary.js';
 import { layout, pngsToPdf } from './render/bookPage.js';
-import { explainAnswer } from './ai/explain.js';
+import { analyzePage, followUp } from './ai/index.js';
 
 /** Small LRU of rendered page images (they can always be drawn again). */
 const pageCache = {
@@ -73,7 +73,7 @@ export function pageAsText(letters) {
  * deps can be overridden in tests.
  */
 export async function answerLetter({ letter, replyLanguage }, deps = {}) {
-  const { volumes = getCatalog(), open = openBook, explain = explainAnswer, random } = deps;
+  const { volumes = getCatalog(), open = openBook, random } = deps;
   const trimmed = String(letter || '').trim();
   if (trimmed.length < 2) throw new Error('LETTER_EMPTY');
   if (trimmed.length > 8000) throw new Error('LETTER_TOO_LONG');
@@ -81,15 +81,8 @@ export async function answerLetter({ letter, replyLanguage }, deps = {}) {
   const page = await open(volumes, { random });
   const letters = page.letters.filter((l) => l.pageText.trim());
   const title = `אגרות קודש, ${page.volumeHeading}, אגרות ${letters.map((l) => l.number).join(', ')}`;
-  // The page itself never depends on Claude: if the explanation is unavailable
-  // (no key, no credit, outage) the answer is still returned, without it.
-  let ai;
-  try {
-    ai = { ...(await explain({ letter: trimmed, igeret: pageAsText(letters), replyLanguage, title })), explained: true };
-  } catch (err) {
-    console.warn('explanation unavailable:', err?.status || '', err?.message || err);
-    ai = { explained: false, sourceLanguage: null, replyLanguage: replyLanguage || null, translation: '', explanation: '', keyQuote: '' };
-  }
+  // The explanation is made only on request (POST /api/analysis), not here.
+  const ai = { explained: false, replyLanguage: replyLanguage || null };
 
   const id = randomUUID();
   pageCache.set(page.spec, page.png);
@@ -138,4 +131,40 @@ export async function getNeighborLetter(id, offset, deps = {}) {
     fullText: l.text,
     viewerUrl: l.viewerUrl,
   };
+}
+
+// ---------- explanation and follow-up questions, on request ----------
+const clip = (str, n) => String(str || '').slice(0, n);
+
+/** The text of the page described by `specStr`, as the AI reads it. */
+async function pageForAi(specStr, deps) {
+  const volumes = deps.volumes || getCatalog();
+  const spec = decodeSpec(specStr, volumes);
+  if (!spec) throw new Error('PAGE_NOT_FOUND');
+  const page = await renderSpec(volumes, spec, deps);
+  const letters = page.letters.filter((l) => l.pageText.trim());
+  return { text: pageAsText(letters), title: `אגרות קודש, ${page.volumeHeading}, אגרות ${letters.map((l) => l.number).join(', ')}` };
+}
+
+export async function analyze({ spec, letter, replyLanguage }, deps = {}) {
+  const q = String(letter || '').trim();
+  if (q.length < 2) throw new Error('LETTER_EMPTY');
+  const page = await pageForAi(spec, deps);
+  const run = deps.analyze || analyzePage;
+  return run({ letter: clip(q, 8000), igeret: page.text, replyLanguage, title: page.title });
+}
+
+export async function askFollowUp({ spec, letter, analysis, history, question }, deps = {}) {
+  const q = String(question || '').trim();
+  if (q.length < 2) throw new Error('QUESTION_EMPTY');
+  const page = await pageForAi(spec, deps);
+  const context = [
+    `${page.title}:\n\"\"\"\n${page.text}\n\"\"\"`,
+    `המכתב שנכתב לרבי:\n\"\"\"\n${clip(letter, 8000)}\n\"\"\"`,
+    analysis?.translation ? `התרגום שנכתב:\n${clip(analysis.translation, 12000)}` : '',
+    `הניתוח שנכתב:\n${clip(analysis?.explanation, 6000)}`,
+  ].filter(Boolean).join('\n\n');
+  const past = (Array.isArray(history) ? history : []).slice(-10).map((h) => ({ q: clip(h?.q, 2000), a: clip(h?.a, 4000) }));
+  const run = deps.followUp || followUp;
+  return run({ context, history: past, question: clip(q, 2000) });
 }

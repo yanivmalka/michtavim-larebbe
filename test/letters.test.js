@@ -93,15 +93,10 @@ test('layout paginates a long letter and the pages become a PDF', async () => {
 });
 
 test('POST /api/letters returns the page, its letters and serves image and PDFs', async () => {
-  let seen;
   const app = createApp({
     volumes: bookVolumes,
     pages: { volumes: bookVolumes, fetchLetter: fakeFetch },
     open: (vols, opts) => openBook(vols, { ...opts, random: (() => { const q = [0.4, 0, 0.5]; return () => q.shift() ?? 0; })(), fetchLetter: fakeFetch }),
-    explain: async (input) => {
-      seen = input;
-      return { sourceLanguage: 'yiddish', replyLanguage: 'he', translation: 'tr', explanation: 'ex', keyQuote: 'q' };
-    },
   });
   const server = app.listen(0);
   const base = `http://127.0.0.1:${server.address().port}`;
@@ -115,8 +110,7 @@ test('POST /api/letters returns the page, its letters and serves image and PDFs'
     const body = await res.json();
     assert.equal(body.volumeHeading, 'כרך א');
     assert.deepEqual(body.letters.map((l) => l.number), ['א', 'ב', 'ג']);
-    assert.match(seen.igeret, /=== אגרת ב ===/);
-    assert.equal(seen.replyLanguage, 'he');
+    assert.equal(body.explained, false, 'no explanation until asked for');
 
     const png = await fetch(base + body.imagePath);
     assert.equal(png.headers.get('content-type'), 'image/png');
@@ -145,17 +139,47 @@ test('POST /api/letters returns the page, its letters and serves image and PDFs'
   }
 });
 
-test('the page is still returned when the explanation is unavailable', async () => {
-  const { answerLetter } = await import('../src/letters.js');
-  const a = await answerLetter({ letter: 'שלום וברכה' }, {
-    volumes: bookVolumes,
-    open: (vols, opts) => openBook(vols, { ...opts, random: () => 0, fetchLetter: fakeFetch }),
-    explain: async () => { throw new Error('credit balance too low'); },
+test('analysis and follow-up questions run only on request, about the page itself', async () => {
+  const { encodeSpec } = await import('../src/igrot/openBook.js');
+  const spec = encodeSpec({ v: 0, i: 0, n: 2, s: 0 });
+  const seen = {};
+  const app = createApp({
+    ai: {
+      volumes: bookVolumes, fetchLetter: fakeFetch,
+      analyze: async (input) => { seen.analyze = input; return { sourceLanguage: 'yiddish', replyLanguage: 'he', translation: 'tr', explanation: 'ex', keyQuote: 'q', provider: 'test' }; },
+      followUp: async (input) => { seen.followUp = input; return { answer: 'תשובה', provider: 'test' }; },
+    },
   });
-  assert.equal(a.explained, false);
-  assert.equal(a.explanation, '');
-  assert.ok(a.letters.length >= 1);
-  assert.match(a.imagePath, /^\/api\/page\/[\w-]+\.png$/);
+  const server = app.listen(0);
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const post = (path, body) => fetch(base + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  try {
+    const r = await post('/api/analysis', { spec, letter: 'אבקש ברכה', replyLanguage: 'he' });
+    assert.equal(r.status, 200);
+    assert.equal((await r.json()).explanation, 'ex');
+    assert.match(seen.analyze.igeret, /=== אגרת א[ =]/, 'the AI reads the page the server draws, not text sent by the client');
+    assert.equal(seen.analyze.replyLanguage, 'he');
+
+    const f = await post('/api/analysis/followup', { spec, letter: 'אבקש ברכה', analysis: { explanation: 'ex' }, history: [{ q: 'ש1', a: 'ת1' }], question: 'ומה לגבי פרנסה?' });
+    assert.equal((await f.json()).answer, 'תשובה');
+    assert.match(seen.followUp.context, /הניתוח שנכתב:\nex/);
+    assert.deepEqual(seen.followUp.history, [{ q: 'ש1', a: 'ת1' }]);
+
+    assert.equal((await post('/api/analysis', { spec: 'bad', letter: 'אבקש' })).status, 400);
+    assert.equal((await post('/api/analysis/followup', { spec, letter: 'x', question: '' })).status, 400);
+  } finally {
+    server.close();
+  }
+  // without a key the server says so clearly
+  delete process.env.GEMINI_API_KEY;
+  const bare = createApp({ ai: { volumes: bookVolumes, fetchLetter: fakeFetch } }).listen(0);
+  try {
+    const r = await fetch(`http://127.0.0.1:${bare.address().port}/api/analysis`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ spec, letter: 'אבקש ברכה' }) });
+    assert.equal(r.status, 503);
+    assert.equal((await r.json()).error, 'AI_NOT_CONFIGURED');
+  } finally {
+    bare.close();
+  }
 });
 
 test('GET /api/igrot/:id/:dir pages to the neighbouring letter', async () => {

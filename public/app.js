@@ -526,6 +526,90 @@ function markerButton() {
 }
 
 // ---------- rendering ----------
+// ---------- explanation and analysis: only on request, then follow-up questions ----------
+async function postJson(path, body) {
+  const res = await fetch(`${API}${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || 'אירעה שגיאה. נסו שוב.');
+  return data;
+}
+function syncEntry(entry) {
+  const conv = convById(entry.conv);
+  save();
+  if (conv?.cloud && user && isOwner(conv)) cloud.saveEntry(conv.id, entry).catch((e) => console.warn('not synced', e));
+}
+
+function analysisSection(entry) {
+  const a = entry.a;
+  const conv = convById(entry.conv);
+  const canAsk = isOwner(conv);
+  const spec = specOf(a.imagePath);
+  const box = el('div', { className: 'analysis' });
+
+  if (!a.explanation) {
+    if (!canAsk) { box.append(el('div', { className: 'note', textContent: 'עדיין לא נעשה ניתוח לעמוד זה.' })); return box; }
+    const btn = el('button', { type: 'button', className: 'analyze-btn', textContent: '✨ הסבר, תרגום וניתוח העמוד' });
+    const status = el('div', { className: 'note' });
+    if (!spec) { btn.disabled = true; status.textContent = 'לא זמין לתשובות ישנות.'; }
+    btn.addEventListener('click', async () => {
+      btn.disabled = true; btn.textContent = '⏳ מנתח את העמוד…'; status.textContent = '';
+      try {
+        const r = await postJson('/api/analysis', { spec, letter: entry.q, replyLanguage: a.replyLanguage || lang.value || undefined });
+        Object.assign(a, { explained: true, explanation: r.explanation, translation: r.translation, keyQuote: r.keyQuote, sourceLanguage: r.sourceLanguage, provider: r.provider });
+        syncEntry(entry);
+        entry.showMore = true;
+        render();
+      } catch (e) {
+        btn.disabled = false; btn.textContent = '✨ הסבר, תרגום וניתוח העמוד';
+        status.textContent = e.message;
+      }
+    });
+    box.append(btn, status);
+    return box;
+  }
+
+  box.append(
+    a.keyQuote && el('div', { className: 'quote', textContent: a.keyQuote }),
+    el('h4', { textContent: 'כיצד המענה מתייחס למכתב' }),
+    markable(a.explanation, `E:${entry.id}`),
+    a.translation && el('details', { open: true },
+      el('summary', { textContent: a.sourceLanguage === 'yiddish' ? 'תרגום מאידיש' : 'תרגום' }),
+      markable(a.translation, `T:${entry.id}`)));
+
+  // follow-up questions about the analysis
+  const qa = entry.followups || [];
+  const thread = el('div', { className: 'followups' },
+    qa.length ? el('h4', { textContent: 'שאלות המשך' }) : null,
+    ...qa.flatMap((f, i) => [
+      el('div', { className: 'fq', textContent: f.q }),
+      el('div', { className: 'fa' }, markable(f.a, `F:${entry.id}:${i}`)),
+    ]));
+  box.append(thread);
+  if (canAsk && spec) {
+    const field = el('textarea', { className: 'fu-input', rows: 1, placeholder: 'שאלת המשך על הניתוח…', maxLength: 2000 });
+    const ask = el('button', { type: 'button', className: 'analyze-btn small', textContent: 'שאלה' });
+    const status = el('div', { className: 'note' });
+    field.addEventListener('input', () => { field.style.height = 'auto'; field.style.height = `${field.scrollHeight}px`; });
+    ask.addEventListener('click', async () => {
+      const question = field.value.trim();
+      if (!question) return;
+      ask.disabled = true; field.disabled = true; status.textContent = '⏳ חושב…';
+      try {
+        const r = await postJson('/api/analysis/followup', {
+          spec, letter: entry.q, analysis: { explanation: a.explanation, translation: a.translation }, history: qa, question,
+        });
+        entry.followups = [...qa, { q: question, a: r.answer, ts: Date.now() }];
+        syncEntry(entry);
+        render();
+      } catch (e) {
+        status.textContent = e.message; ask.disabled = false; field.disabled = false;
+      }
+    });
+    box.append(el('div', { className: 'fu-row' }, field, ask), status);
+  }
+  return box;
+}
+
 function answerBubble(entry) {
   const a = entry.a;
   const img = el('img', { className: 'page-img', src: API + a.imagePath, alt: `עמוד מאגרות קודש, ${a.volumeHeading}`, loading: 'lazy' });
@@ -533,19 +617,13 @@ function answerBubble(entry) {
   img.addEventListener('error', () => img.replaceWith(el('div', { className: 'note', textContent: 'תמונת העמוד אינה זמינה עוד (נשמרת בשרת לזמן מוגבל). האגרות עצמן שמורות כאן למטה.' })));
 
   const more = el('details', { className: 'more' },
-    el('summary', { textContent: a.explained === false ? 'פעולות והאגרות שבעמוד' : 'הסבר, תרגום והאגרות שבעמוד' }),
+    el('summary', { textContent: a.explanation ? 'הסבר, תרגום והאגרות שבעמוד' : 'פעולות, ניתוח והאגרות שבעמוד' }),
     el('div', { className: 'links' },
       el('a', { href: API + a.pdfPath, target: '_blank', rel: 'noopener', textContent: '📄 PDF' }),
       shareButton(entry),
       markerButton()),
     favRow(entry),
-    a.keyQuote && el('div', { className: 'quote', textContent: a.keyQuote }),
-    ...(a.explained === false
-      ? [el('div', { className: 'note', textContent: 'התרגום וההסבר אינם זמינים כרגע. העמוד והאגרות שבו מוצגים במלואם.' })]
-      : [el('h4', { textContent: 'כיצד המענה מתייחס למכתב' }), markable(a.explanation || '', `E:${entry.id}`)]),
-    a.translation && el('details', { open: true },
-      el('summary', { textContent: a.sourceLanguage === 'yiddish' ? 'תרגום מאידיש' : 'תרגום' }),
-      markable(a.translation, `T:${entry.id}`)),
+    analysisSection(entry),
     lettersPager(a),
     el('div', { className: 'note', textContent: 'העמוד מורכב מהטקסט המקוון של אגרות הקודש, ועימודו אינו זהה לעימוד הספר המודפס. ההסבר הוא הצעה להבנה בלבד ואינו פסק הלכה; לשאלות מעשיות – יש להתייעץ עם רב.' }));
   more.open = !!entry.showMore;
@@ -815,6 +893,7 @@ function openConvMenu(conv) {
   $('menu-lock').textContent = conv.locked ? '🔓 ביטול נעילה' : '🔒 נעילת השיחה (במכשיר זה)';
   $('menu-rename').hidden = !owner;
   $('menu-share').hidden = !owner;
+  $('menu-copy-link').hidden = !owner;
   $('menu-stop-share').hidden = !owner || !(isShared(conv) || conv.inviteToken);
   $('menu-delete').textContent = !conv.cloud ? '🗑 מחיקת השיחה' : owner ? '🗑 מחיקת השיחה לכולם' : '🚪 יציאה מהשיחה';
   const people = isShared(conv) ? (conv.members || []).map((u) => nameOf(conv, u) + (u === conv.owner ? ' (פותח השיחה)' : '')).join(', ') : '';
@@ -853,20 +932,53 @@ $('menu-lock').addEventListener('click', async () => {
     delete conv.locked; save(); render();
   }
 });
+/** The invite link of a conversation (creates it if needed), or null if the user must sign in first. */
+async function conversationLink(conv) {
+  await loadCloud();
+  if (!user) {
+    $('account-status').textContent = 'כדי לשתף שיחה יש להתחבר עם חשבון Google.';
+    paintAccount(); $('account').showModal();
+    return null;
+  }
+  if (!conv.cloud) throw new Error('השיחה עדיין מסתנכרנת לחשבון. נסו שוב בעוד רגע.');
+  conv.inviteToken = await cloud.inviteToken(conv);
+  return `${SITE}/join/${conv.id}.${conv.inviteToken}`;
+}
+
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; } catch { /* older WebViews */ }
+  const area = el('textarea', { value: text });
+  area.style.position = 'fixed'; area.style.opacity = '0';
+  document.body.append(area); area.select();
+  const ok = document.execCommand('copy');
+  area.remove();
+  return ok;
+}
+
+$('menu-copy-link').addEventListener('click', async () => {
+  const conv = menuConv;
+  closeConvMenu();
+  try {
+    const link = await conversationLink(conv);
+    if (!link) return;
+    if (await copyText(link)) toast('🔗 הקישור לשיחה הועתק'); else prompt('העתיקו את הקישור:', link);
+  } catch (e) { alert(e.message); }
+});
+
+let toastTimer = null;
+function toast(text) {
+  const t = $('toast');
+  t.textContent = text; t.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.hidden = true; }, 2200);
+}
+
 $('menu-share').addEventListener('click', async () => {
   const conv = menuConv;
   closeConvMenu();
   try {
-    await loadCloud();
-    if (!user) {
-      $('account-status').textContent = 'כדי לשתף שיחה יש להתחבר עם חשבון Google.';
-      paintAccount(); $('account').showModal();
-      return;
-    }
-    if (!conv.cloud) { alert('השיחה עדיין מסתנכרנת לחשבון. נסו שוב בעוד רגע.'); return; }
-    const token = await cloud.inviteToken(conv);
-    conv.inviteToken = token;
-    const link = `${SITE}/join/${conv.id}.${token}`;
+    const link = await conversationLink(conv);
+    if (!link) return;
     const text = `הצטרפו לשיחה "${conv.title}" ב"מכתבים לרבי" – תוכלו לראות את המכתבים והמענים ולהגיב:\n${link}`;
     if (isNativeApp) await window.Capacitor.registerPlugin('Share').share({ title: 'מכתבים לרבי', text, dialogTitle: 'שיתוף השיחה' });
     else if (navigator.share) await navigator.share({ title: 'מכתבים לרבי', text });
