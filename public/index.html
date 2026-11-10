@@ -29,7 +29,8 @@
           <option value="es">Español</option>
         </select>
       </label>
-      <button id="clear" class="icon-btn" title="ניקוי השיחה" aria-label="ניקוי השיחה">🗑</button>
+      <button id="view-fav" class="icon-btn" title="מועדפים" aria-label="מועדפים" aria-pressed="false">☆</button>
+      <button id="view-archive" class="icon-btn" title="ארכיון" aria-label="ארכיון" aria-pressed="false">🗄</button>
     </header>
 
     <div id="update-banner" class="update-banner" hidden>
@@ -38,10 +39,6 @@
     </div>
 
     <main id="chat" class="chat" aria-live="polite">
-      <div class="intro">
-        כתבו לרבי כפי שכותבים מכתב – מה על הלב, בקשה לברכה או שאלה.<br>
-        בתשובה ייפתח עמוד מאגרות הקודש – עם כל האגרות שבו, תרגום (כשהמענה באידיש) והסבר.
-      </div>
     </main>
 
     <dialog id="settings" class="settings">
@@ -63,6 +60,15 @@
         <div class="dialog-actions"><button value="close">סגירה</button></div>
       </form>
     </dialog>
+
+    <div id="hl-bar" class="hl-bar" hidden>
+      <button type="button" id="hl-add">🖍 הדגשה</button>
+    </div>
+
+    <div id="lightbox" class="lightbox" hidden>
+      <button type="button" id="lightbox-close" aria-label="סגירה">✕</button>
+      <div class="lightbox-scroll"><img id="lightbox-img" alt=""></div>
+    </div>
 
     <form id="composer" class="composer">
       <textarea id="input" rows="1" placeholder="כתבו את המכתב…" maxlength="8000" required></textarea>

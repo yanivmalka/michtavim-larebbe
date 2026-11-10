@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { loadCatalog } from './igrot/catalog.js';
 import { openBook } from './igrot/openBook.js';
+import { fetchLetter } from './igrot/chabadlibrary.js';
 import { layout, pngsToPdf } from './render/bookPage.js';
 import { explainAnswer } from './ai/explain.js';
 
@@ -80,6 +81,7 @@ export async function answerLetter({ letter, replyLanguage }, deps = {}) {
     imagePath: `/api/answers/${id}/page.png`,
     pdfPath: `/api/answers/${id}/page.pdf`,
     letters: letters.map((l, n) => ({
+      id: l.id,
       number: l.number,
       startsOnPage: l.startsOnPage,
       endsOnPage: l.endsOnPage,
@@ -89,5 +91,29 @@ export async function answerLetter({ letter, replyLanguage }, deps = {}) {
       pdfPath: `/api/answers/${id}/letters/${n}.pdf`,
     })),
     ...ai,
+  };
+}
+
+let positions;
+/**
+ * The letter `offset` places away from letter `id` in book order (‑1 = previous, 1 = next),
+ * for paging beyond the letters of the opened page. Returns null at the ends of the book.
+ */
+export async function getNeighborLetter(id, offset, deps = {}) {
+  const { volumes = (catalog ??= loadCatalog()), fetch: fetchFn = fetchLetter } = deps;
+  const flat = deps.volumes ? null : positions;
+  const list = flat || volumes.flatMap((v) => v.letters.map(([lid, heading]) => ({ id: lid, heading, volumeHeading: v.heading })));
+  if (!deps.volumes) positions = list;
+  const at = list.findIndex((l) => l.id === id);
+  if (at === -1) return undefined;
+  const target = list[at + offset];
+  if (!target) return null;
+  const l = await fetchFn(target.id);
+  return {
+    id: target.id,
+    number: l.letterHeading || target.heading,
+    volumeHeading: l.volumeHeading || target.volumeHeading,
+    fullText: l.text,
+    viewerUrl: l.viewerUrl,
   };
 }

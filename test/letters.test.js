@@ -148,6 +148,21 @@ test('the page is still returned when the explanation is unavailable', async () 
   assert.match(a.imagePath, /page\.png$/);
 });
 
+test('GET /api/igrot/:id/:dir pages to the neighbouring letter', async () => {
+  const app = createApp({ neighbors: { volumes: bookVolumes, fetch: async (id) => ({ ...fakeLetters[id], text: `טקסט ${id}`, volumeHeading: 'כרך א' }) } });
+  const server = app.listen(0);
+  const base = `http://127.0.0.1:${server.address().port}`;
+  try {
+    const next = await (await fetch(`${base}/api/igrot/11/next`)).json();
+    assert.deepEqual(next.letter, { id: 12, number: 'ב', volumeHeading: 'כרך א', fullText: 'טקסט 12', viewerUrl: 'u12' });
+    assert.equal((await (await fetch(`${base}/api/igrot/11/prev`)).json()).letter, null);
+    assert.equal((await fetch(`${base}/api/igrot/999/next`)).status, 404);
+    assert.equal((await fetch(`${base}/api/igrot/11/sideways`)).status, 400);
+  } finally {
+    server.close();
+  }
+});
+
 test('WhatsApp reply text includes source, translation and explanation', () => {
   const text = formatWhatsAppReply({ title: 'אגרות קודש, כרך ג, אגרות תו, תז', keyQuote: 'q', translation: 'tr', explanation: 'ex', pdfUrl: 'https://x.test/p.pdf' });
   assert.match(text, /כרך ג, אגרות תו, תז/);

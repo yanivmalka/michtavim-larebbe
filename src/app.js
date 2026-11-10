@@ -1,5 +1,5 @@
 import express from 'express';
-import { answerLetter, getPagePng, getPagePdf, getLetterPdf } from './letters.js';
+import { answerLetter, getPagePng, getPagePdf, getLetterPdf, getNeighborLetter } from './letters.js';
 import { userMessage } from './errors.js';
 import { whatsappRouter } from './whatsapp/webhook.js';
 import { cors } from './cors.js';
@@ -25,6 +25,21 @@ export function createApp(deps = {}) {
     } catch (err) {
       const e = userMessage(err);
       if (e.status >= 500) console.error(err);
+      res.status(e.status).json({ error: e.code, message: e.message });
+    }
+  });
+
+  // The previous (dir=prev) or next (dir=next) letter in book order
+  app.get('/api/igrot/:id/:dir', async (req, res) => {
+    try {
+      const offset = { prev: -1, next: 1 }[req.params.dir];
+      if (!offset || !/^\d+$/.test(req.params.id)) return res.sendStatus(400);
+      const letter = await getNeighborLetter(Number(req.params.id), offset, deps.neighbors);
+      if (letter === undefined) return res.sendStatus(404);
+      res.json({ letter });
+    } catch (err) {
+      const e = userMessage(err);
+      console.error(err);
       res.status(e.status).json({ error: e.code, message: e.message });
     }
   });
