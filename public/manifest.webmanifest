@@ -1,0 +1,11 @@
+{
+  "name": "מכתבים לרבי",
+  "short_name": "מכתבים לרבי",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#efe7dd",
+  "theme_color": "#1f3a5f",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

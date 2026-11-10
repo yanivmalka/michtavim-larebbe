@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1f3a5f">
+  <title>מכתבים לרבי</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="bar">
+      <img src="icon.svg" alt="" class="avatar">
+      <div class="title">
+        <h1>מכתבים לרבי</h1>
+        <span class="sub" id="status">מענה מתוך אגרות הקודש</span>
+      </div>
+      <label class="lang">
+        <span class="sr">שפת המענה</span>
+        <select id="lang" aria-label="שפת המענה">
+          <option value="">שפת המכתב</option>
+          <option value="he">עברית</option>
+          <option value="en">English</option>
+          <option value="ru">Русский</option>
+          <option value="fr">Français</option>
+          <option value="es">Español</option>
+        </select>
+      </label>
+      <button id="clear" class="icon-btn" title="ניקוי השיחה" aria-label="ניקוי השיחה">🗑</button>
+    </header>
+
+    <main id="chat" class="chat" aria-live="polite">
+      <div class="intro">
+        כתבו לרבי כפי שכותבים מכתב – מה על הלב, בקשה לברכה או שאלה.<br>
+        בתשובה ייפתח עמוד מאגרות הקודש, עם תרגום (כשהמענה באידיש) והסבר.
+      </div>
+    </main>
+
+    <form id="composer" class="composer">
+      <textarea id="input" rows="1" placeholder="כתבו את המכתב…" maxlength="8000" required></textarea>
+      <button type="submit" id="send" class="send" aria-label="שליחה">➤</button>
+    </form>
+  </div>
+  <script src="app.js" type="module"></script>
+</body>
+</html>
