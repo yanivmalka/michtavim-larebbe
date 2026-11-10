@@ -527,11 +527,21 @@ function markerButton() {
 
 // ---------- rendering ----------
 // ---------- explanation and analysis: only on request, then follow-up questions ----------
-async function postJson(path, body) {
-  const res = await fetch(`${API}${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.message || 'אירעה שגיאה. נסו שוב.');
-  return data;
+async function postJson(path, body, timeoutMs = 90000) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${API}${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: ctrl.signal });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || `אירעה שגיאה (${res.status}). נסו שוב.`);
+    return data;
+  } catch (e) {
+    if (e.name === 'AbortError') throw new Error('הניתוח לוקח יותר מדי זמן. נסו שוב.');
+    if (e instanceof TypeError) throw new Error('אין חיבור לשרת. נסו שוב.');
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 function syncEntry(entry) {
   const conv = convById(entry.conv);
