@@ -69,3 +69,6 @@ details summary { cursor: pointer; color: var(--muted); font-size: .85rem; margi
 .settings hr { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
 .dialog-actions { text-align: left; margin-top: 10px; }
 .dialog-actions button { background: transparent; color: var(--accent); }
+.link-btn { font: inherit; font-size: .85rem; background: none; border: 0; padding: 0; color: var(--accent);
+  text-decoration: underline; cursor: pointer; }
+.link-btn:disabled { opacity: .5; }

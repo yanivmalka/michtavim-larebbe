@@ -42,6 +42,60 @@ const partLabel = (l) => (l.startsOnPage && l.endsOnPage ? 'אגרת שלמה'
   : l.startsOnPage ? 'תחילת האגרת (ממשיכה בעמוד הבא)'
     : l.endsOnPage ? 'סוף האגרת (התחילה בעמוד הקודם)' : 'קטע מהאגרת');
 
+const blobToBase64 = (blob) => new Promise((resolve, reject) => {
+  const r = new FileReader();
+  r.onload = () => resolve(String(r.result).split(',')[1]);
+  r.onerror = reject;
+  r.readAsDataURL(blob);
+});
+
+/** Shares the question text together with the image of the page that answered it. */
+async function shareAnswer(item) {
+  const a = item.answer;
+  const text = `${item.question ? `מכתב לרבי:\n${item.question}\n\n` : ''}המענה: ${a.title}`;
+  const res = await fetch(API + a.imagePath);
+  if (!res.ok) throw new Error('IMAGE_GONE');
+  const blob = await res.blob();
+
+  if (isNativeApp) {
+    const Filesystem = window.Capacitor.registerPlugin('Filesystem');
+    const Share = window.Capacitor.registerPlugin('Share');
+    const { uri } = await Filesystem.writeFile({
+      path: 'share/igrot-kodesh.png', data: await blobToBase64(blob), directory: 'CACHE', recursive: true,
+    });
+    await Share.share({ title: 'מכתבים לרבי', text, files: [uri], dialogTitle: 'שיתוף המענה' });
+    return;
+  }
+  const file = new File([blob], 'igrot-kodesh.png', { type: 'image/png' });
+  if (navigator.canShare?.({ files: [file] })) {
+    await navigator.share({ title: 'מכתבים לרבי', text, files: [file] });
+    return;
+  }
+  // Desktop browsers without file sharing: copy the text and download the image.
+  try { await navigator.clipboard.writeText(text); } catch { /* ignore */ }
+  const link = el('a', { href: URL.createObjectURL(blob), download: 'igrot-kodesh.png' });
+  link.click();
+  URL.revokeObjectURL(link.href);
+  alert('הטקסט הועתק והתמונה ירדה למכשיר – אפשר להדביק ולצרף אותם בכל אפליקציה.');
+}
+
+function shareButton(item) {
+  const btn = el('button', { type: 'button', className: 'link-btn', textContent: '↗ שיתוף' });
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    try {
+      await shareAnswer(item);
+    } catch (e) {
+      if (e?.name !== 'AbortError' && !/cancel/i.test(e?.message || '')) {
+        alert(e?.message === 'IMAGE_GONE' ? 'תמונת העמוד אינה זמינה עוד בשרת.' : 'השיתוף נכשל. נסו שוב.');
+      }
+    } finally {
+      btn.disabled = false;
+    }
+  });
+  return btn;
+}
+
 function renderAnswer(item) {
   const a = item.answer;
   const img = el('img', { className: 'page-img', src: API + a.imagePath, alt: `עמוד מאגרות קודש, ${a.volumeHeading}`, loading: 'lazy' });
@@ -63,7 +117,9 @@ function renderAnswer(item) {
   chat.append(el('div', { className: 'msg them' },
     el('h3', { textContent: `✉️ אגרות קודש · ${a.volumeHeading}` }),
     img,
-    el('div', { className: 'links' }, el('a', { href: API + a.pdfPath, target: '_blank', rel: 'noopener', textContent: '📄 הורדת העמוד כ-PDF' })),
+    el('div', { className: 'links' },
+      el('a', { href: API + a.pdfPath, target: '_blank', rel: 'noopener', textContent: '📄 הורדת העמוד כ-PDF' }),
+      shareButton(item)),
     a.keyQuote && el('div', { className: 'quote', textContent: a.keyQuote }),
     ...(a.explained === false
       ? [el('div', { className: 'note', textContent: 'התרגום וההסבר אינם זמינים כרגע. העמוד והאגרות שבו מוצגים במלואם.' })]
@@ -98,7 +154,7 @@ async function submit(text) {
     const data = await res.json().catch(() => ({}));
     typing.remove();
     if (!res.ok) return renderError(data.message || 'אירעה שגיאה. נסו שוב.');
-    const item = { answer: data, ts: Date.now() };
+    const item = { answer: data, question: text, ts: Date.now() };
     history.push(item); renderAnswer(item);
   } catch {
     typing.remove(); renderError('אין חיבור לשרת. בדקו את החיבור ונסו שוב.');
