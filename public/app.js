@@ -25,28 +25,48 @@ const el = (tag, props = {}, ...children) => {
 };
 
 // ---------- state (kept on this device only) ----------
-// entries: one per letter written – { id, q, ts, a?, fav?: { tags: [] } }
-// days:    per calendar day – { topic?, open?, archived? }
+// convs:   conversations, like chats – { id, title, created, archived?, locked? }
+// entries: one per letter written – { id, conv, q, ts, a?, fav?: { tags: [] }, collapsed? }
 // marks:   highlighter ranges per text – { key: [[start, end], ...] }
-const STORE = 'mlr-state-v3';
-const MAX_ENTRIES = 80;
+const STORE = 'mlr-state-v4';
+const MAX_ENTRIES = 150;
 const TAGS = ['מרגש', 'מדהים', 'מדויק', 'מחזק', 'מפתיע', 'ברכה'];
+const newId = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
+
+const dayKey = (ts) => {
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+const dayLabel = (key) => {
+  if (key === dayKey(Date.now())) return 'היום';
+  if (key === dayKey(Date.now() - 864e5)) return 'אתמול';
+  const [y, m, d] = key.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'numeric', year: 'numeric' });
+};
 
 function loadState() {
   try {
     const s = JSON.parse(localStorage.getItem(STORE));
-    if (s?.entries) return { days: {}, marks: {}, ...s };
+    if (s?.convs) return { marks: {}, ...s };
   } catch { /* fall through */ }
-  const state = { entries: [], days: {}, marks: {} };
-  try { // migrate the older flat history: [{ text, ts }, { answer, question, ts }, ...]
-    const old = JSON.parse(localStorage.getItem('mlr-history-v2')) || [];
-    for (const item of old) {
-      if (item.answer) {
-        const last = state.entries.at(-1);
-        if (last && !last.a) last.a = item.answer;
-        else state.entries.push({ id: `m${item.ts}`, q: item.question || '', ts: item.ts, a: item.answer });
-      } else if (item.text) {
-        state.entries.push({ id: `m${item.ts}`, q: item.text, ts: item.ts });
+  // migrate v3: day groups (with topic / archived) become conversations
+  const state = { convs: [], entries: [], marks: {} };
+  try {
+    const old = JSON.parse(localStorage.getItem('mlr-state-v3'));
+    if (old?.entries) {
+      state.marks = old.marks || {};
+      const byDay = new Map();
+      for (const e of old.entries) {
+        const k = dayKey(e.ts);
+        if (!byDay.has(k)) {
+          const meta = old.days?.[k] || {};
+          const conv = { id: newId(), title: meta.topic || dayLabel(k), created: e.ts, archived: !!meta.archived };
+          if (old.entries.some((x) => dayKey(x.ts) === k && x.locked)) conv.locked = true;
+          state.convs.push(conv);
+          byDay.set(k, conv.id);
+        }
+        const { locked, ...rest } = e;
+        state.entries.push({ ...rest, conv: byDay.get(k) });
       }
     }
   } catch { /* ignore */ }
@@ -66,15 +86,10 @@ function save() {
 
 try { lang.value = localStorage.getItem('mlr-lang') || ''; } catch { /* ignore */ }
 
-const dayKey = (ts) => {
-  const d = new Date(ts);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-};
-const dayLabel = (key) => {
-  if (key === dayKey(Date.now())) return 'היום';
-  const [y, m, d] = key.split('-').map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'numeric', year: 'numeric' });
-};
+const convById = (id) => state.convs.find((c) => c.id === id);
+const entriesOf = (id) => state.entries.filter((e) => e.conv === id);
+const lastTs = (c) => entriesOf(c.id).at(-1)?.ts || c.created;
+
 const time = (ts) => el('span', { className: 'time', textContent: new Date(ts).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) });
 const scrollDown = () => chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
 
@@ -194,12 +209,16 @@ $('lightbox-img').addEventListener('click', (e) => {
 $('lightbox-close').addEventListener('click', () => closeLightbox());
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('lightbox').hidden) closeLightbox(); });
 
-// ---------- device authentication, for hidden letters ----------
+// ---------- device authentication, for locked chats ----------
 const b64 = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf)));
 const unb64 = (str) => Uint8Array.from(atob(str), (c) => c.charCodeAt(0));
-const unlocked = new Set(); // entries revealed in this session
-document.addEventListener('visibilitychange', () => { // leaving the app hides them again
-  if (document.hidden && unlocked.size) { unlocked.clear(); render(); }
+let lockedOpen = false; // locked chats were unlocked in this session
+document.addEventListener('visibilitychange', () => { // leaving the app locks them again
+  if (document.hidden && lockedOpen) {
+    lockedOpen = false;
+    if (view.name === 'locked' || (view.name === 'chat' && convById(view.id)?.locked)) view = { name: 'list' };
+    render();
+  }
 });
 
 /** True if this device can confirm the user (fingerprint, face or screen lock). */
@@ -255,7 +274,7 @@ const blobToBase64 = (blob) => new Promise((resolve, reject) => {
 /** Shares the question text together with the image of the page that answered it. */
 async function shareAnswer(entry) {
   const a = entry.a;
-  const question = entry.locked && !unlocked.has(entry.id) ? '' : entry.q;
+  const question = entry.q;
   const imageUrl = API ? `${API}${a.imagePath}` : new URL(a.imagePath, location.href).href;
   const text = `${question ? `מכתב לרבי:\n${question}\n\n` : ''}המענה: ${a.title}`;
 
@@ -471,38 +490,14 @@ function answerBubble(entry) {
 }
 
 function questionBubble(entry) {
-  const hidden = entry.locked && !unlocked.has(entry.id);
   const tools = el('div', { className: 'q-tools' });
-  const tool = (label, title, fn) => {
-    const b = el('button', { type: 'button', className: 'q-tool', textContent: label, title });
-    b.setAttribute('aria-label', title);
-    b.addEventListener('click', fn);
+  if (entry.a) {
+    const b = el('button', { type: 'button', className: 'q-tool', textContent: entry.collapsed ? '▸' : '▾', title: entry.collapsed ? 'הרחבת המענה' : 'כיווץ המענה' });
+    b.setAttribute('aria-label', b.title);
+    b.addEventListener('click', () => { entry.collapsed = !entry.collapsed; save(); render(); });
     tools.append(b);
-  };
-  tool(entry.collapsed ? '▸' : '▾', entry.collapsed ? 'הרחבת המענה' : 'כיווץ המענה', () => {
-    entry.collapsed = !entry.collapsed; save(); render();
-  });
-  tool(entry.locked ? '🔓' : '🔒', entry.locked ? 'ביטול ההסתרה' : 'הסתרת המכתב', async () => {
-    if (!entry.locked) {
-      if (!(await canAuthenticate())) {
-        alert('במכשיר זה לא הוגדרו טביעת אצבע או נעילת מסך, ולכן אי אפשר להסתיר מכתבים.');
-        return;
-      }
-      entry.locked = true; unlocked.delete(entry.id); save(); render();
-    } else if (await authenticate('ביטול הסתרת המכתב')) {
-      delete entry.locked; save(); render();
-    }
-  });
-
-  const content = hidden
-    ? el('button', { type: 'button', className: 'locked-q', textContent: '🔒 מכתב מוסתר – לחצו לפתיחה' })
-    : el('p', { textContent: entry.q });
-  if (hidden) {
-    content.addEventListener('click', async () => {
-      if (await authenticate('פתיחת מכתב מוסתר')) { unlocked.add(entry.id); render(); }
-    });
   }
-  return el('div', { className: 'msg me' }, tools, content, time(entry.ts));
+  return el('div', { className: 'msg me' }, tools, el('p', { textContent: entry.q }), time(entry.ts));
 }
 
 function entryNodes(entry) {
@@ -517,89 +512,223 @@ function entryNodes(entry) {
   return nodes;
 }
 
-let view = 'main'; // main | fav | archive
+// views: list (all chats) | archive | locked | fav | chat (one conversation)
+let view = { name: 'list' };
+let search = '';
 
-function dayGroup(key, entries) {
-  const meta = state.days[key] || {};
-  const isToday = key === dayKey(Date.now());
-  const title = el('summary');
-  const paintTitle = () => {
-    title.textContent = '';
-    title.append(dayLabel(key), meta.topic ? ' · ' : '', meta.topic ? el('b', { textContent: meta.topic }) : '', ` (${entries.length})`);
-  };
-  paintTitle();
-  const setMeta = (patch) => { state.days[key] = Object.assign(meta, patch); save(); };
-
-  const action = (label, fn) => {
-    const b = el('button', { type: 'button', className: 'link-btn', textContent: label });
-    b.addEventListener('click', fn);
-    return b;
-  };
-  const actions = el('div', { className: 'day-actions' },
-    action('✎ נושא', () => {
-      const topic = prompt('נושא לשיחות של יום זה:', meta.topic || '');
-      if (topic === null) return;
-      setMeta({ topic: topic.trim().slice(0, 40) });
-      paintTitle();
-    }),
-    action(meta.archived ? '↩ החזרה מהארכיון' : '🗄 לארכיון', () => { setMeta({ archived: !meta.archived }); render(); }),
-    action('🗑 מחיקה', () => {
-      if (!confirm('למחוק מהמכשיר את השיחות של יום זה? (מועדפים יישמרו)')) return;
-      state.entries = state.entries.filter((e) => dayKey(e.ts) !== key || e.fav);
-      if (!state.entries.some((e) => dayKey(e.ts) === key)) delete state.days[key];
-      save(); render();
-    }));
-
-  const group = el('details', { className: 'day' }, title,
-    el('div', { className: 'day-body' }, actions, entries.flatMap(entryNodes)));
-  group.open = view !== 'main' || (meta.open ?? isToday);
-  group.addEventListener('toggle', () => { if (view === 'main') setMeta({ open: group.open }); });
-  return group;
+function go(next) {
+  view = next;
+  search = '';
+  closeConvMenu();
+  render({ scroll: next.name === 'chat' });
 }
 
-function render({ scroll = false } = {}) {
-  chat.textContent = '';
-  $('view-fav').setAttribute('aria-pressed', String(view === 'fav'));
-  $('view-fav').textContent = view === 'fav' ? '★' : '☆';
-  $('view-archive').setAttribute('aria-pressed', String(view === 'archive'));
+const shortTime = (ts) => (dayKey(ts) === dayKey(Date.now())
+  ? new Date(ts).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
+  : dayKey(ts) === dayKey(Date.now() - 864e5) ? 'אתמול'
+    : new Date(ts).toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric', year: '2-digit' }));
 
-  const visible = state.entries.filter((e) => {
-    const archived = !!state.days[dayKey(e.ts)]?.archived;
-    if (view === 'fav') return !!e.fav;
-    return view === 'archive' ? archived : !archived;
-  });
+// ---- conversation actions (long press on a row, or ⋮ in a chat) ----
+let menuConv = null;
+function openConvMenu(conv) {
+  menuConv = conv;
+  $('menu-title').textContent = conv.title;
+  $('menu-archive').textContent = conv.archived ? '📤 הוצאה מהארכיון' : '🗄 העברה לארכיון';
+  $('menu-lock').textContent = conv.locked ? '🔓 ביטול נעילה' : '🔒 נעילת השיחה';
+  $('conv-menu').showModal();
+}
+function closeConvMenu() { if ($('conv-menu').open) $('conv-menu').close(); }
 
-  if (view !== 'main') chat.append(el('div', { className: 'view-title', textContent: view === 'fav' ? '★ מועדפים' : '🗄 ארכיון' }));
-  if (view === 'main') {
-    chat.append(el('div', { className: 'intro' },
+$('menu-rename').addEventListener('click', () => {
+  const t = prompt('שם השיחה:', menuConv.title);
+  closeConvMenu();
+  if (t && t.trim()) { menuConv.title = t.trim().slice(0, 50); save(); render(); }
+});
+$('menu-archive').addEventListener('click', () => {
+  menuConv.archived = !menuConv.archived;
+  save(); closeConvMenu();
+  if (view.name === 'chat') go({ name: 'list' }); else render();
+});
+$('menu-lock').addEventListener('click', async () => {
+  const conv = menuConv;
+  closeConvMenu();
+  if (!conv.locked) {
+    if (!(await canAuthenticate())) {
+      alert('במכשיר זה לא הוגדרו טביעת אצבע או נעילת מסך, ולכן אי אפשר לנעול שיחות.');
+      return;
+    }
+    conv.locked = true; save();
+    alert('השיחה ננעלה. היא מופיעה עכשיו רק תחת "שיחות נעולות", שנפתחות בטביעת אצבע או בקוד המכשיר.');
+    if (view.name === 'chat') go({ name: 'list' }); else render();
+  } else if (lockedOpen || await authenticate('ביטול נעילת השיחה')) {
+    delete conv.locked; save(); render();
+  }
+});
+$('menu-delete').addEventListener('click', () => {
+  const conv = menuConv;
+  closeConvMenu();
+  if (!confirm(`למחוק את השיחה "${conv.title}" מהמכשיר?`)) return;
+  const ids = new Set(entriesOf(conv.id).map((e) => e.id));
+  state.entries = state.entries.filter((e) => !ids.has(e.id));
+  state.convs = state.convs.filter((c) => c !== conv);
+  save();
+  if (view.name === 'chat') go({ name: 'list' }); else render();
+});
+
+/** Long press (touch) or right click (mouse) */
+function onLongPress(node, fn) {
+  let timer = null;
+  let fired = false;
+  node.addEventListener('contextmenu', (e) => { e.preventDefault(); fn(); });
+  node.addEventListener('touchstart', () => { fired = false; timer = setTimeout(() => { fired = true; fn(); }, 550); }, { passive: true });
+  for (const ev of ['touchend', 'touchmove', 'touchcancel']) node.addEventListener(ev, () => clearTimeout(timer), { passive: true });
+  node.addEventListener('click', (e) => { if (fired) { e.stopImmediatePropagation(); e.preventDefault(); fired = false; } }, true);
+}
+
+function convRow(conv) {
+  const entries = entriesOf(conv.id);
+  const last = entries.at(-1);
+  const preview = !last ? 'אין עדיין מכתבים'
+    : last.a ? `✉️ ${last.a.title}`
+      : last.pending ? 'פותחים את אגרות הקודש…' : last.q;
+  const favs = entries.filter((e) => e.fav).length;
+  const row = el('button', { type: 'button', className: 'conv' },
+    el('span', { className: 'conv-avatar', textContent: conv.locked ? '🔒' : '✉️' }),
+    el('span', { className: 'conv-main' },
+      el('span', { className: 'conv-top' },
+        el('b', { className: 'conv-title', textContent: conv.title }),
+        el('span', { className: 'conv-time', textContent: shortTime(lastTs(conv)) })),
+      el('span', { className: 'conv-bottom' },
+        el('span', { className: 'conv-preview', textContent: preview }),
+        favs ? el('span', { className: 'conv-badge', textContent: `★ ${favs}` }) : null,
+        entries.length ? el('span', { className: 'conv-count', textContent: String(entries.length) }) : null)));
+  row.addEventListener('click', () => go({ name: 'chat', id: conv.id }));
+  onLongPress(row, () => openConvMenu(conv));
+  return row;
+}
+
+function specialRow(icon, label, count, fn) {
+  const row = el('button', { type: 'button', className: 'conv special' },
+    el('span', { className: 'conv-avatar', textContent: icon }),
+    el('span', { className: 'conv-main' }, el('b', { textContent: label })),
+    el('span', { className: 'conv-count plain', textContent: String(count) }));
+  row.addEventListener('click', fn);
+  return row;
+}
+
+const matches = (conv) => {
+  if (!search) return true;
+  const q = search.toLowerCase();
+  return conv.title.toLowerCase().includes(q)
+    || entriesOf(conv.id).some((e) => e.q.toLowerCase().includes(q) || e.a?.title?.includes(q));
+};
+
+function renderConvList(which) {
+  const list = state.convs
+    .filter((c) => (which === 'locked' ? c.locked : !c.locked && (which === 'archive' ? c.archived : !c.archived)))
+    .filter(matches)
+    .sort((a, b) => lastTs(b) - lastTs(a));
+
+  const box = el('div', { className: 'conv-list' });
+  if (which === 'list' && !search) {
+    const lockedCount = state.convs.filter((c) => c.locked).length;
+    const archivedCount = state.convs.filter((c) => c.archived && !c.locked).length;
+    if (lockedCount) {
+      box.append(specialRow('🔒', 'שיחות נעולות', lockedCount, async () => {
+        if (lockedOpen || await authenticate('פתיחת השיחות הנעולות')) { lockedOpen = true; go({ name: 'locked' }); }
+      }));
+    }
+    if (archivedCount) box.append(specialRow('🗄', 'בארכיון', archivedCount, () => go({ name: 'archive' })));
+    const favCount = state.entries.filter((e) => e.fav && !convById(e.conv)?.locked).length;
+    if (favCount) box.append(specialRow('★', 'מועדפים', favCount, () => go({ name: 'fav' })));
+  }
+  for (const c of list) box.append(convRow(c));
+  if (!list.length) {
+    box.append(el('div', { className: 'empty', textContent: search ? 'לא נמצאו שיחות.'
+      : which === 'list' ? 'עדיין אין שיחות. לחצו על + כדי לכתוב מכתב ראשון.'
+        : which === 'archive' ? 'הארכיון ריק.' : 'אין שיחות נעולות.' }));
+  }
+  if (which === 'list') box.append(el('div', { className: 'list-hint', textContent: 'לחיצה ארוכה על שיחה: שינוי שם, ארכיון, נעילה ומחיקה.' }));
+  return box;
+}
+
+function renderChat(conv) {
+  const box = el('div', { className: 'chat-body' });
+  let lastDay = null;
+  const entries = entriesOf(conv.id);
+  if (!entries.length) {
+    box.append(el('div', { className: 'intro' },
       'כתבו לרבי כפי שכותבים מכתב – מה על הלב, בקשה לברכה או שאלה.', el('br'),
       'בתשובה ייפתח עמוד מאגרות הקודש – עם כל האגרות שבו, תרגום (כשהמענה באידיש) והסבר.'));
   }
-  if (!visible.length && view !== 'main') {
-    chat.append(el('div', { className: 'empty', textContent: view === 'fav' ? 'עדיין אין מועדפים. לחצו על ☆ בתשובה כדי לשמור אותה.' : 'הארכיון ריק.' }));
-  }
-
-  const byDay = new Map();
-  for (const e of visible) {
+  for (const e of entries) {
     const k = dayKey(e.ts);
-    if (!byDay.has(k)) byDay.set(k, []);
-    byDay.get(k).push(e);
+    if (k !== lastDay) { box.append(el('div', { className: 'day-sep', textContent: dayLabel(k) })); lastDay = k; }
+    box.append(...entryNodes(e));
   }
-  for (const [key, entries] of [...byDay].sort(([a], [b]) => a.localeCompare(b))) chat.append(dayGroup(key, entries));
-  form.hidden = view !== 'main';
+  return box;
+}
+
+function renderFav() {
+  const box = el('div', { className: 'chat-body' });
+  const favs = state.entries.filter((e) => e.fav && !convById(e.conv)?.locked).sort((a, b) => b.ts - a.ts);
+  if (!favs.length) box.append(el('div', { className: 'empty', textContent: 'עדיין אין מועדפים. לחצו על ☆ בתשובה כדי לשמור אותה.' }));
+  for (const e of favs) {
+    const from = el('button', { type: 'button', className: 'day-sep link', textContent: `${convById(e.conv)?.title || ''} · ${dayLabel(dayKey(e.ts))}` });
+    from.addEventListener('click', () => go({ name: 'chat', id: e.conv }));
+    box.append(from, ...entryNodes(e));
+  }
+  return box;
+}
+
+function render({ scroll = false } = {}) {
+  let conv = view.name === 'chat' ? convById(view.id) : null;
+  if (view.name === 'chat' && (!conv || (conv.locked && !lockedOpen))) { view = { name: 'list' }; conv = null; }
+  if (view.name === 'locked' && !lockedOpen) view = { name: 'list' };
+  const inList = ['list', 'archive', 'locked'].includes(view.name);
+
+  const titles = { list: 'מכתבים לרבי', archive: 'בארכיון', locked: '🔒 שיחות נעולות', fav: '★ מועדפים' };
+  $('title-text').textContent = conv ? conv.title : titles[view.name];
+  $('status').textContent = conv ? `${entriesOf(conv.id).length} מכתבים` : 'מענה מתוך אגרות הקודש';
+  $('back').hidden = view.name === 'list';
+  document.body.dataset.view = view.name;
+  $('search-bar').hidden = !inList;
+  $('new-chat').hidden = view.name !== 'list';
+  form.hidden = !conv;
+
+  chat.textContent = '';
+  if (inList) chat.append(renderConvList(view.name));
+  else if (view.name === 'fav') chat.append(renderFav());
+  else chat.append(renderChat(conv));
   if (scroll) scrollDown();
 }
 
-$('view-fav').addEventListener('click', () => { view = view === 'fav' ? 'main' : 'fav'; render(); });
-$('view-archive').addEventListener('click', () => { view = view === 'archive' ? 'main' : 'archive'; render(); });
+$('back').addEventListener('click', () => go({ name: view.name === 'chat' && convById(view.id)?.archived ? 'archive'
+  : view.name === 'chat' && convById(view.id)?.locked ? 'locked' : 'list' }));
+$('chat-menu').addEventListener('click', () => { const c = convById(view.id); if (c) openConvMenu(c); });
+$('title-text').addEventListener('click', () => { const c = view.name === 'chat' && convById(view.id); if (c) openConvMenu(c); });
+$('new-chat').addEventListener('click', () => {
+  const conv = { id: newId(), title: 'שיחה חדשה', created: Date.now() };
+  state.convs.push(conv);
+  save();
+  go({ name: 'chat', id: conv.id });
+  input.focus();
+});
+$('search').addEventListener('input', (e) => {
+  search = e.target.value.trim();
+  chat.textContent = '';
+  chat.append(renderConvList(view.name));
+});
 
 // ---------- sending a letter ----------
 async function submit(text) {
   if (isNativeApp && !API && !askServer()) return;
-  const entry = { id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, q: text, ts: Date.now(), pending: true };
-  const key = dayKey(entry.ts);
-  state.days[key] = { ...state.days[key], archived: false, open: true }; // writing reopens today's group
+  const conv = convById(view.id);
+  if (!conv) return;
+  if (conv.title === 'שיחה חדשה' && !entriesOf(conv.id).length) conv.title = text.split(/\s+/).slice(0, 5).join(' ').slice(0, 40);
+  const entry = { id: newId(), conv: conv.id, q: text, ts: Date.now(), pending: true };
   state.entries.push(entry);
+  save();
   render({ scroll: true });
   send.disabled = true; $('status').textContent = 'מקליד…';
   try {
@@ -614,9 +743,9 @@ async function submit(text) {
     entry.error = 'אין חיבור לשרת. בדקו את החיבור ונסו שוב.';
   } finally {
     delete entry.pending;
-    send.disabled = false; $('status').textContent = 'מענה מתוך אגרות הקודש';
+    send.disabled = false;
     save();
-    render({ scroll: true });
+    if (view.name === 'chat' && view.id === conv.id) render({ scroll: true }); else render();
   }
 }
 
@@ -633,7 +762,7 @@ input.addEventListener('keydown', (e) => {
 });
 lang.addEventListener('change', () => { try { localStorage.setItem('mlr-lang', lang.value); } catch { /* ignore */ } });
 
-render({ scroll: true });
+render();
 if (isNativeApp) setupNativeApp();
 if (!isNativeApp && 'serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 
@@ -663,10 +792,13 @@ async function setupNativeApp() {
   AppInfo.addListener('backButton', () => {
     if (closeLightbox()) return;
     if (dialog.open) { dialog.close(); return; }
+    if ($('conv-menu').open) { closeConvMenu(); return; }
     if (markerMode) { setMarkerMode(false); return; }
+    if (view.name !== 'list') { $('back').click(); return; }
     AppInfo.minimizeApp();
   });
-  $('view-fav').before(btn);
+  $('chat-menu').before(btn);
+  btn.classList.add('list-only');
   $('server-save').addEventListener('click', () => { if (setServer($('server-input').value)) status('הכתובת נשמרה.'); });
 
   try { $('auto-check').checked = localStorage.getItem('mlr-auto-update') !== 'off'; } catch { /* ignore */ }

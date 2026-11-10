@@ -13,12 +13,13 @@
 <body>
   <div class="app">
     <header class="bar">
+      <button id="back" class="icon-btn back" title="חזרה" aria-label="חזרה" hidden>→</button>
       <img src="icon.svg" alt="" class="avatar">
       <div class="title">
-        <h1>מכתבים לרבי</h1>
+        <h1 id="title-text">מכתבים לרבי</h1>
         <span class="sub" id="status">מענה מתוך אגרות הקודש</span>
       </div>
-      <label class="lang">
+      <label class="lang chat-only">
         <span class="sr">שפת המענה</span>
         <select id="lang" aria-label="שפת המענה">
           <option value="">שפת המכתב</option>
@@ -29,9 +30,12 @@
           <option value="es">Español</option>
         </select>
       </label>
-      <button id="view-fav" class="icon-btn" title="מועדפים" aria-label="מועדפים" aria-pressed="false">☆</button>
-      <button id="view-archive" class="icon-btn" title="ארכיון" aria-label="ארכיון" aria-pressed="false">🗄</button>
+      <button id="chat-menu" class="icon-btn chat-only" title="אפשרויות השיחה" aria-label="אפשרויות השיחה">⋮</button>
     </header>
+
+    <div id="search-bar" class="search-bar">
+      <input id="search" type="search" placeholder="🔍 חיפוש שיחות" aria-label="חיפוש שיחות">
+    </div>
 
     <div id="update-banner" class="update-banner" hidden>
       <span id="update-text"></span>
@@ -73,6 +77,19 @@
       <div class="lightbox-scroll"><img id="lightbox-img" alt=""></div>
       <button type="button" id="lightbox-close-bottom" class="lightbox-close-bottom">✕ סגירה</button>
     </div>
+
+    <button type="button" id="new-chat" class="fab" title="מכתב חדש" aria-label="מכתב חדש">✎</button>
+
+    <dialog id="conv-menu" class="settings conv-menu">
+      <form method="dialog">
+        <h2 id="menu-title"></h2>
+        <button type="button" id="menu-rename">✎ שינוי שם</button>
+        <button type="button" id="menu-archive">🗄 העברה לארכיון</button>
+        <button type="button" id="menu-lock">🔒 נעילת השיחה</button>
+        <button type="button" id="menu-delete" class="danger">🗑 מחיקת השיחה</button>
+        <div class="dialog-actions"><button value="close">ביטול</button></div>
+      </form>
+    </dialog>
 
     <form id="composer" class="composer">
       <textarea id="input" rows="1" placeholder="כתבו את המכתב…" maxlength="8000" required></textarea>

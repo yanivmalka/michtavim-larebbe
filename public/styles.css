@@ -123,3 +123,43 @@ body.marker-mode .hl { outline: 2px dashed #e0c040; outline-offset: 3px; border-
 .q-tool:hover { opacity: 1; }
 .locked-q { font: inherit; background: none; border: 0; padding: 4px 0; color: var(--muted); cursor: pointer; text-align: start; }
 .collapsed-a { font: inherit; font-size: .9rem; text-align: start; cursor: pointer; border: 0; color: var(--text); }
+
+/* ---------- chats list (WhatsApp-like) ---------- */
+.back { font-size: 1.3rem; padding: 0 4px; }
+.title h1 { cursor: default; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body[data-view="chat"] .title h1 { cursor: pointer; }
+body:not([data-view="chat"]) .chat-only { display: none; }
+body[data-view="chat"] .list-only, body[data-view="fav"] .list-only { display: none; }
+.search-bar { padding: 8px 10px 0; background: var(--bg); }
+.search-bar[hidden] { display: none; }
+.search-bar input { width: 100%; font: inherit; padding: 9px 14px; border: 0; border-radius: 20px; background: var(--input); color: var(--text); }
+body:not([data-view="chat"]) .chat { padding: 6px 0 90px; gap: 0; }
+.conv-list { display: flex; flex-direction: column; }
+.conv { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 14px; border: 0; background: transparent;
+  color: var(--text); font: inherit; text-align: start; cursor: pointer; -webkit-touch-callout: none; user-select: none; }
+.conv:hover, .conv:active { background: rgba(0,0,0,.05); }
+.conv-avatar { flex: none; width: 48px; height: 48px; border-radius: 50%; background: var(--accent); color: #fff;
+  display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+.conv.special .conv-avatar { background: transparent; color: var(--accent); width: 48px; font-size: 1.4rem; }
+.conv-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+.conv.special .conv-main { border: 0; padding: 0; }
+.conv-top, .conv-bottom { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.conv-title { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 1rem; }
+.conv-time { flex: none; font-size: .75rem; color: var(--muted); }
+.conv-preview { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .88rem; color: var(--muted); }
+.conv-badge { flex: none; font-size: .75rem; color: #c9940a; }
+.conv-count { flex: none; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: #25a35a; color: #fff;
+  font-size: .75rem; display: inline-flex; align-items: center; justify-content: center; }
+.conv-count.plain { background: transparent; color: var(--muted); }
+.list-hint { text-align: center; font-size: .75rem; color: var(--muted); padding: 18px 12px; }
+.fab { position: fixed; bottom: calc(env(safe-area-inset-bottom) + 22px); left: max(18px, calc(50% - 432px)); z-index: 15; width: 58px; height: 58px;
+  border-radius: 18px; border: 0; background: #25a35a; color: #fff; font-size: 1.5rem; cursor: pointer; box-shadow: 0 3px 10px rgba(0,0,0,.3); }
+.fab[hidden] { display: none; }
+.day-sep { align-self: center; font-size: .78rem; color: var(--muted); background: var(--them); padding: 4px 12px; border-radius: 10px;
+  margin: 8px 0 2px; box-shadow: 0 1px .5px rgba(0,0,0,.13); border: 0; font-family: inherit; }
+.day-sep.link { cursor: pointer; color: var(--accent); }
+.chat-body { display: flex; flex-direction: column; gap: 8px; }
+.composer[hidden] { display: none; }
+.conv-menu form { display: flex; flex-direction: column; gap: 8px; }
+.conv-menu form > button { text-align: start; }
+.conv-menu .danger { background: #b3261e; }
