@@ -4,7 +4,8 @@ const env = process.env;
 
 export const config = {
   port: Number(env.PORT || 3000),
-  publicBaseUrl: (env.PUBLIC_BASE_URL || `http://localhost:${env.PORT || 3000}`).replace(/\/$/, ''),
+  // RENDER_EXTERNAL_URL is set automatically on Render
+  publicBaseUrl: (env.PUBLIC_BASE_URL || env.RENDER_EXTERNAL_URL || `http://localhost:${env.PORT || 3000}`).replace(/\/$/, ''),
   claude: {
     model: env.CLAUDE_MODEL || 'claude-opus-5-5',
     effort: env.CLAUDE_EFFORT || 'medium',
