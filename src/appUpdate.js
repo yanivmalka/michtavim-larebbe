@@ -35,12 +35,35 @@ export function toVersion(release) {
   };
 }
 
+/**
+ * Public repositories only: github.com/<repo>/releases/latest redirects to the newest
+ * release's tag page, and asset URLs are predictable – no API quota involved.
+ */
+export async function latestFromRedirect(fetchFn = fetch) {
+  const r = await fetchFn(`https://github.com/${REPO}/releases/latest`, { redirect: 'manual' });
+  const m = /\/releases\/tag\/app-v(\d+)$/.exec(r.headers.get('location') || '');
+  if (!m) return null;
+  const versionCode = Number(m[1]);
+  const versionName = `1.0.${versionCode}`;
+  const browser = `https://github.com/${REPO}/releases/download/app-v${versionCode}/michtavim-larebbe-${versionName}.apk`;
+  return { versionCode, versionName, notes: '', publishedAt: null, size: null, asset: { api: null, browser } };
+}
+
 export async function latestVersion({ fetchRelease } = {}) {
   if (!fetchRelease && cached.value && Date.now() - cached.at < CACHE_MS) return cached.value;
-  const release = fetchRelease
-    ? await fetchRelease()
-    : await gh(`https://api.github.com/repos/${REPO}/releases/latest`).then((r) => (r.ok ? r.json() : null));
-  const value = toVersion(release);
+  let value;
+  if (fetchRelease) {
+    value = toVersion(await fetchRelease());
+  } else {
+    const r = await gh(`https://api.github.com/repos/${REPO}/releases/latest`);
+    if (r.ok) {
+      value = toVersion(await r.json());
+    } else {
+      // The API allows few anonymous calls per IP, and hosting providers share IPs.
+      console.warn(`app update: GitHub API answered ${r.status}, using the releases page instead`);
+      value = await latestFromRedirect();
+    }
+  }
   if (!fetchRelease) cached = { at: Date.now(), value };
   return value;
 }
@@ -64,7 +87,7 @@ export function appUpdateRouter(deps = {}) {
     try {
       const v = await latestVersion(deps);
       if (!v) return res.sendStatus(404);
-      if (!TOKEN) return res.redirect(302, v.asset.browser); // public repository
+      if (!TOKEN || !v.asset.api) return res.redirect(302, v.asset.browser); // public repository
       const r = await gh(v.asset.api, 'application/octet-stream'); // private: stream it through
       if (!r.ok || !r.body) return res.sendStatus(502);
       res.type('application/vnd.android.package-archive');
