@@ -2,12 +2,12 @@
 // Bundled to public/vendor/cloud.js by `npm run build:web` (esbuild), so the page needs no CDN.
 import { initializeApp } from 'firebase/app';
 import {
-  getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect,
+  getAuth, connectAuthEmulator, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect,
   signInWithCredential, signOut as fbSignOut,
 } from 'firebase/auth';
 import {
   initializeFirestore, persistentLocalCache, persistentMultipleTabManager, memoryLocalCache,
-  collection, doc, query, where, orderBy, onSnapshot, setDoc, updateDoc, deleteDoc, getDocs,
+  connectFirestoreEmulator, collection, doc, query, where, orderBy, onSnapshot, setDoc, updateDoc, deleteDoc, getDocs,
   writeBatch, arrayUnion, arrayRemove, serverTimestamp,
 } from 'firebase/firestore';
 
@@ -19,7 +19,18 @@ export function initCloud(config) {
   let cache;
   try { cache = persistentLocalCache({ tabManager: persistentMultipleTabManager() }); } catch { cache = memoryLocalCache(); }
   db = initializeFirestore(app, { localCache: cache });
+  // local testing against the Firebase emulators: localStorage['mlr-emulator'] = '1'
+  let emulator = false;
+  try { emulator = localStorage.getItem('mlr-emulator') === '1'; } catch { /* ignore */ }
+  if (emulator) {
+    connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+    connectFirestoreEmulator(db, '127.0.0.1', 8085);
+  }
 }
+
+/** Emulator only: sign in as a made-up Google user. */
+export const signInForTests = (sub, name) => signInWithCredential(auth,
+  GoogleAuthProvider.credential(JSON.stringify({ sub, email: `${sub}@example.com`, email_verified: true, name })));
 
 export const onUser = (cb) => onAuthStateChanged(auth, cb);
 export const currentUser = () => auth?.currentUser || null;

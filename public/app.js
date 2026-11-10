@@ -88,7 +88,7 @@ try { lang.value = localStorage.getItem('mlr-lang') || ''; } catch { /* ignore *
 
 const convById = (id) => state.convs.find((c) => c.id === id);
 const entriesOf = (id) => state.entries.filter((e) => e.conv === id);
-const lastTs = (c) => entriesOf(c.id).at(-1)?.ts || c.created;
+const lastTs = (c) => Math.max(c.created || 0, c.lastTs || 0, entriesOf(c.id).at(-1)?.ts || 0, ...(state.messages || []).filter((m) => m.conv === c.id).map((m) => m.ts));
 
 const time = (ts) => el('span', { className: 'time', textContent: new Date(ts).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) });
 const scrollDown = () => chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
@@ -558,7 +558,191 @@ function answerBubble(entry) {
     time(entry.ts));
 }
 
-function questionBubble(entry) {
+// ---------- account, sync and sharing (Firebase, loaded only when needed) ----------
+let cloud = null;            // the cloud module, once loaded
+let user = null;             // the signed-in user
+const convWatchers = new Map(); // conv id → unsubscribe
+let convsWatcher = null;
+state.messages ||= [];       // chat messages of shared conversations: { id, conv, uid, name, text, ts, replyTo }
+const SITE = isNativeApp ? API : location.origin;
+
+async function loadCloud() {
+  if (cloud) return cloud;
+  const [mod, { firebaseConfig }] = await Promise.all([import('./vendor/cloud.js'), import('./firebase-config.js')]);
+  mod.initCloud(firebaseConfig);
+  cloud = mod;
+  cloud.onUser(onUserChanged);
+  try { if (localStorage.getItem('mlr-emulator') === '1') window.__mlrSignInForTests = cloud.signInForTests; } catch { /* ignore */ }
+  return cloud;
+}
+
+const isShared = (conv) => (conv?.members?.length || 0) > 1;
+const isOwner = (conv) => !conv?.cloud || !user || conv.owner === user.uid;
+const messagesOf = (id) => state.messages.filter((m) => m.conv === id);
+
+let renderQueued = false;
+function renderSoon() { // many snapshots can arrive at once
+  if (renderQueued) return;
+  renderQueued = true;
+  requestAnimationFrame(() => {
+    renderQueued = false;
+    // do not redraw under the user's selection (marker) or an open menu
+    if (!getSelection().isCollapsed || $('conv-menu').open) { setTimeout(renderSoon, 800); return; }
+    render();
+  });
+}
+
+async function onUserChanged(u) {
+  user = u;
+  try { localStorage.setItem('mlr-signed-in', u ? '1' : ''); } catch { /* ignore */ }
+  paintAccount();
+  if (!u) { stopWatching(); return; }
+  if ($('account').open) { $('account-status').textContent = ''; $('account').close(); }
+  // conversations made on this device before signing in move to the account
+  const local = state.convs.filter((c) => !c.cloud);
+  for (const c of local) {
+    try {
+      await cloud.uploadConv({ id: c.id, title: c.title, created: c.created }, entriesOf(c.id).filter((e) => !e.pending));
+      Object.assign(c, { cloud: true, owner: u.uid, members: [u.uid] });
+    } catch (e) { console.warn('upload failed', c.id, e); }
+  }
+  save();
+  watchAll();
+  if (pendingJoin) joinNow();
+}
+
+function stopWatching() {
+  convsWatcher?.(); convsWatcher = null;
+  for (const off of convWatchers.values()) off();
+  convWatchers.clear();
+}
+
+function watchAll() {
+  stopWatching();
+  convsWatcher = cloud.watchMyConvs((docs) => {
+    const ids = new Set(docs.map((d) => d.id));
+    for (const d of docs) {
+      const { updated, joinWith, ...fields } = d;
+      const local = convById(d.id);
+      if (local) Object.assign(local, fields, { cloud: true }); // keeps this device's archived / locked flags
+      else state.convs.push({ ...fields, cloud: true });
+      if (!convWatchers.has(d.id)) watchOne(d.id);
+    }
+    // conversations deleted, or that we left / were removed from
+    for (const c of state.convs.filter((x) => x.cloud && !ids.has(x.id))) dropConv(c.id);
+    save(); renderSoon();
+  }, (e) => console.warn('conversations', e));
+}
+
+function watchOne(id) {
+  convWatchers.set(id, cloud.watchConv(id, {
+    onEntries(list) {
+      const keep = new Map(entriesOf(id).map((e) => [e.id, e]));
+      const merged = list.map((d) => Object.assign(keep.get(d.id) || {}, d, { conv: id })); // keeps fav / collapsed
+      const pending = entriesOf(id).filter((e) => e.pending && !list.some((d) => d.id === e.id));
+      state.entries = state.entries.filter((e) => e.conv !== id).concat(merged, pending);
+      save(); renderSoon();
+    },
+    onMessages(list) {
+      state.messages = state.messages.filter((m) => m.conv !== id).concat(list.map((m) => ({ ...m, conv: id })));
+      save(); renderSoon();
+    },
+    onError: (e) => console.warn('conversation', id, e),
+  }));
+}
+
+function dropConv(id) {
+  convWatchers.get(id)?.(); convWatchers.delete(id);
+  state.entries = state.entries.filter((e) => e.conv !== id);
+  state.messages = state.messages.filter((m) => m.conv !== id);
+  state.convs = state.convs.filter((c) => c.id !== id);
+}
+
+// ---- account dialog ----
+function paintAccount() {
+  $('account-btn').textContent = user ? '👤' : '👤';
+  $('account-btn').classList.toggle('on', !!user);
+  $('account-in').hidden = !user;
+  $('account-out').hidden = !!user;
+  if (user) $('account-name').textContent = `${user.displayName || ''} ${user.email ? `(${user.email})` : ''}`.trim();
+}
+$('account-btn').addEventListener('click', () => { paintAccount(); $('account').showModal(); });
+$('sign-in').addEventListener('click', async () => {
+  $('account-status').textContent = 'מתחבר…';
+  try {
+    await loadCloud();
+    if (isNativeApp) {
+      let Auth;
+      try { Auth = window.Capacitor.registerPlugin('FirebaseAuthentication'); await Auth.signInWithGoogle; } catch { Auth = null; }
+      const result = Auth ? await Auth.signInWithGoogle().catch((e) => { throw e; }) : null;
+      if (!result?.credential?.idToken) throw new Error('NATIVE_SIGN_IN_UNAVAILABLE');
+      await cloud.signInWithGoogle(result.credential.idToken);
+    } else {
+      await cloud.signInWithGoogle();
+    }
+    $('account-status').textContent = '';
+    $('account').close();
+  } catch (e) {
+    $('account-status').textContent = e?.message === 'NATIVE_SIGN_IN_UNAVAILABLE' || /not implemented/i.test(e?.message || '')
+      ? 'ההתחברות באפליקציה תתאפשר בגרסה הבאה. בינתיים אפשר להתחבר באתר.'
+      : /popup-closed|cancel/i.test(`${e?.code} ${e?.message}`) ? '' : `ההתחברות נכשלה: ${e?.code || e?.message || e}`;
+  }
+});
+$('sign-out').addEventListener('click', async () => {
+  if (!confirm('להתנתק? השיחות של החשבון יוסרו מהמכשיר הזה (הן נשמרות בחשבון).')) return;
+  stopWatching();
+  for (const c of state.convs.filter((x) => x.cloud)) dropConv(c.id);
+  save();
+  await cloud?.signOut();
+  $('account').close();
+  go({ name: 'list' });
+});
+
+// ---- joining a shared conversation: link /join/<conv>.<token> ----
+let pendingJoin = null;
+function readJoinLink(url) {
+  const m = /\/join\/([\w-]+)\.([0-9a-f]{32})/.exec(url || '');
+  return m ? { id: m[1], token: m[2] } : null;
+}
+async function joinNow() {
+  const j = pendingJoin;
+  if (!j) return;
+  if (!user) {
+    await loadCloud().catch(() => {});
+    if (!user) {
+      $('account-status').textContent = 'כדי להצטרף לשיחה המשותפת יש להתחבר עם חשבון Google.';
+      paintAccount(); $('account').showModal();
+      return; // continues after sign-in (onUserChanged)
+    }
+  }
+  pendingJoin = null;
+  try {
+    if (!convById(j.id)) await cloud.joinConv(j.id, j.token);
+    go({ name: 'chat', id: j.id });
+  } catch (e) {
+    alert('לא ניתן היה להצטרף לשיחה. ייתכן שהקישור בוטל או שגוי.');
+    console.warn(e);
+  }
+}
+
+// ---- reply-to (shared conversations) ----
+let replyTo = null;
+function setReply(target) {
+  replyTo = target;
+  $('reply-bar').hidden = !target;
+  if (target) { $('reply-text').textContent = `↩ ${target.name}: ${target.text}`; input.focus(); }
+}
+$('reply-cancel').addEventListener('click', () => setReply(null));
+const replyButton = (target) => {
+  const b = el('button', { type: 'button', className: 'q-tool', textContent: '↩', title: 'תגובה' });
+  b.setAttribute('aria-label', 'תגובה');
+  b.addEventListener('click', () => setReply(target));
+  return b;
+};
+const replyQuote = (r) => r && el('div', { className: 'reply-quote' }, el('b', { textContent: r.name }), ` ${r.text}`);
+const nameOf = (conv, uid) => conv?.memberInfo?.[uid]?.name || 'משתתף';
+
+function questionBubble(entry, conv) {
   const tools = el('div', { className: 'q-tools' });
   if (entry.a) {
     const b = el('button', { type: 'button', className: 'q-tool', textContent: entry.collapsed ? '▸' : '▾', title: entry.collapsed ? 'הרחבת המענה' : 'כיווץ המענה' });
@@ -566,17 +750,38 @@ function questionBubble(entry) {
     b.addEventListener('click', () => { entry.collapsed = !entry.collapsed; save(); render(); });
     tools.append(b);
   }
-  return el('div', { className: 'msg me' }, tools, el('p', { textContent: entry.q }), time(entry.ts));
+  const mine = isOwner(conv);
+  const who = mine ? 'אני' : nameOf(conv, conv.owner);
+  if (isShared(conv)) tools.append(replyButton({ kind: 'entry', id: entry.id, name: who, text: entry.q.slice(0, 80) }));
+  return el('div', { className: `msg ${mine ? 'me' : 'them other'}` }, tools,
+    !mine && el('div', { className: 'sender', textContent: `✉️ מכתב של ${who}` }),
+    el('p', { textContent: entry.q }), time(entry.ts));
 }
 
-function entryNodes(entry) {
-  const nodes = [questionBubble(entry)];
+function messageBubble(m, conv) {
+  const mine = user && m.uid === user.uid;
+  const tools = el('div', { className: 'q-tools' }, replyButton({ kind: 'message', id: m.id, name: mine ? 'אני' : m.name, text: m.text.slice(0, 80) }));
+  if (mine || isOwner(conv)) {
+    const del = el('button', { type: 'button', className: 'q-tool', textContent: '🗑', title: 'מחיקת ההודעה' });
+    del.addEventListener('click', async () => { if (confirm('למחוק את ההודעה לכולם?')) await cloud.deleteMessage(conv.id, m.id).catch(() => alert('המחיקה נכשלה.')); });
+    tools.append(del);
+  }
+  return el('div', { className: `msg chat-msg ${mine ? 'me' : 'them other'}` }, tools,
+    !mine && el('div', { className: 'sender', textContent: m.name }),
+    replyQuote(m.replyTo), el('p', { textContent: m.text }), time(m.ts));
+}
+
+function entryNodes(entry, conv = convById(entry.conv)) {
+  const nodes = [questionBubble(entry, conv)];
   if (entry.a && entry.collapsed) {
     const chip = el('button', { type: 'button', className: 'msg them collapsed-a', textContent: `✉️ ${entry.a.title}${entry.fav ? ' ★' : ''} – הרחבה` });
     chip.addEventListener('click', () => { entry.collapsed = false; save(); render(); });
     nodes.push(chip);
-  } else if (entry.a) nodes.push(answerBubble(entry));
-  else if (entry.pending) nodes.push(el('div', { className: 'msg them typing', textContent: 'פותחים את אגרות הקודש…' }));
+  } else if (entry.a) {
+    const bubble = answerBubble(entry);
+    if (isShared(conv)) bubble.prepend(el('div', { className: 'q-tools' }, replyButton({ kind: 'answer', id: entry.id, name: 'המענה', text: entry.a.title })));
+    nodes.push(bubble);
+  } else if (entry.pending) nodes.push(el('div', { className: 'msg them typing', textContent: 'פותחים את אגרות הקודש…' }));
   else nodes.push(el('div', { className: 'msg them error', textContent: entry.error || 'לא התקבל מענה למכתב זה.' }));
   return nodes;
 }
@@ -588,7 +793,9 @@ let search = '';
 function go(next) {
   view = next;
   search = '';
+  $('search').value = '';
   closeConvMenu();
+  setReply(null);
   render({ scroll: next.name === 'chat' });
 }
 
@@ -601,17 +808,29 @@ const shortTime = (ts) => (dayKey(ts) === dayKey(Date.now())
 let menuConv = null;
 function openConvMenu(conv) {
   menuConv = conv;
+  const owner = isOwner(conv);
   $('menu-title').textContent = conv.title;
   $('menu-archive').textContent = conv.archived ? '📤 הוצאה מהארכיון' : '🗄 העברה לארכיון';
-  $('menu-lock').textContent = conv.locked ? '🔓 ביטול נעילה' : '🔒 נעילת השיחה';
+  $('menu-lock').textContent = conv.locked ? '🔓 ביטול נעילה' : '🔒 נעילת השיחה (במכשיר זה)';
+  $('menu-rename').hidden = !owner;
+  $('menu-share').hidden = !owner;
+  $('menu-stop-share').hidden = !owner || !(isShared(conv) || conv.inviteToken);
+  $('menu-delete').textContent = !conv.cloud ? '🗑 מחיקת השיחה' : owner ? '🗑 מחיקת השיחה לכולם' : '🚪 יציאה מהשיחה';
+  const people = isShared(conv) ? (conv.members || []).map((u) => nameOf(conv, u) + (u === conv.owner ? ' (פותח השיחה)' : '')).join(', ') : '';
+  $('menu-members').hidden = !people;
+  $('menu-members').textContent = people ? `👥 ${people}` : '';
+  $('lang').closest('label').hidden = !owner;
   $('conv-menu').showModal();
 }
 function closeConvMenu() { if ($('conv-menu').open) $('conv-menu').close(); }
 
-$('menu-rename').addEventListener('click', () => {
-  const t = prompt('שם השיחה:', menuConv.title);
+$('menu-rename').addEventListener('click', async () => {
+  const conv = menuConv;
+  const t = prompt('שם השיחה:', conv.title);
   closeConvMenu();
-  if (t && t.trim()) { menuConv.title = t.trim().slice(0, 50); save(); render(); }
+  if (!t || !t.trim()) return;
+  conv.title = t.trim().slice(0, 50); save(); render();
+  if (conv.cloud) await cloud.renameConv(conv.id, conv.title).catch(() => alert('שינוי השם לא נשמר בחשבון.'));
 });
 $('menu-archive').addEventListener('click', () => {
   menuConv.archived = !menuConv.archived;
@@ -633,13 +852,45 @@ $('menu-lock').addEventListener('click', async () => {
     delete conv.locked; save(); render();
   }
 });
-$('menu-delete').addEventListener('click', () => {
+$('menu-share').addEventListener('click', async () => {
   const conv = menuConv;
   closeConvMenu();
-  if (!confirm(`למחוק את השיחה "${conv.title}" מהמכשיר?`)) return;
-  const ids = new Set(entriesOf(conv.id).map((e) => e.id));
-  state.entries = state.entries.filter((e) => !ids.has(e.id));
-  state.convs = state.convs.filter((c) => c !== conv);
+  try {
+    await loadCloud();
+    if (!user) {
+      $('account-status').textContent = 'כדי לשתף שיחה יש להתחבר עם חשבון Google.';
+      paintAccount(); $('account').showModal();
+      return;
+    }
+    if (!conv.cloud) { alert('השיחה עדיין מסתנכרנת לחשבון. נסו שוב בעוד רגע.'); return; }
+    const token = await cloud.inviteToken(conv);
+    conv.inviteToken = token;
+    const link = `${SITE}/join/${conv.id}.${token}`;
+    const text = `הצטרפו לשיחה "${conv.title}" ב"מכתבים לרבי" – תוכלו לראות את המכתבים והמענים ולהגיב:\n${link}`;
+    if (isNativeApp) await window.Capacitor.registerPlugin('Share').share({ title: 'מכתבים לרבי', text, dialogTitle: 'שיתוף השיחה' });
+    else if (navigator.share) await navigator.share({ title: 'מכתבים לרבי', text });
+    else { await navigator.clipboard.writeText(text).catch(() => {}); alert(`הקישור הועתק:\n${link}`); }
+  } catch (e) {
+    if (!/cancel|abort/i.test(`${e?.name} ${e?.message}`)) alert(`השיתוף נכשל: ${e?.message || e}`);
+  }
+});
+$('menu-stop-share').addEventListener('click', async () => {
+  const conv = menuConv;
+  closeConvMenu();
+  if (!confirm('להפסיק את השיתוף? המשתתפים האחרים יוסרו מהשיחה והקישור יבוטל.')) return;
+  await cloud.stopSharing(conv).catch(() => alert('הפעולה נכשלה.'));
+});
+$('menu-delete').addEventListener('click', async () => {
+  const conv = menuConv;
+  closeConvMenu();
+  const owner = isOwner(conv);
+  const question = !conv.cloud ? `למחוק את השיחה "${conv.title}" מהמכשיר?`
+    : owner ? `למחוק את השיחה "${conv.title}"? היא תימחק לכל המשתתפים ומכל המכשירים.` : `לצאת מהשיחה "${conv.title}"?`;
+  if (!confirm(question)) return;
+  try {
+    if (conv.cloud) await (owner ? cloud.deleteConv(conv.id) : cloud.leaveConv(conv.id));
+  } catch (e) { alert(`הפעולה נכשלה: ${e?.message || e}`); return; }
+  dropConv(conv.id);
   save();
   if (view.name === 'chat') go({ name: 'list' }); else render();
 });
@@ -656,13 +907,14 @@ function onLongPress(node, fn) {
 
 function convRow(conv) {
   const entries = entriesOf(conv.id);
-  const last = entries.at(-1);
-  const preview = !last ? 'אין עדיין מכתבים'
-    : last.a ? `✉️ ${last.a.title}`
-      : last.pending ? 'פותחים את אגרות הקודש…' : last.q;
+  const items = [...entries, ...messagesOf(conv.id)].sort((x, y) => x.ts - y.ts);
+  const last = items.at(-1);
+  const preview = !last ? (conv.lastPreview || 'אין עדיין מכתבים')
+    : last.text ? `${user && last.uid === user.uid ? 'אני' : last.name}: ${last.text}`
+      : last.a ? `✉️ ${last.a.title}` : last.pending ? 'פותחים את אגרות הקודש…' : last.q;
   const favs = entries.filter((e) => e.fav).length;
   const row = el('button', { type: 'button', className: 'conv' },
-    el('span', { className: 'conv-avatar', textContent: conv.locked ? '🔒' : '✉️' }),
+    el('span', { className: 'conv-avatar', textContent: conv.locked ? '🔒' : isShared(conv) ? '👥' : '✉️' }),
     el('span', { className: 'conv-main' },
       el('span', { className: 'conv-top' },
         el('b', { className: 'conv-title', textContent: conv.title }),
@@ -689,7 +941,8 @@ const matches = (conv) => {
   if (!search) return true;
   const q = search.toLowerCase();
   return conv.title.toLowerCase().includes(q)
-    || entriesOf(conv.id).some((e) => e.q.toLowerCase().includes(q) || e.a?.title?.includes(q));
+    || entriesOf(conv.id).some((e) => e.q.toLowerCase().includes(q) || e.a?.title?.includes(q))
+    || messagesOf(conv.id).some((m) => m.text.toLowerCase().includes(q));
 };
 
 function renderConvList(which) {
@@ -714,26 +967,34 @@ function renderConvList(which) {
   for (const c of list) box.append(convRow(c));
   if (!list.length) {
     box.append(el('div', { className: 'empty', textContent: search ? 'לא נמצאו שיחות.'
-      : which === 'list' ? 'עדיין אין שיחות. לחצו על + כדי לכתוב מכתב ראשון.'
+      : which === 'list' ? 'עדיין אין שיחות. לחצו על ✎ כדי לכתוב מכתב ראשון.'
         : which === 'archive' ? 'הארכיון ריק.' : 'אין שיחות נעולות.' }));
   }
-  if (which === 'list') box.append(el('div', { className: 'list-hint', textContent: 'לחיצה ארוכה על שיחה: שינוי שם, ארכיון, נעילה ומחיקה.' }));
+  if (which === 'list') {
+    box.append(el('div', { className: 'list-hint', textContent: 'לחיצה ארוכה על שיחה: שינוי שם, שיתוף, ארכיון, נעילה ומחיקה.' }));
+    if (!user) {
+      const b = el('button', { type: 'button', className: 'link-btn sync-hint', textContent: '👤 התחברות עם Google – לסנכרון בין מכשירים ולשיתוף שיחות' });
+      b.addEventListener('click', () => $('account-btn').click());
+      box.append(b);
+    }
+  }
   return box;
 }
 
 function renderChat(conv) {
   const box = el('div', { className: 'chat-body' });
   let lastDay = null;
-  const entries = entriesOf(conv.id);
-  if (!entries.length) {
+  const items = [...entriesOf(conv.id).map((e) => ({ ts: e.ts, e })), ...messagesOf(conv.id).map((m) => ({ ts: m.ts, m }))]
+    .sort((x, y) => x.ts - y.ts);
+  if (!items.length) {
     box.append(el('div', { className: 'intro' },
       'כתבו לרבי כפי שכותבים מכתב – מה על הלב, בקשה לברכה או שאלה.', el('br'),
       'בתשובה ייפתח עמוד מאגרות הקודש – עם כל האגרות שבו, תרגום (כשהמענה באידיש) והסבר.'));
   }
-  for (const e of entries) {
-    const k = dayKey(e.ts);
+  for (const it of items) {
+    const k = dayKey(it.ts);
     if (k !== lastDay) { box.append(el('div', { className: 'day-sep', textContent: dayLabel(k) })); lastDay = k; }
-    box.append(...entryNodes(e));
+    if (it.e) box.append(...entryNodes(it.e, conv)); else box.append(messageBubble(it.m, conv));
   }
   return box;
 }
@@ -750,6 +1011,20 @@ function renderFav() {
   return box;
 }
 
+// composer mode in shared conversations: a letter to the Rebbe (owner only) or a message to the others
+let toRebbe = true;
+function paintComposer(conv) {
+  const owner = isOwner(conv);
+  const shared = isShared(conv);
+  if (!owner) toRebbe = false;
+  else if (!shared) toRebbe = true;
+  $('mode').hidden = !(owner && shared);
+  $('mode').textContent = toRebbe ? '✉️' : '💬';
+  $('mode').title = toRebbe ? 'מכתב לרבי (לחצו להודעה למשתתפים)' : 'הודעה למשתתפים (לחצו למכתב לרבי)';
+  input.placeholder = toRebbe ? 'כתבו את המכתב…' : 'הודעה למשתתפים…';
+}
+$('mode').addEventListener('click', () => { toRebbe = !toRebbe; paintComposer(convById(view.id)); input.focus(); });
+
 function render({ scroll = false } = {}) {
   let conv = view.name === 'chat' ? convById(view.id) : null;
   if (view.name === 'chat' && (!conv || (conv.locked && !lockedOpen))) { view = { name: 'list' }; conv = null; }
@@ -758,30 +1033,38 @@ function render({ scroll = false } = {}) {
 
   const titles = { list: 'מכתבים לרבי', archive: 'בארכיון', locked: '🔒 שיחות נעולות', fav: '★ מועדפים' };
   $('title-text').textContent = conv ? conv.title : titles[view.name];
-  $('status').textContent = conv ? `${entriesOf(conv.id).length} מכתבים` : 'מענה מתוך אגרות הקודש';
+  $('status').textContent = conv
+    ? (isShared(conv) ? `👥 ${conv.members.length} משתתפים · ` : '') + `${entriesOf(conv.id).length} מכתבים`
+    : user ? `מחובר: ${user.displayName || user.email}` : 'מענה מתוך אגרות הקודש';
   $('back').hidden = view.name === 'list';
   document.body.dataset.view = view.name;
   $('search-bar').hidden = !inList;
   $('new-chat').hidden = view.name !== 'list';
   form.hidden = !conv;
+  if (conv) paintComposer(conv);
 
+  const keepScroll = !scroll && chat.scrollHeight - chat.scrollTop - chat.clientHeight < 80; // stay at the bottom
+  const top = chat.scrollTop;
   chat.textContent = '';
   if (inList) chat.append(renderConvList(view.name));
   else if (view.name === 'fav') chat.append(renderFav());
   else chat.append(renderChat(conv));
-  if (scroll) scrollDown();
+  if (scroll || (conv && keepScroll)) scrollDown(); else chat.scrollTop = top;
 }
 
 $('back').addEventListener('click', () => go({ name: view.name === 'chat' && convById(view.id)?.archived ? 'archive'
   : view.name === 'chat' && convById(view.id)?.locked ? 'locked' : 'list' }));
 $('chat-menu').addEventListener('click', () => { const c = convById(view.id); if (c) openConvMenu(c); });
 $('title-text').addEventListener('click', () => { const c = view.name === 'chat' && convById(view.id); if (c) openConvMenu(c); });
-$('new-chat').addEventListener('click', () => {
+$('new-chat').addEventListener('click', async () => {
   const conv = { id: newId(), title: 'שיחה חדשה', created: Date.now() };
   state.convs.push(conv);
   save();
   go({ name: 'chat', id: conv.id });
   input.focus();
+  if (user) {
+    try { await cloud.createConv(conv); Object.assign(conv, { cloud: true, owner: user.uid, members: [user.uid] }); save(); } catch (e) { console.warn(e); }
+  }
 });
 $('search').addEventListener('input', (e) => {
   search = e.target.value.trim();
@@ -789,13 +1072,33 @@ $('search').addEventListener('input', (e) => {
   chat.append(renderConvList(view.name));
 });
 
-// ---------- sending a letter ----------
+// ---------- sending ----------
+async function sendChat(conv, text) {
+  const msg = { id: newId(), conv: conv.id, uid: user.uid, name: user.displayName || user.email, text, ts: Date.now(), replyTo };
+  state.messages.push(msg); // shown at once; the snapshot replaces it
+  setReply(null);
+  render({ scroll: true });
+  try {
+    await cloud.sendMessage(conv.id, { id: msg.id, text, ts: msg.ts, replyTo: msg.replyTo });
+  } catch (e) {
+    state.messages = state.messages.filter((m) => m !== msg);
+    render();
+    alert(`ההודעה לא נשלחה: ${e?.message || e}`);
+  }
+}
+
 async function submit(text) {
   if (isNativeApp && !API && !askServer()) return;
   const conv = convById(view.id);
   if (!conv) return;
-  if (conv.title === 'שיחה חדשה' && !entriesOf(conv.id).length) conv.title = text.split(/\s+/).slice(0, 5).join(' ').slice(0, 40);
+  if (!toRebbe && conv.cloud && user) { await sendChat(conv, text); return; }
+  if (!isOwner(conv)) return;
+  if (conv.title === 'שיחה חדשה' && !entriesOf(conv.id).length) {
+    conv.title = text.split(/\s+/).slice(0, 5).join(' ').slice(0, 40);
+    if (conv.cloud) cloud.renameConv(conv.id, conv.title).catch(() => {});
+  }
   const entry = { id: newId(), conv: conv.id, q: text, ts: Date.now(), pending: true };
+  if (replyTo) { entry.replyTo = replyTo; setReply(null); }
   state.entries.push(entry);
   save();
   render({ scroll: true });
@@ -815,6 +1118,7 @@ async function submit(text) {
     send.disabled = false;
     save();
     if (view.name === 'chat' && view.id === conv.id) render({ scroll: true }); else render();
+    if (conv.cloud && user) cloud.saveEntry(conv.id, entry).catch((e) => console.warn('entry not synced', e));
   }
 }
 
@@ -839,6 +1143,15 @@ input.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey && !matchMedia('(pointer: coarse)').matches) { e.preventDefault(); form.requestSubmit(); }
 });
 lang.addEventListener('change', () => { try { localStorage.setItem('mlr-lang', lang.value); } catch { /* ignore */ } });
+
+// a join link opened in the browser
+pendingJoin = readJoinLink(location.pathname);
+if (pendingJoin) history.replaceState(null, '', '/');
+// signed in before on this device: connect straight away
+let signedInBefore = false;
+try { signedInBefore = localStorage.getItem('mlr-signed-in') === '1'; } catch { /* ignore */ }
+if (signedInBefore || state.convs.some((c) => c.cloud)) loadCloud().catch((e) => console.warn('cloud', e));
+if (pendingJoin) joinNow();
 
 render();
 if (isNativeApp) setupNativeApp();
@@ -866,11 +1179,15 @@ async function setupNativeApp() {
   // the server address is built into the app; the field is only shown if it is missing
   $('server-section').hidden = !!window.MLR_API_BASE;
 
+  // links to shared conversations open the app
+  AppInfo.addListener('appUrlOpen', ({ url }) => { pendingJoin = readJoinLink(url); if (pendingJoin) joinNow(); });
+
   // Android back button: close what is open before leaving the app
   AppInfo.addListener('backButton', () => {
     if (closeLightbox()) return;
     if (dialog.open) { dialog.close(); return; }
     if ($('conv-menu').open) { closeConvMenu(); return; }
+    if ($('account').open) { $('account').close(); return; }
     if (markerMode) { setMarkerMode(false); return; }
     if (view.name !== 'list') { $('back').click(); return; }
     AppInfo.minimizeApp();

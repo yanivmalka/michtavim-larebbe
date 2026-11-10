@@ -84,6 +84,18 @@ export function createApp(deps = {}) {
     res.json({ letterLengths: lengthStats(total) });
   });
   app.use('/webhooks/whatsapp', whatsappRouter());
-  app.use(express.static(new URL('../public', import.meta.url).pathname));
+  const publicDir = new URL('../public', import.meta.url).pathname;
+  // links to shared conversations: the page reads the code from the address
+  app.get('/join/:code', (_req, res) => res.sendFile(`${publicDir}/index.html`));
+  // lets Android open these links straight in the app (App Links)
+  app.get('/.well-known/assetlinks.json', (_req, res) => res.json([{
+    relation: ['delegate_permission/common.handle_all_urls'],
+    target: {
+      namespace: 'android_app',
+      package_name: 'com.michtavim.larebbe',
+      sha256_cert_fingerprints: (process.env.ANDROID_CERT_SHA256 || 'A1:31:8E:1B:F5:2E:7B:E3:D0:55:3D:89:33:CE:B7:9D:6A:2A:9F:A8:63:62:D0:D1:B6:DE:4E:32:B8:3F:98:BB').split(','),
+    },
+  }]));
+  app.use(express.static(publicDir));
   return app;
 }

@@ -2,6 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="utf-8">
+  <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="theme-color" content="#1f3a5f">
   <title>מכתבים לרבי</title>
@@ -19,6 +20,7 @@
         <h1 id="title-text">מכתבים לרבי</h1>
         <span class="sub" id="status">מענה מתוך אגרות הקודש</span>
       </div>
+      <button id="account-btn" class="icon-btn list-only" title="חשבון" aria-label="חשבון">👤</button>
       <button id="chat-menu" class="icon-btn chat-only" title="אפשרויות השיחה" aria-label="אפשרויות השיחה">⋮</button>
     </header>
 
@@ -88,7 +90,10 @@
           <option value="es">Español</option>
         </select>
       </label>
+        <div id="menu-members" class="members" hidden></div>
         <button type="button" id="menu-rename">✎ שינוי שם</button>
+        <button type="button" id="menu-share">👥 שיתוף עם אנשי קשר</button>
+        <button type="button" id="menu-stop-share" hidden>✋ הפסקת השיתוף</button>
         <button type="button" id="menu-archive">🗄 העברה לארכיון</button>
         <button type="button" id="menu-lock">🔒 נעילת השיחה</button>
         <button type="button" id="menu-delete" class="danger">🗑 מחיקת השיחה</button>
@@ -96,7 +101,30 @@
       </form>
     </dialog>
 
+    <dialog id="account" class="settings">
+      <form method="dialog">
+        <h2>חשבון</h2>
+        <div id="account-out">
+          <p>התחברות עם חשבון Google מסנכרנת את השיחות בין המכשירים ומאפשרת לשתף שיחות עם אנשי קשר.</p>
+          <button type="button" id="sign-in">התחברות עם Google</button>
+        </div>
+        <div id="account-in" hidden>
+          <p>מחובר: <b id="account-name"></b></p>
+          <p class="note">השיחות נשמרות בחשבון. מועדפים, הדגשות, ארכיון ונעילה נשמרים בכל מכשיר בנפרד.</p>
+          <button type="button" id="sign-out">התנתקות</button>
+        </div>
+        <p id="account-status" class="status" aria-live="polite"></p>
+        <div class="dialog-actions"><button value="close">סגירה</button></div>
+      </form>
+    </dialog>
+
+    <div id="reply-bar" class="reply-bar" hidden>
+      <span id="reply-text"></span>
+      <button type="button" id="reply-cancel" aria-label="ביטול התגובה">✕</button>
+    </div>
+
     <form id="composer" class="composer">
+      <button type="button" id="mode" class="mode-btn" hidden>✉️</button>
       <textarea id="input" rows="1" placeholder="כתבו את המכתב…" maxlength="8000" required></textarea>
       <button type="submit" id="send" class="send" aria-label="שליחה">➤</button>
     </form>
