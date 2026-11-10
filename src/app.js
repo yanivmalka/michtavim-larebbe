@@ -3,6 +3,8 @@ import { answerLetter, getPagePng, getPagePdf, getLetterPdf } from './letters.js
 import { userMessage } from './errors.js';
 import { whatsappRouter } from './whatsapp/webhook.js';
 import { cors } from './cors.js';
+import { lengthStats } from './igrot/lengths.js';
+import { loadCatalog } from './igrot/catalog.js';
 
 export function createApp(deps = {}) {
   const app = express();
@@ -44,6 +46,10 @@ export function createApp(deps = {}) {
   });
 
   app.get('/healthz', (_req, res) => res.json({ ok: true }));
+  app.get('/api/stats', (_req, res) => {
+    const total = loadCatalog().reduce((n, v) => n + v.letters.length, 0);
+    res.json({ letterLengths: lengthStats(total) });
+  });
   app.use('/webhooks/whatsapp', whatsappRouter());
   app.use(express.static(new URL('../public', import.meta.url).pathname));
   return app;

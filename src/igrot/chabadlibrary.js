@@ -1,4 +1,6 @@
 // Client for the Igrot Kodesh text on chabadlibrary.org (ספריית ליובאוויטש).
+import { recordLength } from './lengths.js';
+
 const BASE = process.env.CHABADLIBRARY_BASE || 'https://chabadlibrary.org/books';
 export const IGROT_SECTION_ID = 1200000000; // ספרי כ"ק אדמו"ר ← אגרות קודש
 const UA = 'michtavim-larebbe/0.2 (+https://github.com/yanivmalka/michtavim-larebbe)';
@@ -100,6 +102,7 @@ export async function fetchLetter(id, fetchFn) {
     viewerUrl: viewerUrl(id),
   };
   if (!fetchFn) {
+    recordLength(id, blocks); // shared knowledge, learned from every real download
     cache.set(id, letter);
     if (cache.size > CACHE_MAX) cache.delete(cache.keys().next().value);
   }
