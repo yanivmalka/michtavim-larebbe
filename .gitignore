@@ -7,3 +7,4 @@ dist/
 signing/
 *.jks
 *.keystore
+firestore-debug.log

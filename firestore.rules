@@ -1,0 +1,58 @@
+rules_version = '2';
+// Security rules for "מכתבים לרבי". Publish them in the Firebase console:
+// Firestore Database → Rules → paste this file → Publish.
+service cloud.firestore {
+  match /databases/{db}/documents {
+    function signedIn() { return request.auth != null; }
+    function uid() { return request.auth.uid; }
+    function conv(cid) { return get(/databases/$(db)/documents/convs/$(cid)).data; }
+    function memberOf(cid) { return signedIn() && uid() in conv(cid).members; }
+    function changed() { return request.resource.data.diff(resource.data).affectedKeys(); }
+
+    match /convs/{cid} {
+      allow read: if signedIn() && uid() in resource.data.members;
+
+      allow create: if signedIn()
+        && request.resource.data.owner == uid()
+        && request.resource.data.members == [uid()]
+        && request.resource.data.inviteToken == null;
+
+      allow delete: if signedIn() && resource.data.owner == uid();
+
+      allow update: if signedIn() && (
+        // the owner may change anything except who the owner is
+        (resource.data.owner == uid() && request.resource.data.owner == uid())
+        // a participant may bump the last-message fields, update their own name, or leave
+        || (uid() in resource.data.members
+            && changed().hasOnly(['lastTs', 'lastPreview', 'memberInfo', 'members'])
+            && (request.resource.data.members == resource.data.members
+                || request.resource.data.members == resource.data.members.removeAll([uid()]))
+            && request.resource.data.memberInfo.diff(resource.data.memberInfo).affectedKeys().hasOnly([uid()]))
+        // anyone signed in may join, adding only themselves, with the conversation's invite token
+        || (!(uid() in resource.data.members)
+            && resource.data.inviteToken is string
+            && request.resource.data.joinWith == resource.data.inviteToken
+            && request.resource.data.members == resource.data.members.concat([uid()])
+            && changed().hasOnly(['members', 'memberInfo', 'joinWith'])
+            && request.resource.data.memberInfo.diff(resource.data.memberInfo).affectedKeys().hasOnly([uid()]))
+      );
+
+      // letters to the Rebbe and their answers: everyone in the conversation reads, only the owner writes
+      match /entries/{eid} {
+        allow read: if memberOf(cid);
+        allow write: if signedIn() && conv(cid).owner == uid();
+      }
+
+      // chat between the participants
+      match /messages/{mid} {
+        allow read: if memberOf(cid);
+        allow create: if memberOf(cid)
+          && request.resource.data.uid == uid()
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 4000;
+        allow delete: if signedIn() && (resource.data.uid == uid() || conv(cid).owner == uid());
+      }
+    }
+  }
+}
