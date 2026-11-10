@@ -1,4 +1,6 @@
 ext {
+    // @capacitor-firebase/authentication: include the Google sign-in provider
+    rgcfaIncludeGoogle = true
     minSdkVersion = 23
     compileSdkVersion = 35
     targetSdkVersion = 35

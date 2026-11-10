@@ -5,5 +5,13 @@
   "android": {
     "allowMixedContent": false,
     "adjustMarginsForEdgeToEdge": "disable"
+  },
+  "plugins": {
+    "FirebaseAuthentication": {
+      "skipNativeAuth": true,
+      "providers": [
+        "google.com"
+      ]
+    }
   }
 }

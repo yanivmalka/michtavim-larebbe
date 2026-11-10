@@ -672,9 +672,9 @@ $('sign-in').addEventListener('click', async () => {
   try {
     await loadCloud();
     if (isNativeApp) {
-      let Auth;
-      try { Auth = window.Capacitor.registerPlugin('FirebaseAuthentication'); await Auth.signInWithGoogle; } catch { Auth = null; }
-      const result = Auth ? await Auth.signInWithGoogle().catch((e) => { throw e; }) : null;
+      // native Google sign-in (Credential Manager), then the same Firebase session in the page
+      const Auth = window.Capacitor.registerPlugin('FirebaseAuthentication');
+      const result = await Auth.signInWithGoogle();
       if (!result?.credential?.idToken) throw new Error('NATIVE_SIGN_IN_UNAVAILABLE');
       await cloud.signInWithGoogle(result.credential.idToken);
     } else {
@@ -694,6 +694,7 @@ $('sign-out').addEventListener('click', async () => {
   for (const c of state.convs.filter((x) => x.cloud)) dropConv(c.id);
   save();
   await cloud?.signOut();
+  if (isNativeApp) await window.Capacitor.registerPlugin('FirebaseAuthentication').signOut().catch(() => {});
   $('account').close();
   go({ name: 'list' });
 });

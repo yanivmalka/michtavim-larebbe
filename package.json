@@ -21,6 +21,7 @@
   "private": true,
   "dependencies": {
     "@anthropic-ai/sdk": "^1.7.0",
+    "@capacitor-firebase/authentication": "^7.5.0",
     "@capacitor/app": "^7.1.2",
     "@capacitor/core": "^7.6.10",
     "@capacitor/filesystem": "^7.1.9",

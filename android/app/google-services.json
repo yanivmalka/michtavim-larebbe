@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "226229234681",
+    "project_id": "michtavim-larebbe",
+    "storage_bucket": "michtavim-larebbe.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:226229234681:android:72c9df5049ec90d2436b28",
+        "android_client_info": {
+          "package_name": "com.michtavim.larebbe"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "226229234681-83b73shigsblnd7n49c6nbg8021ekok9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDA6P0kT-1Dc0qmKklf_WUBoeHAUQ1rprU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "226229234681-83b73shigsblnd7n49c6nbg8021ekok9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
