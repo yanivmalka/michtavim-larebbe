@@ -1,14 +1,11 @@
 package com.michtavim.larebbe;
 
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
-import android.content.pm.PackageInstaller;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.net.Uri;
-import android.os.Build;
 import android.provider.Settings;
 
 import androidx.core.content.FileProvider;
@@ -20,10 +17,8 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.MessageDigest;
@@ -31,40 +26,22 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * Downloads a newer APK of this app, checks it, and installs it through Android's PackageInstaller.
- * Unlike handing the file to the installer screen, a PackageInstaller session reports why an install
- * failed (other signing key, blocked, no space…), and the app shows that reason to the user.
+ * Downloads a newer APK of this app, checks it (complete, same package, newer, same signing key),
+ * and opens Android's installer screen for it.
+ *
+ * The install deliberately goes through the installer screen, not a PackageInstaller session:
+ * version 1.0.28 installed through a session (asking to skip the confirmation) and could no longer be
+ * installed at all on a Galaxy A24 with Android 16 – most likely Play Protect treating that pattern as
+ * an app that installs other apps. Keep it this way.
  */
 @CapacitorPlugin(name = "AppUpdater")
 public class AppUpdaterPlugin extends Plugin {
-
-    static final String ACTION_RESULT = "com.michtavim.larebbe.INSTALL_RESULT";
-
-    /** The loaded plugin, so InstallResultReceiver can pass results on to the page. */
-    private static AppUpdaterPlugin active;
-    /** A confirmation screen that could not be shown while the app was in the background. */
-    private static Intent pendingConfirm;
-    private boolean resumed = true;
 
     /** A failure with a code the page turns into a message. */
     private static class UpdateError extends Exception {
         final String code;
         UpdateError(String code, String message) { super(message); this.code = code; }
     }
-
-    @Override
-    public void load() { active = this; }
-
-    @Override
-    protected void handleOnResume() {
-        resumed = true;
-        Intent confirm = pendingConfirm;
-        pendingConfirm = null;
-        if (confirm != null && getActivity() != null) getActivity().startActivity(confirm);
-    }
-
-    @Override
-    protected void handleOnPause() { resumed = false; }
 
     /** Whether Android lets this app install packages (a per-app user setting). */
     @PluginMethod
@@ -85,8 +62,7 @@ public class AppUpdaterPlugin extends Plugin {
     }
 
     /**
-     * Downloads `url` (emitting "progress" events), checks the file and starts the install.
-     * Resolves when Android has the package; the outcome arrives as "installStatus" events.
+     * Downloads `url` (emitting "progress" events), checks the file and opens the installer screen.
      */
     @PluginMethod
     public void downloadAndInstall(PluginCall call) {
@@ -104,9 +80,8 @@ public class AppUpdaterPlugin extends Plugin {
             try {
                 File apk = download(url, expectedSize);
                 checkPackage(apk);
-                JSObject ret = new JSObject();
-                ret.put("method", install(apk));
-                call.resolve(ret);
+                install(apk);
+                call.resolve();
             } catch (UpdateError e) {
                 call.reject(e.getMessage(), e.code);
             } catch (Exception e) {
@@ -192,61 +167,14 @@ public class AppUpdaterPlugin extends Plugin {
         return out;
     }
 
-    /** Installs through a PackageInstaller session; falls back to the installer screen if that is not possible. */
-    private String install(File apk) throws Exception {
+    /** Hands the checked file to Android's installer screen (the user confirms there). */
+    private void install(File apk) {
         Context ctx = getContext();
-        try {
-            PackageInstaller installer = ctx.getPackageManager().getPackageInstaller();
-            PackageInstaller.SessionParams params = new PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL);
-            params.setAppPackageName(ctx.getPackageName());
-            params.setSize(apk.length());
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                // updating itself: Android may skip the confirmation when this app installed the current version
-                params.setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED);
-            }
-            int id = installer.createSession(params);
-            try (PackageInstaller.Session session = installer.openSession(id)) {
-                try (InputStream in = new FileInputStream(apk); OutputStream out = session.openWrite("base.apk", 0, apk.length())) {
-                    byte[] buf = new byte[64 * 1024];
-                    int n;
-                    while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
-                    session.fsync(out);
-                }
-                Intent result = new Intent(ctx, InstallResultReceiver.class).setAction(ACTION_RESULT);
-                int piFlags = PendingIntent.FLAG_UPDATE_CURRENT
-                        | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ? PendingIntent.FLAG_MUTABLE : 0);
-                PendingIntent pending = PendingIntent.getBroadcast(ctx, id, result, piFlags);
-                session.commit(pending.getIntentSender());
-            }
-            return "session";
-        } catch (SecurityException | java.io.IOException e) {
-            // some devices do not allow sessions for sideloaded apps: open the installer screen instead
-            Uri uri = FileProvider.getUriForFile(ctx, ctx.getPackageName() + ".fileprovider", apk);
-            Intent view = new Intent(Intent.ACTION_VIEW);
-            view.setDataAndType(uri, "application/vnd.android.package-archive");
-            view.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
-            ctx.startActivity(view);
-            return "intent";
-        }
-    }
-
-    /** Called by InstallResultReceiver: shows the confirmation screen, or passes the outcome to the page. */
-    static void onResult(Context ctx, int status, String message, String otherPackage, Intent confirm) {
-        AppUpdaterPlugin p = active;
-        if (status == PackageInstaller.STATUS_PENDING_USER_ACTION && confirm != null) {
-            confirm.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            if (p != null && p.resumed && p.getActivity() != null) {
-                p.getActivity().runOnUiThread(() -> p.getActivity().startActivity(confirm));
-            } else {
-                pendingConfirm = confirm; // shown when the user comes back to the app
-            }
-        }
-        if (p == null) return;
-        JSObject r = new JSObject();
-        r.put("status", status);
-        r.put("message", message == null ? "" : message);
-        if (otherPackage != null) r.put("otherPackage", otherPackage);
-        p.notifyListeners("installStatus", r, true);
+        Uri uri = FileProvider.getUriForFile(ctx, ctx.getPackageName() + ".fileprovider", apk);
+        Intent view = new Intent(Intent.ACTION_VIEW);
+        view.setDataAndType(uri, "application/vnd.android.package-archive");
+        view.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+        ctx.startActivity(view);
     }
 
     private boolean installAllowed() {
