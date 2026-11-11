@@ -1,7 +1,8 @@
 ext {
     // @capacitor-firebase/authentication: include the Google sign-in provider
     rgcfaIncludeGoogle = true
-    minSdkVersion = 23
+    // Android 10 (2019) and newer – older phones are no longer supported
+    minSdkVersion = 29
     compileSdkVersion = 35
     targetSdkVersion = 35
     androidxActivityVersion = '1.9.2'

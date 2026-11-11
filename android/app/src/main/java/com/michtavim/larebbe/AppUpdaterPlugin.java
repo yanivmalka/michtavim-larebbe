@@ -66,7 +66,7 @@ public class AppUpdaterPlugin extends Plugin {
     @Override
     protected void handleOnPause() { resumed = false; }
 
-    /** Whether Android lets this app install packages (user setting on Android 8+). */
+    /** Whether Android lets this app install packages (a per-app user setting). */
     @PluginMethod
     public void canInstall(PluginCall call) {
         JSObject ret = new JSObject();
@@ -77,12 +77,10 @@ public class AppUpdaterPlugin extends Plugin {
     /** Opens the system screen where the user allows installing updates from this app. */
     @PluginMethod
     public void openInstallSettings(PluginCall call) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Intent i = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
-                    Uri.parse("package:" + getContext().getPackageName()));
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            getContext().startActivity(i);
-        }
+        Intent i = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                Uri.parse("package:" + getContext().getPackageName()));
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        getContext().startActivity(i);
         call.resolve();
     }
 
@@ -131,7 +129,7 @@ public class AppUpdaterPlugin extends Plugin {
             conn.setReadTimeout(60000);
             int code = conn.getResponseCode();
             if (code != 200) throw new Exception("HTTP " + code);
-            long total = contentLength(conn);
+            long total = conn.getContentLengthLong();
             long done = 0;
             try (InputStream in = conn.getInputStream(); FileOutputStream out = new FileOutputStream(apk)) {
                 byte[] buf = new byte[64 * 1024];
@@ -161,22 +159,17 @@ public class AppUpdaterPlugin extends Plugin {
         return apk;
     }
 
-    /** Content-Length as a long (getContentLengthLong needs Android 7). -1 if unknown. */
-    private static long contentLength(HttpURLConnection conn) {
-        try { return Long.parseLong(conn.getHeaderField("Content-Length")); } catch (Exception e) { return -1; }
-    }
-
     /** The same app, a newer version, signed with the same key – otherwise Android would refuse it. */
     private void checkPackage(File apk) throws Exception {
         PackageManager pm = getContext().getPackageManager();
-        int flags = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P ? PackageManager.GET_SIGNING_CERTIFICATES : PackageManager.GET_SIGNATURES;
+        int flags = PackageManager.GET_SIGNING_CERTIFICATES;
         PackageInfo update = pm.getPackageArchiveInfo(apk.getAbsolutePath(), flags);
         if (update == null) throw new UpdateError("INVALID_APK", "the downloaded file is not a valid app package");
         String me = getContext().getPackageName();
         if (!me.equals(update.packageName)) throw new UpdateError("WRONG_PACKAGE", "package " + update.packageName);
         PackageInfo installed = pm.getPackageInfo(me, flags);
-        long newCode = versionCode(update);
-        long myCode = versionCode(installed);
+        long newCode = update.getLongVersionCode();
+        long myCode = installed.getLongVersionCode();
         if (newCode <= myCode) throw new UpdateError("NOT_NEWER", "version " + newCode + " is not newer than " + myCode);
         Set<String> a = signers(update);
         Set<String> b = signers(installed);
@@ -185,20 +178,9 @@ public class AppUpdaterPlugin extends Plugin {
         }
     }
 
-    @SuppressWarnings("deprecation")
-    private static long versionCode(PackageInfo info) {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.P ? info.getLongVersionCode() : info.versionCode;
-    }
-
     /** SHA-256 of the signing certificates (empty if Android did not read them). */
-    @SuppressWarnings("deprecation")
     private static Set<String> signers(PackageInfo info) throws Exception {
-        Signature[] sigs = null;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            if (info.signingInfo != null) sigs = info.signingInfo.getApkContentsSigners();
-        } else {
-            sigs = info.signatures;
-        }
+        Signature[] sigs = info.signingInfo != null ? info.signingInfo.getApkContentsSigners() : null;
         Set<String> out = new TreeSet<>();
         if (sigs == null) return out;
         MessageDigest sha = MessageDigest.getInstance("SHA-256");
@@ -268,7 +250,6 @@ public class AppUpdaterPlugin extends Plugin {
     }
 
     private boolean installAllowed() {
-        return Build.VERSION.SDK_INT < Build.VERSION_CODES.O
-                || getContext().getPackageManager().canRequestPackageInstalls();
+        return getContext().getPackageManager().canRequestPackageInstalls();
     }
 }
