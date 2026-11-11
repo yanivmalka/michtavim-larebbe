@@ -82,9 +82,10 @@ export function createApp(deps = {}) {
     res.type('application/pdf').set('Content-Disposition', `inline; filename="${name}"`).send(pdf);
   };
   // Pages are addressed by their spec, so these links keep working after restarts.
+  // ?hl=<letter id>:<start>-<end>,… marks those words of the page text, as with a highlighter.
   app.get('/api/page/:spec.png', async (req, res, next) => {
     try {
-      const png = await getPageImage(req.params.spec, deps.pages);
+      const png = await getPageImage(req.params.spec, deps.pages, typeof req.query.hl === 'string' ? req.query.hl : '');
       if (!png) return res.sendStatus(404);
       res.type('image/png').set('Cache-Control', 'public, max-age=604800').send(png);
     } catch (e) { next(e); }
