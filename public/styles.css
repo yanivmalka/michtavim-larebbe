@@ -112,7 +112,6 @@ details summary { cursor: pointer; color: var(--muted); font-size: .85rem; margi
 .chip.on { background: #f5c542; border-color: #f5c542; color: #3d3200; }
 .hl { user-select: text; -webkit-user-select: text; }
 .reading { font-size: calc(1rem * var(--rs, 1)); touch-action: pan-y; }
-.reading .fq, .reading .fa, .reading .fu-input { font-size: .92em; }
 .zoom-bar { position: fixed; bottom: calc(env(safe-area-inset-bottom) + 90px); left: 50%; transform: translateX(-50%); z-index: 40;
   display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 24px; background: rgba(20,20,20,.92); color: #fff; }
 .zoom-bar[hidden] { display: none; }
@@ -244,11 +243,11 @@ details.more[open] > summary::before { content: '▾ '; }
 
 /* ---------- analysis on request, follow-ups, toast ---------- */
 .analysis { margin-top: 6px; }
-details.sub > summary { cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0 4px;
+details.ana-part > summary { cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0 4px;
   font-size: .85rem; color: var(--muted); list-style: none; }
-details.sub > summary::-webkit-details-marker { display: none; }
-details.sub > summary > span::before { content: '▾ '; }
-details.sub:not([open]) > summary > span::before { content: '▸ '; }
+details.ana-part > summary::-webkit-details-marker { display: none; }
+details.ana-part > summary > span::before { content: '▾ '; }
+details.ana-part:not([open]) > summary > span::before { content: '▸ '; }
 .clear-btn { font: inherit; font-size: .85rem; border: 1px solid var(--border); border-radius: 50%; width: 26px; height: 26px; line-height: 1;
   background: transparent; color: var(--muted); cursor: pointer; flex: none; }
 .clear-btn:hover { color: #b3261e; border-color: #b3261e; }
@@ -262,10 +261,10 @@ details.sub:not([open]) > summary > span::before { content: '▸ '; }
 .analyze-btn { font: inherit; border: 0; border-radius: 18px; padding: 8px 16px; background: var(--accent); color: #fff; cursor: pointer; margin: 6px 0; }
 .analyze-btn:disabled { opacity: .6; cursor: default; }
 .analyze-btn.small { padding: 6px 14px; margin: 0; flex: none; }
-.followups .fq { margin: 8px 0 2px; padding: 6px 10px; border-radius: 8px; background: var(--me); align-self: flex-start; font-size: .92rem; }
+.followups .fq { margin: 8px 0 2px; padding: 6px 10px; border-radius: 8px; background: var(--me); align-self: flex-start; font-size: .92em; }
 .followups .fa { padding: 2px 4px 6px; }
 .fu-row { display: flex; gap: 8px; align-items: flex-end; margin-top: 8px; }
-.fu-input { flex: 1; resize: none; font: inherit; font-size: .92rem; padding: 8px 12px; border-radius: 16px; border: 1px solid var(--border);
+.fu-input { flex: 1; resize: none; font: inherit; font-size: .92em; padding: 8px 12px; border-radius: 16px; border: 1px solid var(--border);
   background: var(--input); color: var(--text); max-height: 140px; }
 .toast { position: fixed; bottom: calc(env(safe-area-inset-bottom) + 90px); left: 50%; transform: translateX(-50%); z-index: 40;
   background: rgba(20,20,20,.9); color: #fff; padding: 9px 18px; border-radius: 20px; font-size: .9rem; }
