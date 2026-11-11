@@ -64,23 +64,42 @@
           <button type="button" id="server-save">שמירה</button>
           <hr>
         </div>
-        <div class="version-row">
-          <span>גרסת האפליקציה: <b id="app-version" dir="ltr">–</b></span>
+        <!-- size of the app's own text (buttons, menus, titles); the letter and the analysis have their own size (pinch / Aa) -->
+        <fieldset class="ui-size">
+          <legend>גודל הטקסט של הפקדים</legend>
+          <div class="seg" role="radiogroup" aria-label="גודל הטקסט של הפקדים">
+            <button type="button" class="seg-btn" data-ui="" role="radio" aria-checked="true">רגיל</button>
+            <button type="button" class="seg-btn" data-ui="large" role="radio" aria-checked="false">גדול</button>
+            <button type="button" class="seg-btn" data-ui="xlarge" role="radio" aria-checked="false">גדול מאוד</button>
+          </div>
+          <p class="note">גודל הטקסט של המכתב וההסבר נקבע בנפרד – בצביטה על הטקסט.</p>
+        </fieldset>
+        <div id="update-section">
+          <hr>
+          <div class="version-row">
+            <span>גרסת האפליקציה: <b id="app-version" dir="ltr">–</b></span>
+          </div>
+          <label class="check"><input type="checkbox" id="auto-check" checked> בדיקת עדכונים אוטומטית בפתיחה</label>
+          <button type="button" id="check-update">בדיקת עדכונים</button>
+          <p id="update-status" class="status" aria-live="polite"></p>
+          <button type="button" id="install-update" hidden>הורדה והתקנה</button>
+          <progress id="update-progress" max="100" value="0" hidden></progress>
+          <p id="update-detail" class="note" dir="auto"></p>
+          <a id="manual-update" class="link-btn" target="_blank" rel="noopener" hidden>⬇ הורדה ידנית מהדפדפן</a>
         </div>
-        <label class="check"><input type="checkbox" id="auto-check" checked> בדיקת עדכונים אוטומטית בפתיחה</label>
-        <button type="button" id="check-update">בדיקת עדכונים</button>
-        <p id="update-status" class="status" aria-live="polite"></p>
-        <button type="button" id="install-update" hidden>הורדה והתקנה</button>
-        <progress id="update-progress" max="100" value="0" hidden></progress>
-        <p id="update-detail" class="note" dir="auto"></p>
-        <a id="manual-update" class="link-btn" target="_blank" rel="noopener" hidden>⬇ הורדה ידנית מהדפדפן</a>
         <div class="dialog-actions"><button value="close">סגירה</button></div>
       </form>
     </dialog>
 
+    <!-- tools, shown while text of an answer is selected: highlight, text size, PDF, share, marker mode -->
     <div id="hl-bar" class="hl-bar" hidden>
-      <button type="button" id="hl-add" hidden>🖍 הדגשת הטקסט המסומן</button>
-      <button type="button" id="hl-mode">🖍 מצב מרקר</button>
+      <div class="hl-tools">
+        <button type="button" id="hl-add" hidden>🖍 הדגשה</button>
+        <button type="button" id="tool-size" hidden title="גודל הטקסט (או צביטה על הטקסט)">Aa</button>
+        <a id="tool-pdf" target="_blank" rel="noopener" hidden>📄 PDF</a>
+        <button type="button" id="tool-share" hidden>↗ שיתוף</button>
+        <button type="button" id="hl-mode">🖍 מצב מרקר</button>
+      </div>
     </div>
 
     <div id="lightbox" class="lightbox" hidden>

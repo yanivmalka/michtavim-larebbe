@@ -1,6 +1,6 @@
 // Draws text that looks like a printed page of Igrot Kodesh, as PNG images.
 // Canvas (Skia) handles right-to-left and mixed Hebrew/Latin text correctly.
-import { createCanvas, GlobalFonts } from '@napi-rs/canvas';
+import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { PDFDocument } from 'pdf-lib';
 
 const font = (f) => new URL(`../../assets/fonts/${f}`, import.meta.url).pathname;
@@ -24,25 +24,45 @@ const STYLE = {
 };
 const LINE = 1.55;
 
+/** Breaks a block into lines; each line also lists its words (joined by single spaces in `text`). */
 function wrap(ctx, text, width, indent) {
   const lines = [];
   for (const para of text.split('\n')) {
     let line = '';
+    let words = [];
     let first = lines.length === 0;
     for (const word of para.split(/\s+/).filter(Boolean)) {
       const next = line ? `${line} ${word}` : word;
       const limit = first ? width - indent : width;
       if (line && ctx.measureText(next).width > limit) {
-        lines.push({ text: line, first });
+        lines.push({ text: line, first, words });
         first = false;
         line = word;
+        words = [word];
       } else {
         line = next;
+        words.push(word);
       }
     }
-    if (line) lines.push({ text: line, first });
+    if (line) lines.push({ text: line, first, words });
   }
   return lines;
+}
+
+/**
+ * Where each word of a drawn line sits on the page: boxes in page pixels, with the word's offsets
+ * inside the line's text. `right` is the x of the line's right edge (text runs right to left).
+ */
+function wordBoxes(ctx, line, right, yTop, lh) {
+  const out = [];
+  let at = 0;
+  for (const word of line.words) {
+    const before = at ? ctx.measureText(line.text.slice(0, at)).width : 0;
+    const through = ctx.measureText(line.text.slice(0, at + word.length)).width;
+    out.push({ s: at, e: at + word.length, x: right - through, y: yTop, w: through - before, h: lh });
+    at += word.length + 1;
+  }
+  return out;
 }
 
 function newCanvas(header) {
@@ -72,15 +92,18 @@ function newCanvas(header) {
  * @param {{ kind: string, text: string, letter: number, continued?: boolean }[]} flow
  *   blocks in reading order; `letter` is an index the caller uses to track what was shown.
  * @param {{ header: {right: string, left: string}, maxPages?: number, footer?: (i: number, n: number) => string }} opts
- * @returns {{ pages: Buffer[], shown: Map<number, { text: string, complete: boolean }> }}
+ * @returns {{ pages: Buffer[], shown: Map<number, { text: string, complete: boolean }>,
+ *   boxes: { letter: number, page: number, s: number, e: number, x: number, y: number, w: number, h: number }[] }}
  *   `shown` holds, per letter index, the text that made it onto the pages and whether
- *   all of that letter's blocks in the flow fit.
+ *   all of that letter's blocks in the flow fit. `boxes` places every drawn word on its page,
+ *   with its offsets (s, e) inside that letter's shown text – for highlighting on the image.
  */
 export function layout(flow, { header, maxPages = Infinity, footer }) {
   const width = PAGE.width - PAGE.side * 2;
   const bottom = PAGE.height - PAGE.bottom;
   const pages = [];
   const shown = new Map();
+  const boxes = [];
   const remaining = new Map();
   for (const b of flow) remaining.set(b.letter, (remaining.get(b.letter) || 0) + 1);
 
@@ -111,6 +134,8 @@ export function layout(flow, { header, maxPages = Infinity, footer }) {
     }
 
     const placed = [];
+    const sofar = shown.get(block.letter)?.text.length || 0;
+    let offset = sofar ? sofar + 1 : 0; // where the next line starts in the letter's shown text
     for (const line of lines) {
       if (y + lh > bottom) {
         if (!nextPage()) break;
@@ -118,16 +143,22 @@ export function layout(flow, { header, maxPages = Infinity, footer }) {
       const c = page.ctx;
       c.font = `${s.size}px ${s.bold ? 'FrankRuhlBold' : 'FrankRuhl'}`;
       c.fillStyle = s.color || INK;
+      let right;
       if (s.align === 'center') {
         c.textAlign = 'center';
         c.fillText(line.text, PAGE.width / 2, y + s.size);
+        right = PAGE.width / 2 + c.measureText(line.text).width / 2;
       } else if (s.align === 'left') {
         c.textAlign = 'left';
         c.fillText(line.text, PAGE.side, y + s.size);
+        right = PAGE.side + c.measureText(line.text).width;
       } else {
         c.textAlign = 'right';
-        c.fillText(line.text, PAGE.width - PAGE.side - (line.first ? indent : 0), y + s.size);
+        right = PAGE.width - PAGE.side - (line.first ? indent : 0);
+        c.fillText(line.text, right, y + s.size);
       }
+      for (const b of wordBoxes(c, line, right, y, lh)) boxes.push({ letter: block.letter, page: pages.length, ...b, s: offset + b.s, e: offset + b.e });
+      offset += line.text.length + 1;
       placed.push(line.text);
       y += lh;
     }
@@ -154,7 +185,37 @@ export function layout(flow, { header, maxPages = Infinity, footer }) {
     c.fillText(text, PAGE.width / 2, PAGE.height - 50);
   });
 
-  return { pages: pages.map((c) => c.toBuffer('image/png')), shown };
+  return { pages: pages.map((c) => c.toBuffer('image/png')), shown, boxes };
+}
+
+const MARKER = '#ffe66b';
+/**
+ * The page image with a marker drawn over the given word boxes (as a highlighter: the ink stays
+ * dark). Words on one line are joined into one stroke.
+ */
+export async function drawHighlights(png, boxes) {
+  const img = await loadImage(png);
+  const canvas = createCanvas(img.width, img.height);
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0);
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.fillStyle = MARKER;
+  for (const b of mergeBoxes(boxes)) ctx.fillRect(b.x - 4, b.y + b.h * 0.12, b.w + 8, b.h * 0.84);
+  return canvas.toBuffer('image/png');
+}
+/** Boxes on the same line that touch (or nearly) become one box. */
+export function mergeBoxes(boxes) {
+  const sorted = [...boxes].sort((a, b) => a.y - b.y || b.x - a.x); // top to bottom, right to left
+  const out = [];
+  for (const b of sorted) {
+    const last = out.at(-1);
+    if (last && last.y === b.y && b.x + b.w >= last.x - 24) {
+      const right = Math.max(last.x + last.w, b.x + b.w);
+      last.x = Math.min(last.x, b.x);
+      last.w = right - last.x;
+    } else out.push({ ...b });
+  }
+  return out;
 }
 
 /** Wraps PNG pages into a PDF (A4 width, page proportions kept). */

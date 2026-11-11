@@ -66,13 +66,18 @@ export async function renderSpec(volumes, spec, { fetchLetter = defaultFetch } =
     for (const b of blocks) flow.push({ ...b, letter: k, continued: b.continued || (!fromTop && b === blocks[0]) });
   });
 
-  const { pages, shown } = layout(flow, { header: { right: 'אגרות קודש', left: vol.heading }, maxPages: 1 });
+  const { pages, shown, boxes: drawn } = layout(flow, { header: { right: 'אגרות קודש', left: vol.heading }, maxPages: 1 });
 
   const letters = [];
+  const boxes = []; // every word on the page, with its offsets in its letter's pageText – for the marker on the image
   chain.forEach((c, k) => {
     const s = shown.get(k);
     if (!s) return;
     const fromTop = k > 0 || start === 0;
+    const shift = fromTop ? s.text.split('\n')[0].length + 1 : 0; // the number line is not in pageText
+    for (const b of drawn) {
+      if (b.letter === k && b.page === 0 && b.s >= shift) boxes.push({ id: c.id, s: b.s - shift, e: b.e - shift, x: b.x, y: b.y, w: b.w, h: b.h });
+    }
     letters.push({
       id: c.id,
       number: c.heading,
@@ -98,7 +103,7 @@ export async function renderSpec(volumes, spec, { fetchLetter = defaultFetch } =
       : { i: spec.i + k, s: (k === 0 ? start : 0) + body.length + 1 };
   });
 
-  return { volume: vol.volume, volumeHeading: vol.heading, png: pages[0], letters, spec: encodeSpec(spec), end, consumed };
+  return { volume: vol.volume, volumeHeading: vol.heading, png: pages[0], letters, boxes, spec: encodeSpec(spec), end, consumed };
 }
 
 /** Spec of a page starting at letter `i`, offset `s`, with enough letters after it to fill a page. */
