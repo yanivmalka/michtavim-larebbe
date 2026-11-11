@@ -258,9 +258,12 @@ details.ana-part:not([open]) > summary > span::before { content: '▸ '; }
 .letter-num { text-align: center; font-weight: 600; margin: 6px 0 2px; }
 .full-letter { margin-top: 6px; padding: 6px 8px; border-radius: 6px; background: rgba(0,0,0,.04); }
 .full-letter[hidden] { display: none; }
-.analyze-btn { font: inherit; border: 0; border-radius: 18px; padding: 8px 16px; background: var(--accent); color: #fff; cursor: pointer; margin: 6px 0; }
+/* buttons keep their size whatever the reading text size */
+.analyze-btn { font: inherit; font-size: 1rem; border: 0; border-radius: 18px; padding: 8px 16px; background: var(--accent); color: #fff; cursor: pointer; margin: 6px 0; }
 .analyze-btn:disabled { opacity: .6; cursor: default; }
-.analyze-btn.small { padding: 6px 14px; margin: 0; flex: none; }
+.analyze-btn.small { padding: 6px 14px; margin: 0; flex: none; font-size: .95rem; }
+.icon-btn[hidden] { display: none; }
+#collapse-all { font-size: 1.3rem; padding: 0 4px; }
 .followups .fq { margin: 8px 0 2px; padding: 6px 10px; border-radius: 8px; background: var(--me); align-self: flex-start; font-size: .92em; }
 .followups .fa { padding: 2px 4px 6px; }
 .fu-row { display: flex; gap: 8px; align-items: flex-end; margin-top: 8px; }
