@@ -53,6 +53,8 @@ API_BASE_URL=https://michtavim-larebbe.onrender.com npm run apk   # local debug 
 - Bump the `CACHE` name in `public/sw.js` when shipping UI changes.
 
 ## CI / release
+**Auto-merge approved by the owner (Nov 2026):** when a requested change is done and tested, open a PR to `main`
+and merge it without asking, then check that the Android build of the new version succeeded and report it.
 `.github/workflows/android.yml`: on push to `main`, versionCode = run number; with secrets
 `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` it builds a
 signed APK and publishes Release `app-v<n>`; repo variable `API_BASE_URL` is baked into the app.
