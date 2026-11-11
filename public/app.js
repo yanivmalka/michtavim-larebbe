@@ -2008,7 +2008,7 @@ function paintComposer(conv) {
   $('mode').title = toRebbe ? 'מכתב לרבי (לחצו להודעה למשתתפים)' : 'הודעה למשתתפים (לחצו למכתב לרבי)';
   input.placeholder = toRebbe ? 'כתבו את המכתב…' : 'הודעה למשתתפים…';
 }
-$('mode').addEventListener('click', () => { toRebbe = !toRebbe; paintComposer(convById(view.id)); input.focus(); });
+$('mode').addEventListener('click', () => { toRebbe = !toRebbe; paintComposer(convById(view.id)); input.focus(); paintOpeners(); });
 
 function render({ scroll = false } = {}) {
   let conv = view.name === 'chat' ? convById(view.id) : null;
@@ -2177,8 +2177,49 @@ form.addEventListener('submit', (e) => {
   submit(text);
 });
 const growInput = () => { input.style.height = 'auto'; input.style.height = `${input.scrollHeight}px`; };
-input.addEventListener('input', growInput);
-input.addEventListener('focus', () => setTimeout(() => { growInput(); scrollDown(); }, 300)); // after the keyboard opens
+input.addEventListener('input', () => { growInput(); paintOpeners(); });
+input.addEventListener('focus', () => { paintOpeners(); setTimeout(() => { growInput(); scrollDown(); }, 300); }); // after the keyboard opens
+input.addEventListener('blur', () => { $('openers').hidden = true; });
+
+// ---------- quick opening for a letter: offered as chips when the empty letter box gets focus ----------
+const DEFAULT_OPENING = 'לכבוד הרבי מלך המשיח שליט"א';
+const normOpening = (s) => s.replace(/[״"'\u05f3\u05f4]/g, '').replace(/\s+/g, ' ').replace(/[,:;!\s]+$/, '').trim();
+// the openings this user writes most often: the first line of previous letters (two lines when the first is only ב"ה)
+function commonOpenings() {
+  const counts = new Map();
+  for (const e of state.entries) {
+    const lines = (e.q || '').split('\n').map((l) => l.trim()).filter(Boolean);
+    if (!lines.length) continue;
+    let opening = lines[0];
+    if (opening.length <= 6 && lines[1]) opening = `${opening}\n${lines[1]}`;
+    if (opening.length > 60 || /[.?!]$/.test(opening) || lines.length < 2 && !opening.endsWith(',')) continue; // a whole letter, not an opening
+    const key = normOpening(opening);
+    const c = counts.get(key) || { text: opening, n: 0 };
+    c.n += 1;
+    counts.set(key, c);
+  }
+  return [...counts.values()].filter((c) => c.n >= 2 && normOpening(c.text) !== normOpening(DEFAULT_OPENING))
+    .sort((a, b) => b.n - a.n).slice(0, 2).map((c) => c.text);
+}
+function paintOpeners() {
+  const bar = $('openers');
+  const conv = view.name === 'chat' ? convById(view.id) : null;
+  const show = conv && toRebbe && isOwner(conv) && document.activeElement === input && !input.value.trim();
+  bar.hidden = !show;
+  if (!show) return;
+  bar.replaceChildren(...[...commonOpenings(), DEFAULT_OPENING].map((text) => {
+    const chip = el('button', { type: 'button', className: 'opener', textContent: text.replace(/\n/g, ' · '), title: 'הוספת הפתיחה למכתב' });
+    chip.addEventListener('pointerdown', (e) => e.preventDefault()); // keep the keyboard and the focus on the letter box
+    chip.addEventListener('click', () => {
+      input.value = `${text}\n${input.value.replace(/^\s+/, '')}`;
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+      growInput();
+      bar.hidden = true;
+    });
+    return chip;
+  }));
+}
 if (window.visualViewport) {
   // browsers that do not resize the page for the keyboard: keep the composer above it
   visualViewport.addEventListener('resize', () => {

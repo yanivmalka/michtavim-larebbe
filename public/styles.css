@@ -293,6 +293,12 @@ details.more > summary::-webkit-details-marker { display: none; }
 .reply-bar[hidden] { display: none; }
 .reply-bar span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .reply-bar button { background: none; border: 0; cursor: pointer; color: var(--muted); font-size: 1rem; }
+.openers { display: flex; gap: 6px; margin: 0 10px 4px; overflow-x: auto; scrollbar-width: none; }
+.openers::-webkit-scrollbar { display: none; }
+.openers[hidden] { display: none; }
+.opener { flex: none; max-width: 80vw; border: 1px solid var(--border); background: var(--them); color: var(--text); border-radius: 16px;
+  padding: 6px 12px; font: inherit; font-size: .85rem; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.opener:active { background: var(--input); }
 .mode-btn { flex: none; width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--border); background: var(--input); font-size: 1.2rem; cursor: pointer; }
 .mode-btn[hidden] { display: none; }
 
