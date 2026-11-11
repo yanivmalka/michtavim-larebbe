@@ -917,7 +917,7 @@ function analysisSection(entry) {
     syncEntry(entry);
     render();
   });
-  const sub = el('details', { className: 'sub', open: !entry.analysisClosed },
+  const sub = el('details', { className: 'ana-part', open: !entry.analysisClosed },
     el('summary', {}, el('span', { textContent: '✨ כיצד המענה מתייחס למכתב' }), canAsk && clear),
     a.keyQuote && el('div', { className: 'quote', textContent: a.keyQuote }),
     pageParagraph(a.explanation, `E:${entry.id}`, spec),
@@ -934,7 +934,7 @@ function analysisSection(entry) {
       el('div', { className: 'fq', textContent: f.q }),
       el('div', { className: 'fa' }, pageParagraph(f.a, `F:${entry.id}:${i}`, spec)),
     ]));
-  const fu = el('details', { className: 'sub', open: !entry.followupsClosed },
+  const fu = el('details', { className: 'ana-part', open: !entry.followupsClosed },
     el('summary', { textContent: `💬 שאלות המשך${qa.length ? ` (${qa.length})` : ''}` }),
     thread);
   fu.addEventListener('toggle', () => { entry.followupsClosed = !fu.open; save(); });
