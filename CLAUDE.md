@@ -63,6 +63,7 @@ API_BASE_URL=https://michtavim-larebbe.onrender.com npm run apk   # local debug 
 ## CI / release
 **Auto-merge approved by the owner (Nov 2026):** when a requested change is done and tested, open a PR to `main`
 and merge it without asking, then check that the Android build of the new version succeeded and report it.
+Documentation-only changes: put `[skip ci]` in the merge commit title, so no empty app version is released.
 `.github/workflows/android.yml`: on push to `main`, versionCode = run number; with secrets
 `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` it builds a
 signed APK and publishes Release `app-v<n>`; repo variable `API_BASE_URL` is baked into the app.
@@ -76,10 +77,10 @@ The keystore itself is **not** in git – the owner keeps it; losing it forces e
 `AI_RATE_PER_HOUR`, WhatsApp vars (empty). Free instance sleeps after ~15 min (first request ~1 min).
 
 ## Open items
-- **Firestore rules not published yet** (owner, Nov 2026): the backup of favourites/tags/highlights (`users/{uid}/private/…`)
-  fails until `firestore.rules` is pasted and published in Firebase Console → Firestore Database → Rules. This
-  environment has no Firebase credentials (publishing from here was blocked). Option offered: deploy rules from CI with a
-  service-account secret.
+- **Firestore rules: the owner reports they are published** (Nov 2026; not verifiable from here – no Firebase
+  credentials in this environment). To confirm: favourite an answer while signed in → no "הגיבוי … לא הצליח" toast,
+  and `users/{uid}/private/favs` appears in Firebase Console → Firestore → Data. Option offered: deploy rules from CI
+  with a service-account secret.
 - Verify with the owner: authorized domain added, authorized domain added, Android fingerprints added
   (the downloaded `google-services.json` had no Android OAuth client yet), native sign-in tested on a phone.
 - Not yet verified on a real phone: keyboard insets, biometric prompt, share sheet, swipe, App Links.
