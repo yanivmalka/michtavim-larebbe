@@ -148,3 +148,16 @@ export async function joinConv(id, token) {
 export async function leaveConv(id) {
   await updateDoc(convRef(id), { members: arrayRemove(me().uid) });
 }
+
+// ---------- the user's own backup: favourites + tags, and highlights ----------
+// Two documents, users/{uid}/private/favs and …/marks, each { items: { key: { v, ts } } }.
+// v = the value (tags / flat ranges), or null once removed; ts = when it was changed, so
+// devices merge item by item and the newer change wins.
+const privRef = (name) => doc(db, 'users', me().uid, 'private', name);
+export function watchPrefs(onItems, onError) {
+  const offs = ['favs', 'marks'].map((name) => onSnapshot(privRef(name),
+    (s) => onItems(name, s.data()?.items || {}, s.metadata.hasPendingWrites), onError));
+  return () => offs.forEach((off) => off());
+}
+/** Merges `items` (key → { v, ts }) into the backup. */
+export const savePrefs = (name, items) => setDoc(privRef(name), { items, updated: serverTimestamp() }, { merge: true });

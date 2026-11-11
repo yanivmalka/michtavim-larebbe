@@ -133,7 +133,7 @@ function paintMarks(p) {
       if (!getSelection().isCollapsed) return;
       state.marks[p.dataset.key].splice(i, 1);
       if (!state.marks[p.dataset.key].length) delete state.marks[p.dataset.key];
-      save();
+      markChanged(p.dataset.key);
       paintMarks(p);
     });
     p.append(m);
@@ -161,7 +161,7 @@ function applyMark(found) {
   const [p, start, end] = found;
   if (end <= start) return;
   state.marks[p.dataset.key] = mergeRanges([...(state.marks[p.dataset.key] || []), [start, end]]);
-  save();
+  markChanged(p.dataset.key);
   getSelection().removeAllRanges();
   paintMarks(p);
   $('hl-bar').hidden = true;
@@ -541,7 +541,7 @@ function favStar(entry, onToggle) {
   star.setAttribute('aria-expanded', String(!!entry.tagsOpen));
   star.addEventListener('click', (e) => {
     e.preventDefault(); e.stopPropagation(); // inside a <summary>: do not open / close the details
-    if (!entry.fav) entry.fav = { tags: [] };
+    if (!entry.fav) { entry.fav = { tags: [] }; favChanged(entry); }
     entry.tagsOpen = !entry.tagsOpen;
     save();
     onToggle();
@@ -575,20 +575,20 @@ function favPanel(entry) {
       chip.setAttribute('aria-pressed', String(on));
       chip.addEventListener('click', () => {
         entry.fav.tags = on ? chosen.filter((t) => t !== tag) : [...chosen, tag];
-        save(); paint();
+        favChanged(entry); paint();
       });
       row.append(chip);
     }
     const add = el('button', { type: 'button', className: 'chip', textContent: '+ תיאור משלך' });
     add.addEventListener('click', () => {
       const tag = (prompt('תיאור משלך:') || '').trim().slice(0, 20);
-      if (tag && !entry.fav.tags.includes(tag)) { entry.fav.tags.push(tag); save(); paint(); }
+      if (tag && !entry.fav.tags.includes(tag)) { entry.fav.tags.push(tag); favChanged(entry); paint(); }
     });
     const remove = el('button', { type: 'button', className: 'chip remove', textContent: '☆ הסרה מהמועדפים' });
     remove.addEventListener('click', () => {
       if (entry.fav.tags.length && !confirm('להסיר מהמועדפים? התגיות שנבחרו יימחקו.')) return;
       delete entry.fav; delete entry.tagsOpen;
-      save(); render();
+      favChanged(entry); render();
     });
     row.append(add, remove);
     box.append(row);
@@ -1145,10 +1145,90 @@ async function onUserChanged(u) {
   }
   save();
   watchAll();
+  prefsWatcher = cloud.watchPrefs(onPrefs, (e) => console.warn('backup', e));
   if (pendingJoin) joinNow();
 }
 
+// ---------- backup of favourites (+ tags) and highlights in the Google account ----------
+// Per user, private (users/{uid}/private/favs|marks). Every item keeps the time it was last changed,
+// so devices merge item by item: the newer change wins, and nothing is lost when two devices edit.
+let prefsWatcher = null;
+state.prefTs ||= { favs: {}, marks: {} }; // key → time of the last change known on this device
+state.cloudFavs ||= {};                   // backed-up favourites of letters not on this device yet
+const prefQueue = { favs: {}, marks: {} };
+let prefTimer = null;
+let prefWarned = false;
+
+function prefChanged(name, key, v) {
+  const ts = Date.now();
+  state.prefTs[name][key] = ts;
+  prefQueue[name][key] = { v, ts };
+  save();
+  clearTimeout(prefTimer);
+  prefTimer = setTimeout(pushPrefs, 1200);
+}
+function favChanged(entry) { prefChanged('favs', entry.id, entry.fav ? [...entry.fav.tags] : null); }
+function markChanged(key) { prefChanged('marks', key, state.marks[key]?.length ? state.marks[key].flat() : null); }
+const toRanges = (flat) => { const out = []; for (let i = 0; i + 1 < flat.length; i += 2) out.push([flat[i], flat[i + 1]]); return out; };
+
+async function pushPrefs() {
+  if (!user || !cloud) return; // signed out: everything is sent when signing in (onPrefs)
+  for (const name of ['favs', 'marks']) {
+    const items = prefQueue[name];
+    if (!Object.keys(items).length) continue;
+    prefQueue[name] = {};
+    try {
+      await cloud.savePrefs(name, items);
+    } catch (e) {
+      prefQueue[name] = { ...items, ...prefQueue[name] }; // try again later
+      console.warn('backup failed', e);
+      if (!prefWarned) { prefWarned = true; toast('הגיבוי של המועדפים וההדגשות לחשבון לא הצליח – ננסה שוב.'); }
+      clearTimeout(prefTimer);
+      prefTimer = setTimeout(pushPrefs, 60000);
+      return;
+    }
+  }
+}
+
+function applyFav(id) {
+  const e = state.entries.find((x) => x.id === id);
+  if (!e) return false;
+  const tags = state.cloudFavs[id];
+  delete state.cloudFavs[id];
+  if (tags) e.fav = { tags: [...tags] }; else { delete e.fav; delete e.tagsOpen; }
+  return true;
+}
+const localPref = (name, key) => (name === 'favs'
+  ? (state.entries.find((e) => e.id === key)?.fav?.tags ?? state.cloudFavs[key] ?? null)
+  : (state.marks[key]?.length ? state.marks[key].flat() : null));
+
+/** The account's copy arrived: take what is newer there, send what is newer here. */
+function onPrefs(name, items) {
+  const known = state.prefTs[name];
+  let changed = false;
+  for (const [key, it] of Object.entries(items)) {
+    if (!it || typeof it.ts !== 'number' || (known[key] || 0) >= it.ts) continue;
+    known[key] = it.ts;
+    changed = true;
+    if (name === 'favs') { state.cloudFavs[key] = Array.isArray(it.v) ? it.v : null; applyFav(key); }
+    else if (Array.isArray(it.v) && it.v.length) state.marks[key] = toRanges(it.v);
+    else delete state.marks[key];
+  }
+  const local = name === 'favs' ? state.entries.filter((e) => e.fav).map((e) => e.id) : Object.keys(state.marks);
+  for (const key of new Set([...local, ...Object.keys(known)])) {
+    const remote = items[key];
+    if (remote && remote.ts >= (known[key] || 0)) continue; // the account is up to date
+    const v = localPref(name, key);
+    if (!remote && v == null) continue;                        // nothing to back up
+    known[key] ||= Date.now();                                 // saved before the backup existed
+    prefQueue[name][key] = { v, ts: known[key] };
+  }
+  if (Object.keys(prefQueue[name]).length) { clearTimeout(prefTimer); prefTimer = setTimeout(pushPrefs, 300); }
+  if (changed) { save(); renderSoon(); }
+}
+
 function stopWatching() {
+  prefsWatcher?.(); prefsWatcher = null;
   convsWatcher?.(); convsWatcher = null;
   for (const off of convWatchers.values()) off();
   convWatchers.clear();
@@ -1185,6 +1265,7 @@ function watchOne(id) {
       });
       const pending = entriesOf(id).filter((e) => e.pending && !list.some((d) => d.id === e.id));
       state.entries = state.entries.filter((e) => e.conv !== id).concat(merged, pending);
+      for (const e of merged) if (e.id in state.cloudFavs) applyFav(e.id); // favourites backed up before the letter arrived
       save(); renderSoon();
     },
     onMessages(list) {
@@ -1407,7 +1488,10 @@ $('sel-delete').addEventListener('click', async () => {
     const e = state.entries.find((x) => x.id === id);
     if (!e) continue;
     if (conv?.cloud && user) await cloud.deleteEntry(conv.id, id).catch(() => failed.push(id));
-    if (!failed.includes(id)) { state.entries = state.entries.filter((x) => x !== e); pagers.delete(id); }
+    if (!failed.includes(id)) {
+      if (e.fav) { delete e.fav; favChanged(e); } // the favourite goes from the backup too
+      state.entries = state.entries.filter((x) => x !== e); pagers.delete(id);
+    }
   }
   for (const id of msgs) {
     if (conv?.cloud && user) await cloud.deleteMessage(conv.id, id).catch(() => failed.push(id));

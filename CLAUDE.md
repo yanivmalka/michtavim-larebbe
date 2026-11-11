@@ -31,7 +31,11 @@ boundaries – no content on intimate matters or matters of femininity.
 - `convs/{id}/entries/{id}`: letters to the Rebbe + answer (`a`) + `followups[]` – **owner writes only**
 - `convs/{id}/messages/{id}`: chat between participants `{uid, name, text, ts, replyTo}`
 - Join link `/join/<convId>.<token>`; joining sets `joinWith` = token. Rules: `firestore.rules` (tested: `npm run test:rules`)
-- Per-device only (localStorage `mlr-state-v4`): favourites, marks, archived, locked, collapsed. Not synced by design
+- `users/{uid}/private/favs` and `…/marks`: the user's own backup of favourites + tags and highlights,
+  `{ items: { key: { v, ts } } }` (v = tags / flat ranges, null once removed). Merged item by item, newer `ts` wins
+  (`onPrefs` / `pushPrefs` in `public/app.js`). Only that user reads/writes it (rules tested). **The rules must be
+  published in the Firebase console for the backup to work.**
+- Per-device only (localStorage `mlr-state-v4`): archived, locked, collapsed, read/unread. Not synced by design
 
 ## Key decisions (and why)
 - **hebrewbooks.org dropped**: it serves a Cloudflare bot challenge; we do not bypass it. chabadlibrary text instead → the page layout is simulated, not the printed one (UI says so).
