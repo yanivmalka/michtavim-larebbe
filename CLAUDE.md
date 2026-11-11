@@ -33,8 +33,9 @@ boundaries – no content on intimate matters or matters of femininity.
 - Join link `/join/<convId>.<token>`; joining sets `joinWith` = token. Rules: `firestore.rules` (tested: `npm run test:rules`)
 - `users/{uid}/private/favs` and `…/marks`: the user's own backup of favourites + tags and highlights,
   `{ items: { key: { v, ts } } }` (v = tags / flat ranges, null once removed). Merged item by item, newer `ts` wins
-  (`onPrefs` / `pushPrefs` in `public/app.js`). Only that user reads/writes it (rules tested). **The rules must be
-  published in the Firebase console for the backup to work.**
+  (`onPrefs` / `pushPrefs` in `public/app.js`). Only that user reads/writes it (rules tested). Rules published by the
+  owner and **verified on the phone (Nov 2026): favourites back up with no error**. Rules are published by hand in the
+  Firebase console (no Firebase credentials here); deploying them from CI with a service-account secret was offered.
 - Per-device only (localStorage `mlr-state-v4`): archived, locked, collapsed, read/unread. Not synced by design
 
 ## Key decisions (and why)
@@ -77,10 +78,6 @@ The keystore itself is **not** in git – the owner keeps it; losing it forces e
 `AI_RATE_PER_HOUR`, WhatsApp vars (empty). Free instance sleeps after ~15 min (first request ~1 min).
 
 ## Open items
-- **Firestore rules: the owner reports they are published** (Nov 2026; not verifiable from here – no Firebase
-  credentials in this environment). To confirm: favourite an answer while signed in → no "הגיבוי … לא הצליח" toast,
-  and `users/{uid}/private/favs` appears in Firebase Console → Firestore → Data. Option offered: deploy rules from CI
-  with a service-account secret.
 - Verify with the owner: authorized domain added, authorized domain added, Android fingerprints added
   (the downloaded `google-services.json` had no Android OAuth client yet), native sign-in tested on a phone.
 - Not yet verified on a real phone: keyboard insets, biometric prompt, share sheet, swipe, App Links.
