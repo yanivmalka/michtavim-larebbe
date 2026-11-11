@@ -1,5 +1,7 @@
 import express from 'express';
-import { answerLetter, getPageImage, getPagePdf, getLetterPdf, getNeighborLetter, getTurnedPage, analyze, askFollowUp } from './letters.js';
+import {
+  answerLetter, getPageImage, getPagePdf, getLetterPdf, getNeighborLetter, getTurnedPage, analyze, askFollowUp, translateAnalysis, acronyms,
+} from './letters.js';
 import { userMessage } from './errors.js';
 import { whatsappRouter } from './whatsapp/webhook.js';
 import { cors } from './cors.js';
@@ -72,6 +74,8 @@ export function createApp(deps = {}) {
   };
   app.post('/api/analysis', aiRoute((b, d) => analyze(b, d)));
   app.post('/api/analysis/followup', aiRoute((b, d) => askFollowUp(b, d)));
+  app.post('/api/analysis/translate', aiRoute((b, d) => translateAnalysis(b, d)));
+  app.post('/api/acronyms', aiRoute((b, d) => acronyms(b, d)));
 
   const sendPdf = (res, pdf, name) => {
     if (!pdf) return res.sendStatus(404);

@@ -20,9 +20,25 @@
         <h1 id="title-text">מכתבים לרבי</h1>
         <span class="sub" id="status">מענה מתוך אגרות הקודש</span>
       </div>
-      <button id="account-btn" class="icon-btn list-only" title="חשבון" aria-label="חשבון">👤</button>
+      <button id="home-menu" class="icon-btn list-only" title="תפריט" aria-label="תפריט">⋮</button>
       <button id="chat-menu" class="icon-btn chat-only" title="אפשרויות השיחה" aria-label="אפשרויות השיחה">⋮</button>
     </header>
+
+    <!-- selection mode (long press on a letter, an answer, a message or a chat) -->
+    <header id="sel-bar" class="bar sel-bar" hidden>
+      <button type="button" id="sel-close" class="icon-btn" title="ביטול הבחירה" aria-label="ביטול הבחירה">✕</button>
+      <div class="title"><h1 id="sel-count">1</h1></div>
+      <button type="button" id="sel-archive" class="icon-btn" title="העברה לארכיון" aria-label="העברה לארכיון">🗄</button>
+      <button type="button" id="sel-lock" class="icon-btn" title="נעילה" aria-label="נעילה">🔒</button>
+      <button type="button" id="sel-copy" class="icon-btn" title="העתקה" aria-label="העתקה">📋</button>
+      <button type="button" id="sel-move" class="icon-btn" title="העברה לשיחה אחרת" aria-label="העברה לשיחה אחרת">➦</button>
+      <button type="button" id="sel-delete" class="icon-btn" title="מחיקה" aria-label="מחיקה">🗑</button>
+      <button type="button" id="sel-more" class="icon-btn" title="עוד" aria-label="עוד">⋮</button>
+    </header>
+
+    <!-- the standard drop-down menu (⋮) -->
+    <div id="menu-backdrop" class="menu-backdrop" hidden></div>
+    <div id="menu" class="menu" role="menu" hidden></div>
 
     <div id="search-bar" class="search-bar">
       <input id="search" type="search" placeholder="🔍 חיפוש שיחות" aria-label="חיפוש שיחות">
@@ -76,31 +92,24 @@
 
     <button type="button" id="new-chat" class="fab" title="מכתב חדש" aria-label="מכתב חדש">✎</button>
 
-    <dialog id="conv-menu" class="settings conv-menu">
+    <dialog id="move-dialog" class="settings conv-menu">
       <form method="dialog">
-        <h2 id="menu-title"></h2>
-<label class="lang-row">
-        <span>שפת המענה</span>
-        <select id="lang" aria-label="שפת המענה">
-          <option value="">שפת המכתב</option>
-          <option value="he">עברית</option>
-          <option value="en">English</option>
-          <option value="ru">Русский</option>
-          <option value="fr">Français</option>
-          <option value="es">Español</option>
-        </select>
-      </label>
-        <div id="menu-members" class="members" hidden></div>
-        <button type="button" id="menu-rename">✎ שינוי שם</button>
-        <button type="button" id="menu-share">👥 שיתוף עם אנשי קשר</button>
-        <button type="button" id="menu-copy-link">🔗 העתקת קישור לשיחה</button>
-        <button type="button" id="menu-stop-share" hidden>✋ הפסקת השיתוף</button>
-        <button type="button" id="menu-archive">🗄 העברה לארכיון</button>
-        <button type="button" id="menu-lock">🔒 נעילת השיחה</button>
-        <button type="button" id="menu-delete" class="danger">🗑 מחיקת השיחה</button>
+        <h2>העברה לשיחה</h2>
+        <div id="move-list" class="move-list"></div>
         <div class="dialog-actions"><button value="close">ביטול</button></div>
       </form>
     </dialog>
+
+    <!-- text size (pinch on the letter / analysis, or the Aa button) -->
+    <div id="zoom-bar" class="zoom-bar" hidden>
+      <button type="button" id="zoom-minus" aria-label="הקטנת הטקסט">−</button>
+      <input type="range" id="zoom-range" min="70" max="200" step="5" value="100" aria-label="גודל הטקסט">
+      <button type="button" id="zoom-plus" aria-label="הגדלת הטקסט">+</button>
+      <span id="zoom-pct" dir="ltr">100%</span>
+    </div>
+
+    <!-- expansion of abbreviations (ראשי תיבות), on tap -->
+    <div id="rt-pop" class="rt-pop" role="dialog" hidden></div>
 
     <dialog id="account" class="settings">
       <form method="dialog">

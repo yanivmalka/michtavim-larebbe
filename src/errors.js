@@ -11,12 +11,14 @@ const MESSAGES = {
   PAGE_NOT_FOUND: 'העמוד לא נמצא.',
   QUESTION_EMPTY: 'נא לכתוב שאלה.',
   AI_TRUNCATED: 'ההסבר נקטע. נסו שוב.',
+  LANGUAGE_BAD: 'שפה לא מוכרת.',
+  NOTHING_TO_TRANSLATE: 'אין עדיין ניתוח לתרגום.',
 };
 
 export function userMessage(err) {
   const code = err?.message || '';
   if (MESSAGES[code]) {
-    const status = /^(LETTER|QUESTION|PAGE)/.test(code) ? 400 : code === 'AI_RATE_LIMIT' ? 429 : 503;
+    const status = /^(LETTER|QUESTION|PAGE|LANGUAGE|NOTHING)/.test(code) ? 400 : code === 'AI_RATE_LIMIT' ? 429 : 503;
     return { status, code, message: MESSAGES[code] };
   }
   if (err?.status === 429) return { status: 429, code: 'AI_RATE_LIMIT', message: MESSAGES.AI_RATE_LIMIT };
