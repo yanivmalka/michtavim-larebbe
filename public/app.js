@@ -2337,25 +2337,11 @@ async function setupNativeApp() {
     NOT_NEWER: 'הגרסה שהורדה אינה חדשה מהמותקנת.',
     SIGNATURE_MISMATCH: REINSTALL,
   };
-  const INSTALL_ERRORS = { // PackageInstaller.STATUS_*
-    2: `Android חסם את ההתקנה (לרוב Play Protect). אם מופיעה הודעה של Play Protect – בחרו "פרטים נוספים" ואז "התקנה בכל זאת". ${MANUAL}`,
-    3: 'ההתקנה בוטלה.',
-    4: `קובץ העדכון אינו תקין. נסו שוב. ${MANUAL}`,
-    5: REINSTALL,
-    6: 'אין מספיק מקום פנוי במכשיר להתקנת העדכון. פנו מקום ונסו שוב.',
-    7: 'העדכון אינו תואם למכשיר הזה.',
-    8: 'ההתקנה לא הסתיימה בזמן. נסו שוב.',
-  };
   function failed(text, detail) {
     paintUpdate('available', text);
     $('update-detail').textContent = detail ? `פרטים: ${detail}` : '';
     $('manual-update').hidden = false;
   }
-  Updater.addListener('installStatus', ({ status: code, message }) => {
-    if (code === -1) { paintUpdate('done', 'אשרו את ההתקנה בחלון שנפתח.'); return; } // waiting for the user
-    if (code === 0) { paintUpdate('done', 'העדכון הותקן.'); return; }
-    failed(INSTALL_ERRORS[code] || `ההתקנה נכשלה. ${MANUAL}`, message || `status ${code}`);
-  });
   $('manual-update').href = 'https://github.com/yanivmalka/michtavim-larebbe/releases/latest';
 
   $('check-update').addEventListener('click', () => check());
