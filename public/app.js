@@ -1890,7 +1890,6 @@ async function setupNativeApp() {
     $('app-version').textContent = info.version;
   } catch { /* plugin missing – keep defaults */ }
 
-  nativeSettings = () => { $('server-input').value = API; dialog.showModal(); };
   // the server address is built into the app; the field is only shown if it is missing
   $('server-section').hidden = !!window.MLR_API_BASE;
 
@@ -1917,55 +1916,78 @@ async function setupNativeApp() {
     try { localStorage.setItem('mlr-auto-update', e.target.checked ? 'on' : 'off'); } catch { /* ignore */ }
   });
 
+  /**
+   * The update part of the dialog shows one step at a time:
+   * idle (check button) → checking → available (install button only) → downloading (progress only) → done.
+   */
+  let phase = 'idle';
+  function paintUpdate(next, text) {
+    if (next) phase = next;
+    if (text !== undefined) status(text);
+    const check = $('check-update'), installBtn = $('install-update'), bar = $('update-progress');
+    check.hidden = !['idle', 'checking'].includes(phase);
+    check.disabled = phase === 'checking';
+    check.textContent = phase === 'checking' ? 'בודק…' : 'בדיקת עדכונים';
+    installBtn.hidden = phase !== 'available';
+    installBtn.textContent = latest ? `הורדה והתקנה של גרסה ${latest.versionName}` : 'הורדה והתקנה';
+    bar.hidden = phase !== 'downloading';
+    $('update-banner').hidden = phase !== 'available' || dialog.open;
+  }
+  const openSettings = () => {
+    $('server-input').value = API;
+    if (phase === 'done' && latest) paintUpdate('available', `גרסה חדשה זמינה: ${latest.versionName} (מותקנת: ${current.version || current.build}).`);
+    dialog.showModal();
+    paintUpdate();
+  };
+  nativeSettings = openSettings;
+  dialog.addEventListener('close', () => paintUpdate());
+
   async function check({ quiet = false } = {}) {
-    if (!API) { if (!quiet) status('יש להגדיר קודם את כתובת השרת.'); return; }
-    if (!quiet) status('בודק…');
+    if (phase === 'downloading') return;
+    if (!API) { if (!quiet) paintUpdate('idle', 'יש להגדיר קודם את כתובת השרת.'); return; }
+    if (!quiet) paintUpdate('checking', '');
     try {
       const res = await fetch(`${API}/api/app/latest`, { cache: 'no-store' });
       const v = await res.json();
-      if (!v.available) { if (!quiet) status('לא נמצאה גרסה בשרת.'); return; }
+      if (!v.available) { if (!quiet) paintUpdate('idle', 'לא נמצאה גרסה בשרת.'); return; }
       if (v.versionCode > current.build) {
         latest = v;
-        status(`גרסה חדשה זמינה: ${v.versionName} (מותקנת: ${current.version || current.build}).`);
-        $('install-update').hidden = false;
         $('update-text').textContent = `גרסה חדשה ${v.versionName} זמינה`;
-        $('update-banner').hidden = false;
+        paintUpdate('available', `גרסה חדשה זמינה: ${v.versionName} (מותקנת: ${current.version || current.build}).`);
       } else if (!quiet) {
-        status(`האפליקציה מעודכנת (${current.version}).`);
-        $('install-update').hidden = true;
+        paintUpdate('idle', `האפליקציה מעודכנת (${current.version}).`);
       }
     } catch {
-      if (!quiet) status('לא ניתן היה לבדוק עדכונים. בדקו את החיבור ואת כתובת השרת.');
+      if (!quiet) paintUpdate('idle', 'לא ניתן היה לבדוק עדכונים. בדקו את החיבור ואת כתובת השרת.');
     }
   }
 
   async function install() {
-    if (!latest) return;
+    if (!latest || phase === 'downloading') return;
     const { allowed } = await Updater.canInstall();
     if (!allowed) {
-      status('יש לאשר לאפליקציה להתקין עדכונים, ואז ללחוץ שוב על "הורדה והתקנה".');
+      paintUpdate('available', 'יש לאשר לאפליקציה להתקין עדכונים, ואז ללחוץ שוב על "הורדה והתקנה".');
       await Updater.openInstallSettings();
       return;
     }
     const bar = $('update-progress');
-    bar.hidden = false; bar.value = 0;
-    $('install-update').disabled = true;
-    status('מוריד את העדכון…');
+    bar.value = 0;
+    paintUpdate('downloading', 'מוריד את העדכון…');
     const sub = await Updater.addListener('progress', ({ percent }) => { bar.value = percent; status(`מוריד… ${percent}%`); });
     try {
       await Updater.downloadAndInstall({ url: `${API}${latest.downloadPath}` });
-      status('ההורדה הסתיימה – אשרו את ההתקנה בחלון שנפתח.');
+      paintUpdate('done', 'ההורדה הסתיימה – אשרו את ההתקנה בחלון שנפתח.');
     } catch (e) {
-      status(e?.code === 'INSTALL_NOT_ALLOWED' ? 'יש לאשר התקנת עדכונים להגדרות האפליקציה.' : 'ההורדה נכשלה. נסו שוב.');
+      paintUpdate('available', e?.code === 'INSTALL_NOT_ALLOWED' ? 'יש לאשר התקנת עדכונים בהגדרות האפליקציה, ואז לנסות שוב.' : 'ההורדה נכשלה. נסו שוב.');
     } finally {
       sub.remove();
-      $('install-update').disabled = false;
     }
   }
 
   $('check-update').addEventListener('click', () => check());
   $('install-update').addEventListener('click', install);
-  $('update-now').addEventListener('click', () => { $('server-input').value = API; dialog.showModal(); install(); });
+  $('update-now').addEventListener('click', () => { openSettings(); install(); });
+  paintUpdate('idle', '');
 
   if ($('auto-check').checked) check({ quiet: true });
 }
