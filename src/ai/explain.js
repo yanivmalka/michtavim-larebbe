@@ -9,10 +9,14 @@ export const AnswerSchema = z.object({
   translation: z.string(),
   explanation: z.string(),
   keyQuote: z.string(),
+  sources: z.array(z.string()).default([]),
 });
 
+/** Shared rule: an answer in Hebrew (or any language) must not mix in letters of another script. */
+export const SCRIPT_RULE = 'כתוב אך ורק באותיות של שפת היעד (עברית – באותיות עבריות בלבד). אל תשלב אותיות ערביות, פרסיות או תווים מכתב אחר, גם לא במילה בודדת; אם מילה אינה ידועה לך – השאר אותה כפי שהיא במקור.';
+
 /** Translating an existing analysis to another language, and expanding abbreviations – small, shared prompts. */
-export const TRANSLATE_SYSTEM = `אתה מתרגם. תקבל רשימת קטעי טקסט (הסבר ותרגום של עמוד מ"אגרות קודש" של הרבי מליובאוויטש) וקוד שפה. תרגם כל קטע לשפה המבוקשת בנאמנות ובלשון מכובדת, ושמור על מבנה הפסקאות והכותרות ("אגרת <מספר>"). החזר JSON בלבד: { "items": [ ...הקטעים המתורגמים באותו סדר... ] }, באותו מספר קטעים בדיוק.`;
+export const TRANSLATE_SYSTEM = `אתה מתרגם. תקבל רשימת קטעי טקסט (הסבר ותרגום של עמוד מ"אגרות קודש" של הרבי מליובאוויטש) וקוד שפה. תרגם כל קטע לשפה המבוקשת בנאמנות ובלשון מכובדת, ושמור על מבנה הפסקאות והכותרות ("אגרת <מספר>"). ${SCRIPT_RULE} החזר JSON בלבד: { "items": [ ...הקטעים המתורגמים באותו סדר... ] }, באותו מספר קטעים בדיוק.`;
 export const translateSchema = {
   type: 'object',
   additionalProperties: false,
@@ -21,7 +25,7 @@ export const translateSchema = {
 };
 export const TranslateSchema = z.object({ items: z.array(z.string()) });
 
-export const ACRONYM_SYSTEM = `לפניך עמוד מתוך "אגרות קודש" של הרבי מליובאוויטש ורשימת ראשי תיבות וקיצורים המופיעים בו. פענח כל אחד מהם כפי שהוא משמש בהקשר של העמוד, בעברית, "על דרך אפשר": תן את הפענוח הסביר ביותר ראשון, ואם יש כמה אפשרויות הגיוניות – תן עד 3, מהסביר לפחות סביר. קיצור שאינך מזהה – החזר לו רשימה ריקה. החזר JSON בלבד.`;
+export const ACRONYM_SYSTEM = `לפניך קטע (משפט או עמוד) מתוך "אגרות קודש" של הרבי מליובאוויטש ורשימת ראשי תיבות וקיצורים המופיעים בו. פענח כל אחד מהם כפי שהוא משמש בהקשר של הקטע, בעברית, "על דרך אפשר": תן את הפענוח הסביר ביותר ראשון, ואם יש כמה אפשרויות הגיוניות – תן עד 3, מהסביר לפחות סביר. קיצור שאינך מזהה – החזר לו רשימה ריקה. החזר JSON בלבד.`;
 export const acronymSchema = {
   type: 'object',
   additionalProperties: false,
@@ -45,13 +49,14 @@ export const FOLLOWUP_SYSTEM = `אתה ממשיך שיחה עם אדם שכתב 
 const jsonSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['sourceLanguage', 'replyLanguage', 'translation', 'explanation', 'keyQuote'],
+  required: ['sourceLanguage', 'replyLanguage', 'translation', 'explanation', 'keyQuote', 'sources'],
   properties: {
     sourceLanguage: { type: 'string', enum: ['hebrew', 'yiddish', 'english', 'russian', 'other'], description: 'השפה העיקרית של העמוד' },
     replyLanguage: { type: 'string', description: 'קוד השפה (ISO 639-1) שבה נכתבו translation, explanation ו-keyQuote' },
     translation: { type: 'string', description: 'תרגום מלא של כל מה שבעמוד לשפת המענה, אגרת אחר אגרת, עם כותרת "אגרת <מספר>" לפני כל אחת. אם הכול כבר בשפת המענה – מחרוזת ריקה' },
     explanation: { type: 'string', description: 'הסבר כיצד מה שבעמוד עשוי להתייחס למה שנכתב במכתב' },
     keyQuote: { type: 'string', description: 'משפט קצר מתוך העמוד (בשפת המענה) שהוא לב המענה' },
+    sources: { type: 'array', items: { type: 'string' }, description: 'הקטעים שבעמוד שעליהם מושתת ההסבר: 2–6 ציטוטים קצרים (5–25 מילים), מועתקים מילה במילה מטקסט העמוד כפי שהוא, בשפת המקור ובלי שינוי' },
   },
 };
 
@@ -61,6 +66,8 @@ const SYSTEM = `אתה מסייע לאדם שכתב מכתב לרבי מליוב
 1. אם העמוד אינו בשפת המענה (בפרט כשהוא באידיש) – תרגם את כל מה שבו, בנאמנות ובלשון מכובדת. ראשי תיבות – פתח אותם בתרגום.
 2. כתוב הסבר חם, ענייני ולא מפריז: אילו נקודות בעמוד – מכל אחת מהאגרות שבו – עשויות להתייחס למה שהכותב שיתף, ואיזה כיוון מעשי עולה מהן. התבסס רק על מה שכתוב בעמוד, ואם הקשר אינו ישיר – אמור זאת בפשטות והצע איזו נקודה כללית אפשר לקחת. אל תציג פרשנות כנבואה ואל תפסוק הלכה; בשאלה הלכתית, רפואית או משפטית – הפנה בעדינות לרב, לרופא או לאיש מקצוע.
 3. שמור על כבוד ודרך ארץ. ההסבר באורך של 2–4 פסקאות קצרות.
+4. ב-sources החזר את הקטעים שבעמוד שעליהם מושתת ההסבר: 2–6 ציטוטים קצרים (5–25 מילים כל אחד), מועתקים מילה במילה מטקסט העמוד כפי שהוא (בשפת המקור, בלי לתרגם ובלי לתקן), כדי שאפשר יהיה לסמן אותם על גבי העמוד.
+${SCRIPT_RULE}
 החזר JSON בלבד לפי הסכמה.`;
 
 /** Skip the call entirely when no Claude credentials are configured. */
@@ -146,7 +153,7 @@ export async function acronymsClaude({ context, words }) {
     betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default',
     output_config: { effort: 'low', format: { type: 'json_schema', schema: acronymSchema } },
     system: ACRONYM_SYSTEM,
-    messages: [{ role: 'user', content: `העמוד:\n"""\n${context}\n"""\n\nראשי התיבות לפענוח: ${JSON.stringify(words)}` }],
+    messages: [{ role: 'user', content: `הקטע:\n"""\n${context}\n"""\n\nראשי התיבות לפענוח: ${JSON.stringify(words)}` }],
   });
   return AcronymSchema.parse(jsonOf(response)).items;
 }

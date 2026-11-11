@@ -112,34 +112,45 @@ function mergeRanges(ranges) {
   return out;
 }
 
-/** A paragraph whose text can be marked; marks are stored under `key`. */
-function markable(text, key) {
+/**
+ * A paragraph whose text can be marked; marks are stored under `key`. `ai` holds ranges the
+ * explanation rests on (marked by the AI): shown like the user's marks, but not removable.
+ */
+function markable(text, key, ai = []) {
   const p = el('p', { className: 'hl' });
   p.dataset.key = key;
   p.dataset.text = text;
+  p.aiRanges = ai;
   paintMarks(p);
   return p;
 }
 
 function paintMarks(p) {
   const text = p.dataset.text;
-  const ranges = state.marks[p.dataset.key] || [];
+  const mine = state.marks[p.dataset.key] || [];
+  const ai = p.aiRanges || [];
   p.textContent = '';
-  let pos = 0;
-  ranges.forEach(([s, e], i) => {
-    if (s > pos) p.append(text.slice(pos, s));
-    const m = el('mark', { textContent: text.slice(s, e), title: 'לחיצה מסירה את ההדגשה' });
-    m.addEventListener('click', () => {
-      if (!getSelection().isCollapsed) return;
-      state.marks[p.dataset.key].splice(i, 1);
-      if (!state.marks[p.dataset.key].length) delete state.marks[p.dataset.key];
-      markChanged(p.dataset.key);
-      paintMarks(p);
-    });
+  const cuts = new Set([0, text.length]);
+  for (const [s, e] of [...mine, ...ai]) { cuts.add(Math.max(0, Math.min(text.length, s))); cuts.add(Math.max(0, Math.min(text.length, e))); }
+  const pts = [...cuts].sort((a, b) => a - b);
+  for (let k = 0; k + 1 < pts.length; k++) {
+    const s = pts[k], e = pts[k + 1];
+    const i = mine.findIndex(([a, b]) => a <= s && b >= e);
+    const fromAi = ai.some(([a, b]) => a <= s && b >= e);
+    if (i < 0 && !fromAi) { p.append(text.slice(s, e)); continue; }
+    const m = el('mark', { textContent: text.slice(s, e), className: fromAi ? (i < 0 ? 'ai' : 'ai mine') : '' });
+    if (i >= 0) {
+      m.title = 'לחיצה מסירה את ההדגשה';
+      m.addEventListener('click', () => {
+        if (!getSelection().isCollapsed) return;
+        state.marks[p.dataset.key].splice(i, 1);
+        if (!state.marks[p.dataset.key].length) delete state.marks[p.dataset.key];
+        markChanged(p.dataset.key);
+        paintMarks(p);
+      });
+    } else m.title = 'קטע שעליו מושתת ההסבר';
     p.append(m);
-    pos = e;
-  });
-  if (pos < text.length) p.append(text.slice(pos));
+  }
 }
 
 /** The current selection as [paragraph, start, end] if it lies inside one markable paragraph. */
@@ -164,7 +175,7 @@ function applyMark(found) {
   markChanged(p.dataset.key);
   getSelection().removeAllRanges();
   paintMarks(p);
-  $('hl-bar').hidden = true;
+  paintTools(null, null);
 }
 
 // Marker mode: every finished selection is highlighted at once (no button needed).
@@ -176,7 +187,29 @@ function setMarkerMode(on) {
   document.body.classList.toggle('marker-mode', on);
   $('hl-mode').textContent = on ? '🖍 מרקר פעיל – לסיום' : '🖍 מצב מרקר';
   $('hl-mode').classList.toggle('on', on);
-  $('hl-bar').hidden = !on && !selectedRange();
+  paintTools(selectedRange(), toolEntry);
+}
+
+// ---------- tools, while text of an answer is selected: highlight, text size, PDF, share, marker ----------
+let toolEntry = null; // the answer whose text is selected
+function paintTools(found, entry) {
+  toolEntry = entry;
+  const page = entry && currentPage(pagerOf(entry));
+  $('hl-add').hidden = !found;
+  $('tool-size').hidden = !entry;
+  $('tool-share').hidden = !entry;
+  $('tool-pdf').hidden = !page?.pdfPath;
+  if (page?.pdfPath) $('tool-pdf').href = API + page.pdfPath;
+  $('hl-bar').hidden = !found && !entry && !markerMode;
+}
+/** The answer (entry with an answer) whose bubble holds the current selection, if any. */
+function selectedEntry() {
+  const sel = getSelection();
+  if (!sel.rangeCount || sel.isCollapsed) return null;
+  const bubble = bubbleOf(sel.getRangeAt(0).commonAncestorContainer);
+  const key = bubble?.dataset.sel || '';
+  const entry = key.startsWith('e:') ? state.entries.find((e) => e.id === key.slice(2)) : null;
+  return entry?.a ? entry : null;
 }
 /** The bubble the selection started in: "select all" (or a drag past its edge) stays inside it. */
 let selBubble = null;
@@ -196,14 +229,23 @@ document.addEventListener('selectionchange', () => {
   }
   const found = selectedRange();
   if (found) lastRange = found;
-  $('hl-add').hidden = !found;
-  $('hl-bar').hidden = !found && !markerMode;
+  paintTools(found, selectedEntry());
   clearTimeout(markTimer);
   if (markerMode && found) markTimer = setTimeout(() => { const f = selectedRange(); if (f) applyMark(f); }, 900);
 });
-for (const id of ['hl-add', 'hl-mode']) $(id).addEventListener('pointerdown', (e) => e.preventDefault()); // keep the selection
+for (const id of ['hl-add', 'hl-mode', 'tool-size', 'tool-pdf', 'tool-share']) $(id).addEventListener('pointerdown', (e) => e.preventDefault()); // keep the selection
 $('hl-add').addEventListener('click', () => { const f = selectedRange() || lastRange; if (f) applyMark(f); lastRange = null; });
-$('hl-mode').addEventListener('click', () => setMarkerMode(!markerMode));
+$('hl-mode').addEventListener('click', () => {
+  const on = !markerMode;
+  setMarkerMode(on);
+  if (on) toast('מצב מרקר: כל טקסט שתסמנו באגרת, בהסבר או בתרגום יודגש. לסיום – הכפתור הצהוב למעלה.');
+});
+$('tool-size').addEventListener('click', () => showZoomBar(true));
+$('tool-share').addEventListener('click', async () => {
+  const entry = toolEntry;
+  if (!entry) return;
+  try { await shareAnswer(entry); } catch (e) { if (e?.name !== 'AbortError' && !/cancel/i.test(e?.message || '')) alert(`השיתוף נכשל: ${e?.message || e}`); }
+});
 
 // ---------- pages of an answer: the page that opened, and the pages before / after it ----------
 // One pager per answer, shared by the bubble (image + text) and the full-screen view, so both
@@ -222,6 +264,27 @@ function pagerOf(entry) {
   return p;
 }
 const currentPage = (p) => p.pages[p.at];
+
+// the passages the explanation rests on: { spec, id, r: [start, end, …] } per letter, marked on the image and in the text
+const pairsOf = (flat) => { const out = []; for (let i = 0; i + 1 < (flat || []).length; i += 2) out.push([flat[i], flat[i + 1]]); return out; };
+const aiRangesOf = (entry, spec, id) => (entry?.a?.highlights || []).filter((h) => h.spec === spec && h.id === id).flatMap((h) => pairsOf(h.r));
+function hlParam(entry, spec) {
+  const hs = (entry?.a?.highlights || []).filter((h) => h.spec === spec && h.r?.length);
+  return hs.map((h) => `${h.id}:${pairsOf(h.r).map(([s, e]) => `${s}-${e}`).join(',')}`).join(';');
+}
+/** The image of a page; when it is the page the explanation was made on, its passages are marked. */
+function pageImageUrl(entry, page) {
+  const hl = entry ? hlParam(entry, page.spec) : '';
+  return `${API}${page.imagePath}${hl ? `?hl=${encodeURIComponent(hl)}` : ''}`;
+}
+/** When another page is shown than the one with the explanation's marks: says where they are. */
+function hlNote(entry, pager) {
+  const hs = entry?.a?.highlights || [];
+  if (!hs.length || hs.some((h) => h.spec === currentPage(pager).spec)) return '';
+  const at = pager.pages.findIndex((p) => hs.some((h) => h.spec === p.spec));
+  const where = at < 0 ? 'בעמוד אחר' : at === pager.opened ? 'בעמוד שנפתח' : at < pager.at ? 'בעמוד קודם' : 'בעמוד הבא';
+  return `🖍 הסימונים של ההסבר ${where}`;
+}
 function whereLabel(p) {
   const offset = p.at - p.opened;
   if (p.busy) return 'טוען…';
@@ -297,7 +360,7 @@ async function turnPager(p, dir) {
 }
 
 // ---------- full-screen image, with pinch zoom ----------
-const lb = { pager: null, scale: 1, fitWidth: 0 };
+const lb = { pager: null, entry: null, scale: 1, fitWidth: 0 };
 const lbScroll = () => $('lightbox').querySelector('.lightbox-scroll');
 
 function paintLightbox() {
@@ -305,9 +368,10 @@ function paintLightbox() {
   if (!p) return;
   const img = $('lightbox-img');
   const page = currentPage(p);
-  const src = API + page.imagePath;
+  const src = pageImageUrl(lb.entry, page);
   if (img.getAttribute('src') !== src) { setLightboxScale(1); img.src = src; lbScroll().scrollTo(0, 0); }
-  $('lb-where').textContent = whereLabel(p);
+  const note = hlNote(lb.entry, p);
+  $('lb-where').textContent = note ? `${whereLabel(p)} · ${note}` : whereLabel(p);
   $('lb-prev').disabled = p.busy || atFirst(p);
   $('lb-next').disabled = p.busy || atLast(p);
 }
@@ -338,7 +402,7 @@ $('lightbox-img').addEventListener('load', () => { if (lb.scale === 1) lb.fitWid
 function openLightbox(pager, alt, entry = null) {
   if (entry && isUnread(entry)) { setRead(entry); save(); }
   prefetchAround(pager);
-  lb.pager = pager; lb.scale = 1; lb.fitWidth = 0;
+  lb.pager = pager; lb.entry = entry; lb.scale = 1; lb.fitWidth = 0;
   hideZoomBar(); hideAcronymPop();
   $('lightbox-img').alt = alt;
   $('lightbox-img').removeAttribute('src');
@@ -391,14 +455,22 @@ function closeLightbox(fromHistory = false) {
   $('lightbox').hidden = true;
   setLightboxScale(1);
   $('lightbox-img').removeAttribute('src');
-  lb.pager = null;
+  lb.pager = null; lb.entry = null;
   if (!isNativeApp && !fromHistory && history.state?.lightbox) history.back();
   return true;
 }
 window.addEventListener('popstate', () => closeLightbox(true));
-$('lightbox').addEventListener('click', (e) => { if (e.target === e.currentTarget || e.target.classList.contains('lightbox-scroll')) closeLightbox(); });
+// a tap on the left third turns to the next page, on the right third to the previous one (a Hebrew book);
+// a tap in the middle zooms in on the page (and back to fit), or closes when beside the page
+$('lightbox').addEventListener('click', (e) => {
+  if (e.target !== e.currentTarget && !e.target.classList.contains('lightbox-scroll') && e.target !== $('lightbox-img')) return;
+  if (lb.scale > 1) { setLightboxScale(1); return; }
+  const f = e.clientX / innerWidth;
+  if (f < 0.3 && !$('lightbox-nav').hidden) { turnLightbox(1); return; }
+  if (f > 0.7 && !$('lightbox-nav').hidden) { turnLightbox(-1); return; }
+  if (e.target === $('lightbox-img')) setLightboxScale(2.5, e.clientX, e.clientY); else closeLightbox();
+});
 $('lightbox-close-bottom').addEventListener('click', () => closeLightbox());
-$('lightbox-img').addEventListener('click', (e) => setLightboxScale(lb.scale > 1 ? 1 : 2.5, e.clientX, e.clientY)); // tap: zoom in / back to fit
 $('lightbox-close').addEventListener('click', () => closeLightbox());
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('lightbox').hidden) closeLightbox(); });
 
@@ -468,7 +540,8 @@ const blobToBase64 = (blob) => new Promise((resolve, reject) => {
 async function shareAnswer(entry) {
   const a = entry.a;
   const question = entry.q;
-  const imageUrl = API ? `${API}${a.imagePath}` : new URL(a.imagePath, location.href).href;
+  const marked = pageImageUrl(entry, { spec: specOf(a.imagePath), imagePath: a.imagePath });
+  const imageUrl = API ? marked : new URL(marked, location.href).href;
   const text = `${question ? `מכתב לרבי:\n${question}\n\n` : ''}המענה: ${a.title}`;
 
   let blob = null;
@@ -515,21 +588,6 @@ async function shareAnswer(entry) {
     URL.revokeObjectURL(link.href);
   }
   alert(blob ? 'הטקסט הועתק והתמונה ירדה למכשיר – אפשר להדביק ולצרף אותם בכל אפליקציה.' : 'הטקסט והקישור לתמונה הועתקו.');
-}
-
-function shareButton(entry) {
-  const btn = el('button', { type: 'button', className: 'link-btn', textContent: '↗ שיתוף' });
-  btn.addEventListener('click', async () => {
-    btn.disabled = true;
-    try {
-      await shareAnswer(entry);
-    } catch (e) {
-      if (e?.name !== 'AbortError' && !/cancel/i.test(e?.message || '')) alert(`השיתוף נכשל: ${e?.message || e}`);
-    } finally {
-      btn.disabled = false;
-    }
-  });
-  return btn;
 }
 
 // ---------- favourites: the star in the answer's row opens the tags under it ----------
@@ -599,8 +657,8 @@ function favPanel(entry) {
 
 // ---------- the text of the page: the same page as in the image, previous / next page ----------
 /** A markable paragraph that also knows which page it belongs to (for expanding abbreviations). */
-function pageParagraph(text, key, spec) {
-  const p = markable(text, key);
+function pageParagraph(text, key, spec, ai = []) {
+  const p = markable(text, key, ai);
   if (spec) p.dataset.spec = spec;
   return p;
 }
@@ -610,8 +668,8 @@ function pageTextSection(entry, pager) {
   const next = el('button', { type: 'button', className: 'nav-btn', textContent: '←', title: 'העמוד הבא' });
   const where = el('span', { className: 'where' });
   const body = el('div', { className: 'letter-body page-text reading' });
-  const box = el('details', { className: 'letters', open: !!entry.textOpen },
-    el('summary', { textContent: '📜 הטקסט שבעמוד' }),
+  const box = el('details', { className: 'letters fold', open: !!entry.textOpen },
+    el('summary', {}, el('span', { className: 'sum-label', textContent: '📜 הטקסט שבעמוד' })),
     el('div', { className: 'pager' }, prev, where, next), // RTL: first = right
     body);
   box.addEventListener('toggle', () => { entry.textOpen = box.open; save(); });
@@ -640,7 +698,7 @@ function pageTextSection(entry, pager) {
       const [fullBtn, fullBox] = l.fullText ? fullLetter(l, page.spec) : [];
       body.append(el('div', { className: 'letter' },
         l.startsOnPage !== false && el('div', { className: 'letter-num', textContent: l.number }),
-        pageParagraph(l.pageText, `P:${page.spec}:${l.id ?? l.number}`, page.spec),
+        pageParagraph(l.pageText, `P:${page.spec}:${l.id ?? l.number}`, page.spec, aiRangesOf(entry, page.spec, l.id)),
         el('div', { className: 'links' },
           l.id != null && el('a', { href: `${API}/api/igrot/${l.id}.pdf`, target: '_blank', rel: 'noopener', textContent: '📄 PDF האגרת' }),
           l.viewerUrl && el('a', { href: l.viewerUrl, target: '_blank', rel: 'noopener', textContent: '🔗 במקור' }),
@@ -706,11 +764,6 @@ $('zoom-bar').addEventListener('pointerup', () => showZoomBar());
   }, { passive: false });
   for (const ev of ['touchend', 'touchcancel']) chat.addEventListener(ev, () => { pinch = null; }, { passive: true });
 }
-function textSizeButton() {
-  const b = el('button', { type: 'button', className: 'link-btn', textContent: 'Aa', title: 'גודל הטקסט (או צביטה על הטקסט)' });
-  b.addEventListener('click', () => showZoomBar(true));
-  return b;
-}
 
 // ---------- ראשי תיבות: a tap on an abbreviation shows what it stands for ----------
 const rtCache = new Map(); // word → options found by the AI, for this page
@@ -766,6 +819,16 @@ function rangeIn(p, start, end) {
   }
   if (done < 2) range.setEnd(p, p.childNodes.length);
   return range;
+}
+
+/** The sentence around [start, end) in `text` – what the AI gets when asked to explain an abbreviation in context. */
+function sentenceAround(text, start, end) {
+  const stop = /[.!?:\n]/;
+  let s = start, e = end;
+  while (s > 0 && !stop.test(text[s - 1]) && start - s < 400) s -= 1;
+  while (e < text.length && !stop.test(text[e]) && e - end < 400) e += 1;
+  if (e < text.length && stop.test(text[e]) && text[e] !== '\n') e += 1; // keep the sentence's end mark
+  return text.slice(s, e).trim();
 }
 
 /** The run of abbreviations around the tapped word (כ"ק אדמו"ר שליט"א), as [{ word, start, end }]. */
@@ -835,12 +898,14 @@ function showAcronymPop(p, found) {
       foot.append(all);
     }
     if (p.dataset.spec) {
-      const ai = el('button', { type: 'button', className: 'rt-btn', textContent: options.length ? '🔎 לפי ההקשר' : '🔎 בירור לפי העמוד' });
+      const ai = el('button', { type: 'button', className: 'rt-btn', textContent: options.length ? '🔎 לפי ההקשר' : '🔎 בירור לפי ההקשר' });
       ai.addEventListener('click', async () => {
         const words = run.length > 1 ? run.map((w) => w.word) : [found.word];
         ai.disabled = true; ai.textContent = '⏳';
         try {
-          const r = await postJson('/api/acronyms', { spec: p.dataset.spec, words: words.map((w) => w.replace(/[.,;:!?]+$/, '')) }, 60000);
+          // only the sentence the word stands in is sent, not the whole page
+          const sentence = sentenceAround(found.text, run.length > 1 ? run[0].start : found.start, run.length > 1 ? run.at(-1).end : found.end);
+          const r = await postJson('/api/acronyms', { spec: p.dataset.spec, words: words.map((w) => w.replace(/[.,;:!?]+$/, '')), sentence }, 60000);
           for (const it of r.items || []) rtCache.set(it.word, it.options);
           const mine = r.items?.find((it) => it.word === found.word.replace(/[.,;:!?]+$/, ''))?.options || [];
           options = [...new Set([...mine, ...options])];
@@ -877,15 +942,6 @@ chat.addEventListener('click', (e) => {
   if (!found || !isAcronym(found.word)) { hideAcronymPop(); return; }
   showAcronymPop(p, found);
 });
-
-function markerButton() {
-  const b = el('button', { type: 'button', className: 'link-btn', textContent: '🖍 מרקר' });
-  b.addEventListener('click', () => {
-    setMarkerMode(true);
-    alert('מצב מרקר: סמנו טקסט באגרת, בהסבר או בתרגום – הוא יודגש. לסיום לחצו על הכפתור הצהוב למעלה.');
-  });
-  return b;
-}
 
 // ---------- rendering ----------
 // ---------- explanation and analysis: only on request, then follow-up questions ----------
@@ -933,21 +989,28 @@ async function translateEntry(entry, language) {
   }
 }
 
-/** The language of the explanation, at the left end of the actions row; changing it translates an existing analysis. */
+/**
+ * "תרגם": a drop-down in the answer's row that reads as a button. Choosing a language translates an
+ * existing analysis (or sets the language of the analysis to come); the current language is ticked.
+ */
 function langSelect(entry) {
   const a = entry.a;
-  const sel = el('select', { className: 'lang-select', title: 'שפת המענה' });
-  sel.setAttribute('aria-label', 'שפת המענה');
-  for (const [v, label] of LANGS) sel.append(el('option', { value: v, textContent: label }));
-  sel.value = a.replyLanguage || replyLang || '';
+  const sel = el('select', { className: 'lang-select', title: 'תרגום המענה לשפה אחרת' });
+  sel.setAttribute('aria-label', 'תרגום המענה לשפה אחרת');
+  const current = a.explanation ? (a.analysisLanguage || '') : (a.replyLanguage || replyLang || '');
+  sel.append(el('option', { value: '__', textContent: '🌐 תרגם' }));
+  for (const [v, label] of LANGS) sel.append(el('option', { value: v, textContent: `${v === current ? '✓ ' : ''}${label}` }));
+  sel.value = '__';
   sel.addEventListener('change', () => {
     const v = sel.value;
+    sel.value = '__'; // stays "תרגם"
+    if (v === '__') return;
     a.replyLanguage = v || null;
     setReplyLang(v);
     if (a.explanation && v && v !== (a.analysisLanguage || '')) translateEntry(entry, v);
-    else syncEntry(entry);
+    else { syncEntry(entry); render(); }
   });
-  return el('label', { className: 'lang-wrap', title: 'שפת המענה' }, '🌐', sel);
+  return el('span', { className: 'lang-wrap' }, sel);
 }
 
 function analysisSection(entry) {
@@ -970,9 +1033,10 @@ function analysisSection(entry) {
         Object.assign(a, {
           explained: true, explanation: r.explanation, translation: r.translation, keyQuote: r.keyQuote, sourceLanguage: r.sourceLanguage,
           provider: r.provider, analysisLanguage: (r.replyLanguage || wanted || '').slice(0, 2),
+          highlights: r.highlights || [], sourcesFound: r.sourcesFound || 0, sourcesTotal: r.sourcesTotal || 0, // the passages the explanation rests on
         });
         syncEntry(entry);
-        entry.showMore = true;
+        entry.showMore = true; entry.analysisOpen = true; entry.translationOpen = true; // just asked for: shown open
         render();
       } catch (e) {
         btn.disabled = false; btn.textContent = '✨ הסבר, תרגום וניתוח העמוד';
@@ -989,34 +1053,37 @@ function analysisSection(entry) {
   const clear = el('button', { type: 'button', className: 'del-btn', textContent: '🗑 מחיקת הניתוח' });
   clear.addEventListener('click', () => {
     if (!confirm('למחוק את ההסבר, התרגום ושאלות ההמשך? אפשר יהיה לבקש ניתוח חדש.')) return;
-    for (const k of ['explanation', 'translation', 'keyQuote', 'sourceLanguage', 'analysisLanguage', 'provider']) delete a[k];
+    for (const k of ['explanation', 'translation', 'keyQuote', 'sourceLanguage', 'analysisLanguage', 'provider', 'highlights', 'sourcesFound', 'sourcesTotal']) delete a[k];
     a.explained = false;
     delete entry.followups;
     syncEntry(entry);
     render();
   });
-  const sub = el('details', { className: 'ana-part', open: !entry.analysisClosed },
-    el('summary', {}, el('span', { textContent: '✨ כיצד המענה מתייחס למכתב' })),
-    a.keyQuote && el('div', { className: 'quote', textContent: a.keyQuote }),
-    pageParagraph(a.explanation, `E:${entry.id}`, spec),
-    a.translation && el('details', { open: true },
-      el('summary', { textContent: a.sourceLanguage === 'yiddish' ? 'תרגום מאידיש' : 'תרגום' }),
-      pageParagraph(a.translation, `T:${entry.id}`, spec)),
-    canAsk && el('div', { className: 'del-row' }, clear));
-  sub.addEventListener('toggle', () => { entry.analysisClosed = !sub.open; save(); });
-  box.append(sub);
 
-  // follow-up questions about the analysis (collapsible)
+  // where the explanation rests: marked on the page image and in the page text
+  const marksNote = () => {
+    if (!a.highlights) return null;
+    const found = a.sourcesFound || 0, total = a.sourcesTotal || 0;
+    if (!a.highlights.length) return total ? el('div', { className: 'hl-note', textContent: '🖍 הקטעים שההסבר מבוסס עליהם לא אותרו בעמוד.' }) : null;
+    const page = pagerOf(entry).pages[pagerOf(entry).opened];
+    const ids = new Set(a.highlights.map((h) => h.id));
+    const beyond = (page?.letters || []).filter((l) => ids.has(l.id)).flatMap((l) => [!l.startsOnPage && 'בעמוד הקודם', !l.endsOnPage && 'בעמוד הבא']).filter(Boolean);
+    const more = beyond.length ? ` האגרת המסומנת ממשיכה ${[...new Set(beyond)].join(' ו')} – ההסבר מתייחס רק למה שבעמוד שנפתח.` : '';
+    const partial = found < total ? ` (${found} מתוך ${total} קטעים אותרו)` : '';
+    return el('div', { className: 'hl-note', textContent: `🖍 הקטעים שעליהם מושתת ההסבר מסומנים במרקר על תמונת העמוד ובטקסט שבעמוד${partial}.${more}` });
+  };
+
+  // follow-up questions about the analysis – inside the analysis, so minimizing it hides them too
   const qa = entry.followups || [];
   const thread = el('div', { className: 'followups' },
     ...qa.flatMap((f, i) => [
       el('div', { className: 'fq', textContent: f.q }),
       el('div', { className: 'fa' }, pageParagraph(f.a, `F:${entry.id}:${i}`, spec)),
     ]));
-  const fu = el('details', { className: 'ana-part', open: !entry.followupsClosed },
-    el('summary', { textContent: `💬 שאלות המשך${qa.length ? ` (${qa.length})` : ''}` }),
+  const fu = el('details', { className: 'ana-part fold', open: !!entry.followupsOpen },
+    el('summary', {}, el('span', { className: 'sum-label', textContent: `💬 שאלות המשך${qa.length ? ` (${qa.length})` : ''}` })),
     thread);
-  fu.addEventListener('toggle', () => { entry.followupsClosed = !fu.open; save(); });
+  fu.addEventListener('toggle', () => { entry.followupsOpen = fu.open; save(); });
   if (canAsk && spec) {
     const field = el('textarea', { className: 'fu-input', rows: 1, placeholder: 'שאלת המשך על הניתוח…', maxLength: 2000 });
     const ask = el('button', { type: 'button', className: 'analyze-btn small', textContent: 'שאלה' });
@@ -1031,7 +1098,7 @@ function analysisSection(entry) {
           spec, letter: entry.q, analysis: { explanation: a.explanation, translation: a.translation }, history: qa, question,
         });
         entry.followups = [...qa, { q: question, a: r.answer, ts: Date.now() }];
-        delete entry.followupsClosed;
+        entry.followupsOpen = true;
         syncEntry(entry);
         render();
       } catch (e) {
@@ -1039,10 +1106,22 @@ function analysisSection(entry) {
       }
     });
     fu.append(el('div', { className: 'fu-row' }, field, ask), status);
-  } else if (!qa.length) {
-    return box; // nothing to show under "follow-up questions"
   }
-  box.append(fu);
+
+  const translation = a.translation && el('details', { className: 'ana-part fold', open: !!entry.translationOpen },
+    el('summary', {}, el('span', { className: 'sum-label', textContent: a.sourceLanguage === 'yiddish' ? '📖 תרגום מאידיש' : '📖 תרגום' })),
+    pageParagraph(a.translation, `T:${entry.id}`, spec));
+  if (translation) translation.addEventListener('toggle', () => { entry.translationOpen = translation.open; save(); });
+  const sub = el('details', { className: 'ana-part fold', open: !!entry.analysisOpen },
+    el('summary', {}, el('span', { className: 'sum-label', textContent: '✨ כיצד המענה מתייחס למכתב' })),
+    a.keyQuote && el('div', { className: 'quote', textContent: a.keyQuote }),
+    pageParagraph(a.explanation, `E:${entry.id}`, spec),
+    marksNote(),
+    translation,
+    (canAsk && spec) || qa.length ? fu : null,
+    canAsk && el('div', { className: 'del-row' }, clear));
+  sub.addEventListener('toggle', () => { entry.analysisOpen = sub.open; save(); });
+  box.append(sub);
   return box;
 }
 
@@ -1052,39 +1131,39 @@ function answerBubble(entry) {
   const img = el('img', { className: 'page-img', alt: `עמוד מאגרות קודש, ${a.volumeHeading}`, loading: 'lazy' });
   img.addEventListener('click', () => openLightbox(pager, img.alt, entry));
   img.addEventListener('error', () => img.replaceWith(el('div', { className: 'note', textContent: 'תמונת העמוד אינה זמינה עוד (נשמרת בשרת לזמן מוגבל). האגרות עצמן שמורות כאן למטה.' })));
-  const pdf = el('a', { target: '_blank', rel: 'noopener', textContent: '📄 PDF' });
   const pageWhere = el('div', { className: 'page-where' });
   const text = pageTextSection(entry, pager);
+  const where = () => [pager.at === pager.opened ? '' : `📖 ${whereLabel(pager)}`, hlNote(entry, pager)].filter(Boolean).join(' · ');
   const paintPage = () => {
     const page = currentPage(pager);
-    img.src = API + page.imagePath;
-    pdf.href = API + page.pdfPath;
-    pageWhere.textContent = pager.at === pager.opened ? '' : `📖 ${whereLabel(pager)}`;
+    img.src = pageImageUrl(entry, page);
+    pageWhere.textContent = where();
     text.paint();
   };
   pager.onChange = paintPage;
-  pager.onNav = () => { pageWhere.textContent = pager.at === pager.opened ? '' : `📖 ${whereLabel(pager)}`; text.nav(); };
+  pager.onNav = () => { pageWhere.textContent = where(); text.nav(); };
   paintPage();
   prefetchAround(pager); // the pages before and after are ready before the user turns to them
 
   const wrap = el('div', { className: 'fav-wrap' }, favPanel(entry));
-  const summary = el('summary', {}, el('span', { className: 'more-label', textContent: a.explanation ? 'הסבר, תרגום והטקסט שבעמוד' : 'פעולות, ניתוח והטקסט שבעמוד' }));
+  // the row: its label, "תרגם", the star – and the chevron at the left end (like every other row)
+  const summary = el('summary', {}, el('span', { className: 'more-label sum-label', textContent: a.explanation ? 'הסבר והטקסט שבעמוד' : 'ניתוח והטקסט שבעמוד' }), langSelect(entry));
   const paintStar = () => { summary.querySelector('.star')?.remove(); summary.append(favStar(entry, () => { paintStar(); wrap.replaceChildren(favPanel(entry)); })); };
   paintStar();
-  const more = el('details', { className: 'more' },
+  summary.querySelector('.lang-select').addEventListener('click', (e) => e.stopPropagation()); // inside a <summary>: do not open / close
+  const more = el('details', { className: 'more fold' },
     summary,
-    el('div', { className: 'links' }, pdf, shareButton(entry), textSizeButton(), markerButton(), langSelect(entry)),
     analysisSection(entry),
     text.box,
-    el('div', { className: 'note', textContent: 'העמוד מורכב מהטקסט המקוון של אגרות הקודש, ועימודו אינו זהה לעימוד הספר המודפס. ההסבר הוא הצעה להבנה בלבד ואינו פסק הלכה; לשאלות מעשיות – יש להתייעץ עם רב.' }));
+    el('div', { className: 'note', textContent: 'העמוד מורכב מהטקסט המקוון של אגרות הקודש, ועימודו אינו זהה לעימוד הספר המודפס. ההסבר הוא הצעה להבנה בלבד ואינו פסק הלכה; לשאלות מעשיות – יש להתייעץ עם רב. סימון טקסט פותח כלים: הדגשה, גודל טקסט, PDF ושיתוף.' }));
   more.open = !!entry.showMore;
   // the tags sit right under the row with the star, whether the row is open or closed
   const placeTags = () => { if (more.open) summary.after(wrap); else more.after(wrap); };
   more.addEventListener('toggle', () => { entry.showMore = more.open; save(); placeTags(); });
 
-  const fold = el('button', { type: 'button', className: 'fold-btn', textContent: '▴', title: 'מזעור המענה' });
+  const fold = el('button', { type: 'button', className: 'chev', textContent: '▴', title: 'מזעור המענה' });
   fold.setAttribute('aria-label', 'מזעור המענה');
-  fold.addEventListener('click', () => { entry.collapsed = true; save(); render(); });
+  fold.addEventListener('click', () => { collapseEntry(entry); save(); render(); });
   const bubble = el('div', { className: 'msg them' },
     el('div', { className: 'ans-head' }, el('h3', { textContent: `✉️ אגרות קודש · ${a.volumeHeading}` }), fold),
     pageWhere,
@@ -1260,7 +1339,7 @@ function watchOne(id) {
         const before = keep.get(d.id);
         const fresh = d.a && !before?.a && !inFlight.has(d.id) && conv?.readTs && d.ts > conv.readTs - 5 * 60e3;
         const e = Object.assign(before || {}, d, { conv: id }); // keeps fav / collapsed / unread
-        if (fresh && !(view.name === 'chat' && view.id === id && !document.hidden)) { e.unread = true; e.collapsed = true; }
+        if (fresh && !(view.name === 'chat' && view.id === id && !document.hidden)) { e.unread = true; collapseEntry(e); }
         return e;
       });
       const pending = entriesOf(id).filter((e) => e.pending && !list.some((d) => d.id === e.id));
@@ -1511,7 +1590,7 @@ $('sel-read').addEventListener('click', () => {
   } else {
     const list = selected('e').map((id) => state.entries.find((e) => e.id === id)).filter((e) => e?.a);
     const read = list.some(isUnread);
-    for (const e of list) { setRead(e, read); if (!read) e.collapsed = true; }
+    for (const e of list) { setRead(e, read); if (!read) collapseEntry(e); }
   }
   clearSelection(); save(); render();
 });
@@ -1561,9 +1640,9 @@ async function moveEntries(ids, from, target) {
 function questionBubble(entry, conv) {
   const tools = el('div', { className: 'q-tools' });
   if (entry.a) {
-    const b = el('button', { type: 'button', className: 'q-tool fold-btn', textContent: entry.collapsed ? '▾' : '▴', title: entry.collapsed ? 'הרחבת המענה' : 'מזעור המענה' });
+    const b = el('button', { type: 'button', className: 'chev', textContent: entry.collapsed ? '▾' : '▴', title: entry.collapsed ? 'הרחבת המענה' : 'מזעור המענה' });
     b.setAttribute('aria-label', b.title);
-    b.addEventListener('click', () => { if (entry.collapsed) expandEntry(entry); else { entry.collapsed = true; save(); render(); } });
+    b.addEventListener('click', () => { if (entry.collapsed) expandEntry(entry); else { collapseEntry(entry); save(); render(); } });
     tools.append(b);
   }
   const mine = isOwner(conv);
@@ -1600,10 +1679,15 @@ function entryNodes(entry, conv = convById(entry.conv)) {
     const chip = el('button', { type: 'button', className: `msg them collapsed-a${isUnread(entry) ? ' unread' : ''}` },
       el('span', { className: 'ca-icon', textContent: isUnread(entry) ? '●' : '✉️' }),
       el('span', { className: 'ca-title', textContent: `${entry.a.title}${entry.fav ? ' ★' : ''}` }),
-      el('span', { className: 'ca-open', textContent: '▾' }));
+      el('span', { className: 'ca-open chev', textContent: '▾' }));
     chip.title = isUnread(entry) ? 'מענה חדש – לחצו לקריאה' : 'הרחבת המענה';
     chip.addEventListener('click', () => expandEntry(entry));
-    nodes.push(selectable(chip, 'e', entry.id));
+    selectable(chip, 'e', entry.id);
+    if (entry.fav?.tags.length) { // the chosen tags stay in sight, under the minimized row
+      const line = el('button', { type: 'button', className: 'fav-line', textContent: `★ ${entry.fav.tags.join(' · ')}`, title: 'הרחבת המענה והתגיות' });
+      line.addEventListener('click', () => { entry.tagsOpen = true; expandEntry(entry); });
+      nodes.push(el('div', { className: 'ca-wrap' }, chip, el('div', { className: 'fav-under' }, line)));
+    } else nodes.push(chip);
   } else if (entry.a) {
     const bubble = answerBubble(entry);
     if (isShared(conv)) swipeToReply(bubble, { kind: 'answer', id: entry.id, name: 'המענה', text: entry.a.title });
@@ -1633,6 +1717,11 @@ function unreadCount(conv) {
 function setRead(entry, read = true) {
   if (read) delete entry.unread; else entry.unread = true;
 }
+/** Minimizes an answer – and every section inside it, so it opens again the way it was first shown. */
+function collapseEntry(entry) {
+  entry.collapsed = true;
+  for (const k of ['showMore', 'analysisOpen', 'translationOpen', 'followupsOpen', 'textOpen', 'tagsOpen', 'analysisClosed', 'followupsClosed']) delete entry[k];
+}
 function expandEntry(entry) {
   entry.collapsed = false;
   setRead(entry);
@@ -1643,7 +1732,7 @@ function go(next) {
   if (next.name === 'chat') {
     const conv = convById(next.id);
     // a chat always opens with its letters and answers minimized
-    for (const e of entriesOf(next.id)) if (e.a) e.collapsed = true;
+    for (const e of entriesOf(next.id)) if (e.a) collapseEntry(e);
     if (conv) { conv.readTs = Date.now(); delete conv.markedUnread; }
     save();
   }
@@ -1691,6 +1780,26 @@ $('menu-backdrop').addEventListener('click', closeMenu);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && menuOpen()) closeMenu(); });
 let nativeSettings = null; // set in the Android app: opens the settings & updates dialog
 
+// ---------- the size of the app's own text (buttons, menus, titles): regular / large / very large ----------
+const UI_SIZES = ['', 'large', 'xlarge'];
+let uiSize = '';
+try { uiSize = localStorage.getItem('mlr-ui-size') || ''; } catch { /* ignore */ }
+function setUiSize(v) {
+  uiSize = UI_SIZES.includes(v) ? v : '';
+  if (uiSize) document.documentElement.dataset.ui = uiSize; else delete document.documentElement.dataset.ui;
+  try { localStorage.setItem('mlr-ui-size', uiSize); } catch { /* ignore */ }
+  for (const b of document.querySelectorAll('.seg-btn')) b.setAttribute('aria-checked', String(b.dataset.ui === uiSize));
+}
+setUiSize(uiSize);
+for (const b of document.querySelectorAll('.seg-btn')) b.addEventListener('click', () => setUiSize(b.dataset.ui));
+/** The settings dialog: on the web only the text size; in the Android app also the server and updates. */
+function openSettings() {
+  if (nativeSettings) { nativeSettings(); return; }
+  $('update-section').hidden = true;
+  $('server-section').hidden = true;
+  $('settings').showModal();
+}
+
 // ---- conversation actions (the ⋮ of a chat, or a selected chat in the list) ----
 function convMenuItems(conv) {
   const owner = isOwner(conv);
@@ -1713,13 +1822,13 @@ function convMenuItems(conv) {
 function homeMenuItems() {
   return [
     { label: user ? `👤 ${user.displayName || user.email}` : '👤 התחברות עם Google', onClick: openAccount },
-    nativeSettings && { label: '⚙ הגדרות ועדכונים', onClick: nativeSettings },
+    { label: isNativeApp ? '⚙ הגדרות ועדכונים' : '⚙ הגדרות', onClick: openSettings },
   ];
 }
 
 /** Minimizes (or expands) every letter-and-answer of a conversation; kept on this device. */
 function collapseAll(conv, on) {
-  for (const e of entriesOf(conv.id)) if (e.a) { if (on) e.collapsed = true; else { delete e.collapsed; setRead(e); } }
+  for (const e of entriesOf(conv.id)) if (e.a) { if (on) collapseEntry(e); else { delete e.collapsed; setRead(e); } }
   save(); render();
 }
 function paintCollapseAll(conv) {
@@ -2132,7 +2241,7 @@ async function requestAnswer(entry) {
   const watching = view.name === 'chat' && view.id === entry.conv && !document.hidden;
   if (entry.a) {
     if (watching) entry.collapsed = false; // just arrived in front of the user: shown open, and read
-    else { entry.unread = true; entry.collapsed = true; notifyReady(conv, entry); }
+    else { entry.unread = true; collapseEntry(entry); notifyReady(conv, entry); }
   }
   save();
   if (watching) render({ scroll: true }); else render();

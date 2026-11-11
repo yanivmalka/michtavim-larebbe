@@ -2,7 +2,8 @@ import { randomUUID } from 'node:crypto';
 import { loadCatalog } from './igrot/catalog.js';
 import { openBook, renderSpec, decodeSpec, encodeSpec, turnPage } from './igrot/openBook.js';
 import { fetchLetter } from './igrot/chabadlibrary.js';
-import { layout, pngsToPdf } from './render/bookPage.js';
+import { layout, pngsToPdf, drawHighlights } from './render/bookPage.js';
+import { findQuote, stripForeignScript, parseHighlights } from './highlights.js';
 import { analyzePage, followUp, translateTexts, expandAcronyms } from './ai/index.js';
 
 /** Small LRU of rendered page images (they can always be drawn again). */
@@ -15,16 +16,35 @@ const pageCache = {
 let catalog;
 const getCatalog = () => (catalog ??= loadCatalog());
 
-/** PNG of the page described by `spec`, drawn again if needed. null if the spec is invalid. */
-export async function getPageImage(specStr, deps = {}) {
+/** The drawn page (PNG + where every word sits), drawn again if needed. null if the spec is invalid. */
+async function pageData(specStr, deps = {}) {
   const cached = pageCache.get(specStr);
   if (cached) return cached;
   const volumes = deps.volumes || getCatalog();
   const spec = decodeSpec(specStr, volumes);
   if (!spec) return null;
   const page = await renderSpec(volumes, spec, deps);
-  pageCache.set(specStr, page.png);
-  return page.png;
+  return remember(page);
+}
+const remember = (page) => { const data = { png: page.png, boxes: page.boxes || [] }; pageCache.set(page.spec, data); return data; };
+
+/**
+ * PNG of the page described by `spec`. With `hl` ("<letter id>:<start>-<end>,…;…", offsets in the
+ * letters' page text) the quoted words are marked on the image, as with a highlighter.
+ */
+export async function getPageImage(specStr, deps = {}, hl = '') {
+  const data = await pageData(specStr, deps);
+  if (!data) return null;
+  const wanted = hl ? parseHighlights(hl) : null;
+  if (!wanted) return data.png;
+  const boxes = data.boxes.filter((b) => wanted.some((h) => h.id === b.id && h.ranges.some(([s, e]) => b.s < e && b.e > s)));
+  if (!boxes.length) return data.png;
+  const key = `${specStr}?${hl}`;
+  const cached = pageCache.get(key);
+  if (cached) return cached.png;
+  const png = await drawHighlights(data.png, boxes);
+  pageCache.set(key, { png, boxes: [] });
+  return png;
 }
 
 /** The letters of a drawn page, as the clients see them: the text on the page (same as the image) and the whole letter. */
@@ -51,7 +71,7 @@ export async function getTurnedPage(specStr, dir, deps = {}) {
   const next = await turnPage(volumes, spec, dir, deps);
   if (!next) return null;
   const page = await renderSpec(volumes, next, deps);
-  pageCache.set(page.spec, page.png);
+  remember(page);
   const letters = lettersOut(page);
   return {
     spec: page.spec, imagePath: `/api/page/${page.spec}.png`, pdfPath: `/api/page/${page.spec}.pdf`,
@@ -106,7 +126,7 @@ export async function answerLetter({ letter, replyLanguage }, deps = {}) {
   const ai = { explained: false, replyLanguage: replyLanguage || null };
 
   const id = randomUUID();
-  pageCache.set(page.spec, page.png);
+  remember(page);
 
   return {
     id,
@@ -154,8 +174,30 @@ async function pageForAi(specStr, deps) {
   const spec = decodeSpec(specStr, volumes);
   if (!spec) throw new Error('PAGE_NOT_FOUND');
   const page = await renderSpec(volumes, spec, deps);
+  remember(page);
   const letters = page.letters.filter((l) => l.pageText.trim());
-  return { text: pageAsText(letters), title: `אגרות קודש, ${page.volumeHeading}, אגרות ${letters.map((l) => l.number).join(', ')}` };
+  return { spec: page.spec, letters, text: pageAsText(letters), title: `אגרות קודש, ${page.volumeHeading}, אגרות ${letters.map((l) => l.number).join(', ')}` };
+}
+
+/**
+ * The quotes the explanation rests on, found in the letters of the page: one item per letter,
+ * with flat [start, end, start, end, …] offsets in its pageText (flat, so it can be stored in Firestore).
+ */
+export function highlightsFor(page, sources) {
+  const quotes = (Array.isArray(sources) ? sources : []).map((q) => String(q || '').trim()).filter(Boolean).slice(0, 12);
+  const byLetter = new Map();
+  let found = 0;
+  for (const quote of quotes) {
+    for (const l of page.letters) {
+      const r = findQuote(l.pageText, quote);
+      if (!r) continue;
+      byLetter.set(l.id, [...(byLetter.get(l.id) || []), ...r]);
+      found += 1;
+      break;
+    }
+  }
+  const highlights = [...byLetter].map(([id, r]) => ({ spec: page.spec, id, r }));
+  return { highlights, sourcesFound: found, sourcesTotal: quotes.length };
 }
 
 export async function analyze({ spec, letter, replyLanguage }, deps = {}) {
@@ -163,7 +205,9 @@ export async function analyze({ spec, letter, replyLanguage }, deps = {}) {
   if (q.length < 2) throw new Error('LETTER_EMPTY');
   const page = await pageForAi(spec, deps);
   const run = deps.analyze || analyzePage;
-  return run({ letter: clip(q, 8000), igeret: page.text, replyLanguage, title: page.title });
+  const { sources, ...out } = await run({ letter: clip(q, 8000), igeret: page.text, replyLanguage, title: page.title });
+  for (const k of ['translation', 'explanation', 'keyQuote']) if (typeof out[k] === 'string') out[k] = stripForeignScript(out[k]);
+  return { ...out, ...highlightsFor(page, sources) };
 }
 
 export async function askFollowUp({ spec, letter, analysis, history, question }, deps = {}) {
@@ -178,7 +222,8 @@ export async function askFollowUp({ spec, letter, analysis, history, question },
   ].filter(Boolean).join('\n\n');
   const past = (Array.isArray(history) ? history : []).slice(-10).map((h) => ({ q: clip(h?.q, 2000), a: clip(h?.a, 4000) }));
   const run = deps.followUp || followUp;
-  return run({ context, history: past, question: clip(q, 2000) });
+  const out = await run({ context, history: past, question: clip(q, 2000) });
+  return { ...out, answer: stripForeignScript(out.answer) };
 }
 
 const LANG = /^[a-z]{2}$/;
@@ -194,16 +239,19 @@ export async function translateAnalysis({ language, explanation, translation, ke
   const run = deps.translate || translateTexts;
   const out = await run({ language, items });
   if (!Array.isArray(out) || out.length !== items.length) throw new Error('AI_EMPTY');
-  const keep = (i) => (items[i] ? out[i] : '');
+  const keep = (i) => (items[i] ? stripForeignScript(out[i]) : '');
   return { replyLanguage: language, explanation: keep(0), translation: keep(1), keyQuote: keep(2), followups: answers.map((_, i) => keep(3 + i)) };
 }
 
-/** Expands abbreviations that the dictionary in the app does not know, in the context of the page. */
-export async function acronyms({ spec, words }, deps = {}) {
+/**
+ * Expands abbreviations that the dictionary in the app does not know, in context: the sentence they
+ * were tapped in (`sentence`, sent by the app), or else the whole page.
+ */
+export async function acronyms({ spec, words, sentence }, deps = {}) {
   const list = [...new Set((Array.isArray(words) ? words : []).map((w) => clip(w, 30).trim()).filter(Boolean))].slice(0, 20);
   if (!list.length) throw new Error('QUESTION_EMPTY');
-  const page = await pageForAi(spec, deps);
+  const context = typeof sentence === 'string' && sentence.trim().length >= 3 ? clip(sentence.trim(), 1500) : (await pageForAi(spec, deps)).text;
   const run = deps.acronyms || expandAcronyms;
-  const items = await run({ context: page.text, words: list });
+  const items = await run({ context, words: list });
   return { items: list.map((word) => ({ word, options: (items.find((i) => i.word === word)?.options || []).slice(0, 3) })) };
 }

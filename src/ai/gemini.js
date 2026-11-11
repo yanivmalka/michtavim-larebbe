@@ -97,7 +97,7 @@ export async function translateWithGemini({ language, items }) {
 export async function acronymsWithGemini({ context, words }) {
   const out = await generateJson({
     system: ACRONYM_SYSTEM, schema: acronymSchema,
-    text: `העמוד:\n"""\n${context}\n"""\n\nראשי התיבות לפענוח: ${JSON.stringify(words)}`,
+    text: `הקטע:\n"""\n${context}\n"""\n\nראשי התיבות לפענוח: ${JSON.stringify(words)}`,
   });
   return AcronymSchema.parse(out).items;
 }
