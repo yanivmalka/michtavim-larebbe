@@ -12,7 +12,8 @@
     "apk": "npm run mobile:build && cd android && ./gradlew assembleDebug",
     "catalog": "node scripts/build-catalog.mjs",
     "build:web": "esbuild web/cloud.js --bundle --format=esm --minify --target=es2020 --legal-comments=none --outfile=public/vendor/cloud.js",
-    "test:rules": "firebase emulators:exec --project demo-michtavim --only firestore \"node --test test/rules/*.test.mjs\""
+    "test:rules": "firebase emulators:exec --project demo-michtavim --only firestore \"node --test test/rules/*.test.mjs\"",
+    "abbr-stats": "node scripts/abbr-stats.mjs"
   },
   "engines": {
     "node": ">=20"
@@ -25,6 +26,7 @@
     "@capacitor/app": "^7.1.2",
     "@capacitor/core": "^7.6.10",
     "@capacitor/filesystem": "^7.1.9",
+    "@capacitor/local-notifications": "^7.0.7",
     "@capacitor/share": "^7.0.4",
     "@google/genai": "^2.31.0",
     "@napi-rs/canvas": "^1.1.0",

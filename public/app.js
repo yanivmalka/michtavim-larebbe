@@ -235,28 +235,65 @@ function notifyPager(p) {
   p.onChange?.();
   if (lb.pager === p && !$('lightbox').hidden) paintLightbox();
 }
+/** Only the arrows and "where" labels changed (a page was added at an end): no redraw of the text. */
+function notifyNav(p) {
+  p.onNav?.();
+  if (lb.pager === p && !$('lightbox').hidden) paintLightbox();
+}
+
+/**
+ * Loads the page before (dir -1) or after (dir 1) the pages already known, without moving the view.
+ * One request per direction at a time; a turn waits for a request already on the way.
+ */
+function loadNeighbor(p, dir) {
+  const key = dir > 0 ? 'next' : 'prev';
+  p.inflight ||= {};
+  if (p.inflight[key]) return p.inflight[key];
+  const from = dir > 0 ? p.pages.at(-1) : p.pages[0];
+  if (!from.spec || (dir > 0 ? from.last : from.first)) return Promise.resolve(false);
+  p.inflight[key] = (async () => {
+    try {
+      const res = await fetch(`${API}/api/page/${from.spec}/${key}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const { page } = await res.json();
+      if (!page) { from[dir > 0 ? 'last' : 'first'] = true; return false; }
+      if (dir > 0) p.pages.push(page);
+      else { p.pages.unshift(page); p.at += 1; p.opened += 1; }
+      new Image().src = API + page.imagePath; // the browser fetches (and the server draws) the image now
+      return true;
+    } finally {
+      p.inflight[key] = null;
+    }
+  })();
+  return p.inflight[key];
+}
+/** Gets the pages next to the one shown, so turning to them is instant. */
+function prefetchAround(p) {
+  if (!p.pages[0].spec) return;
+  for (const dir of [1, -1]) {
+    const edge = dir > 0 ? p.at === p.pages.length - 1 : p.at === 0;
+    if (edge) loadNeighbor(p, dir).then((added) => { if (added) notifyNav(p); }).catch(() => {});
+  }
+}
 async function turnPager(p, dir) {
   if (p.busy || !p.pages[0].spec) return;
   const edge = dir > 0 ? p.at === p.pages.length - 1 : p.at === 0;
-  if (!edge) { p.at += dir; notifyPager(p); return; }
-  const from = dir > 0 ? p.pages.at(-1) : p.pages[0];
-  if (dir > 0 ? from.last : from.first) return;
-  p.busy = true; notifyPager(p);
-  try {
-    const res = await fetch(`${API}/api/page/${from.spec}/${dir > 0 ? 'next' : 'prev'}`);
-    const { page } = res.ok ? await res.json() : {};
-    if (page) {
-      if (dir > 0) { p.pages.push(page); p.at += 1; } else { p.pages.unshift(page); p.opened += 1; }
-    } else if (res.ok) {
-      from[dir > 0 ? 'last' : 'first'] = true;
-    } else {
-      alert('לא ניתן היה לטעון את העמוד. נסו שוב.');
+  if (edge) {
+    const from = dir > 0 ? p.pages.at(-1) : p.pages[0];
+    if (dir > 0 ? from.last : from.first) return;
+    p.busy = true; notifyNav(p);
+    let added = false;
+    try {
+      added = await loadNeighbor(p, dir);
+    } catch (e) {
+      alert(e instanceof TypeError ? 'אין חיבור לשרת.' : 'לא ניתן היה לטעון את העמוד. נסו שוב.');
     }
-  } catch {
-    alert('אין חיבור לשרת.');
+    p.busy = false;
+    if (!added) { notifyNav(p); return; }
   }
-  p.busy = false;
+  p.at += dir;
   notifyPager(p);
+  prefetchAround(p);
 }
 
 // ---------- full-screen image, with pinch zoom ----------
@@ -298,7 +335,9 @@ function setLightboxScale(scale, cx, cy) {
 }
 $('lightbox-img').addEventListener('load', () => { if (lb.scale === 1) lb.fitWidth = $('lightbox-img').clientWidth; });
 
-function openLightbox(pager, alt) {
+function openLightbox(pager, alt, entry = null) {
+  if (entry && isUnread(entry)) { setRead(entry); save(); }
+  prefetchAround(pager);
   lb.pager = pager; lb.scale = 1; lb.fitWidth = 0;
   hideZoomBar(); hideAcronymPop();
   $('lightbox-img').alt = alt;
@@ -493,38 +532,69 @@ function shareButton(entry) {
   return btn;
 }
 
-// ---------- favourites ----------
-function favRow(entry) {
-  const row = el('div', { className: 'fav-row' });
+// ---------- favourites: the star in the answer's row opens the tags under it ----------
+/** The star button; a tap opens or closes the tags panel (it never removes the chosen tags). */
+function favStar(entry, onToggle) {
+  const star = el('button', { type: 'button', className: `star${entry.fav ? ' on' : ''}`, textContent: entry.fav ? '★' : '☆' });
+  star.title = entry.tagsOpen ? 'הסתרת התגיות' : entry.fav ? 'התגיות שנבחרו' : 'שמירה במועדפים';
+  star.setAttribute('aria-label', star.title);
+  star.setAttribute('aria-expanded', String(!!entry.tagsOpen));
+  star.addEventListener('click', (e) => {
+    e.preventDefault(); e.stopPropagation(); // inside a <summary>: do not open / close the details
+    if (!entry.fav) entry.fav = { tags: [] };
+    entry.tagsOpen = !entry.tagsOpen;
+    save();
+    onToggle();
+  });
+  return star;
+}
+
+/** Under the answer's row: the tags (scrollable, chosen first) when open, or a line of the chosen tags when closed. */
+function favPanel(entry) {
+  const box = el('div', { className: 'fav-panel' });
+  let order = null; // the order is fixed while the panel is open, so chips do not jump under the finger
   const paint = () => {
-    row.textContent = '';
-    const star = el('button', { type: 'button', className: 'star', textContent: entry.fav ? '★' : '☆', title: entry.fav ? 'הסרה מהמועדפים' : 'שמירה במועדפים' });
-    star.setAttribute('aria-pressed', String(!!entry.fav));
-    star.addEventListener('click', () => {
-      if (entry.fav) delete entry.fav; else entry.fav = { tags: [] };
-      save(); paint();
-    });
-    row.append(star);
-    if (!entry.fav) return;
-    const all = [...new Set([...TAGS, ...entry.fav.tags])];
-    for (const tag of all) {
-      const on = entry.fav.tags.includes(tag);
+    box.textContent = '';
+    if (!entry.fav) { order = null; return; }
+    if (!entry.tagsOpen) {
+      order = null;
+      if (entry.fav.tags.length) {
+        const line = el('button', { type: 'button', className: 'fav-line', textContent: `★ ${entry.fav.tags.join(' · ')}` });
+        line.addEventListener('click', () => { entry.tagsOpen = true; save(); render(); });
+        box.append(line);
+      }
+      return;
+    }
+    const chosen = entry.fav.tags;
+    order ||= [...chosen, ...TAGS.filter((t) => !chosen.includes(t))];
+    for (const t of chosen) if (!order.includes(t)) order.push(t);
+    const row = el('div', { className: 'chip-row' });
+    for (const tag of order) {
+      const on = chosen.includes(tag);
       const chip = el('button', { type: 'button', className: `chip${on ? ' on' : ''}`, textContent: tag });
+      chip.setAttribute('aria-pressed', String(on));
       chip.addEventListener('click', () => {
-        entry.fav.tags = on ? entry.fav.tags.filter((t) => t !== tag) : [...entry.fav.tags, tag];
+        entry.fav.tags = on ? chosen.filter((t) => t !== tag) : [...chosen, tag];
         save(); paint();
       });
       row.append(chip);
     }
-    const add = el('button', { type: 'button', className: 'chip', textContent: '+' , title: 'תיאור משלך' });
+    const add = el('button', { type: 'button', className: 'chip', textContent: '+ תיאור משלך' });
     add.addEventListener('click', () => {
       const tag = (prompt('תיאור משלך:') || '').trim().slice(0, 20);
       if (tag && !entry.fav.tags.includes(tag)) { entry.fav.tags.push(tag); save(); paint(); }
     });
-    row.append(add);
+    const remove = el('button', { type: 'button', className: 'chip remove', textContent: '☆ הסרה מהמועדפים' });
+    remove.addEventListener('click', () => {
+      if (entry.fav.tags.length && !confirm('להסיר מהמועדפים? התגיות שנבחרו יימחקו.')) return;
+      delete entry.fav; delete entry.tagsOpen;
+      save(); render();
+    });
+    row.append(add, remove);
+    box.append(row);
   };
   paint();
-  return row;
+  return box;
 }
 
 // ---------- the text of the page: the same page as in the image, previous / next page ----------
@@ -557,11 +627,14 @@ function pageTextSection(entry, pager) {
     return [btn, holder];
   };
 
-  const paint = () => {
-    const page = currentPage(pager);
+  const nav = () => {
     where.textContent = whereLabel(pager);
     prev.disabled = pager.busy || atFirst(pager);
     next.disabled = pager.busy || atLast(pager);
+  };
+  const paint = () => {
+    const page = currentPage(pager);
+    nav();
     body.textContent = '';
     for (const l of page.letters || []) {
       const [fullBtn, fullBox] = l.fullText ? fullLetter(l, page.spec) : [];
@@ -593,7 +666,7 @@ function pageTextSection(entry, pager) {
   }, { passive: true });
 
   paint();
-  return { box, paint };
+  return { box, paint, nav };
 }
 
 // ---------- text size of the letter and the analysis – pinch, or the Aa slider; applies to all chats ----------
@@ -725,20 +798,27 @@ function showAcronymPop(p, found) {
 
   const paint = () => {
     head.textContent = '';
-    head.append(el('b', { textContent: found.word.replace(/[.,;:!?]+$/, '') }), close);
+    head.append(el('b', { textContent: found.word.replace(/[.,;:!?]+$/, '') }),
+      options.length > 1 ? el('span', { className: 'rt-count', textContent: `${options.length} אפשרויות` }) : '', close);
     body.textContent = '';
     if (!options.length) {
       body.append(el('span', { className: 'rt-none', textContent: 'לא נמצא פענוח במילון.' }));
+    } else if (options.length === 1) {
+      body.append(el('span', { className: 'rt-text', textContent: options[0] }));
     } else {
-      body.append(el('span', { textContent: options[at] }));
-      if (options.length > 1) {
-        const prevB = el('button', { type: 'button', className: 'rt-nav', textContent: '›', title: 'האפשרות הקודמת' });
-        const nextB = el('button', { type: 'button', className: 'rt-nav', textContent: '‹', title: 'האפשרות הבאה' });
-        prevB.disabled = at === 0; nextB.disabled = at === options.length - 1;
-        prevB.addEventListener('click', () => { at -= 1; paint(); });
-        nextB.addEventListener('click', () => { at += 1; paint(); });
-        body.append(el('span', { className: 'rt-pages' }, prevB, el('span', { textContent: `${at + 1}/${options.length}` }), nextB));
-      }
+      // RTL: the next option is to the left (←), the previous to the right (→)
+      const prevB = el('button', { type: 'button', className: 'rt-nav', textContent: '→', title: 'האפשרות הקודמת' });
+      const nextB = el('button', { type: 'button', className: 'rt-nav', textContent: '←', title: 'האפשרות הבאה' });
+      prevB.disabled = at === 0; nextB.disabled = at === options.length - 1;
+      prevB.addEventListener('click', () => { at -= 1; paint(); });
+      nextB.addEventListener('click', () => { at += 1; paint(); });
+      const dots = el('span', { className: 'rt-dots' }, ...options.map((_, i) => {
+        const d = el('button', { type: 'button', className: `rt-dot${i === at ? ' on' : ''}`, title: `אפשרות ${i + 1}` });
+        d.addEventListener('click', () => { at = i; paint(); });
+        return d;
+      }));
+      body.append(el('div', { className: 'rt-pager' }, prevB, el('span', { className: 'rt-text', textContent: options[at] }), nextB),
+        el('div', { className: 'rt-where' }, el('span', { textContent: `אפשרות ${at + 1} מתוך ${options.length}` }), dots));
     }
     foot.textContent = '';
     if (run.length > 1) {
@@ -905,11 +985,9 @@ function analysisSection(entry) {
 
   if (entry.translating) box.append(el('div', { className: 'note', textContent: `⏳ מתרגם את הניתוח ל${langName(entry.translating)}…` }));
 
-  // the analysis (collapsible), with a button that clears it so a new one can be asked for
-  const clear = el('button', { type: 'button', className: 'clear-btn', textContent: '✕', title: 'ניקוי הניתוח ושאלות ההמשך' });
-  clear.setAttribute('aria-label', 'ניקוי הניתוח');
-  clear.addEventListener('click', (e) => {
-    e.preventDefault(); e.stopPropagation();
+  // the analysis (collapsible), with a delete button at its end so a new one can be asked for
+  const clear = el('button', { type: 'button', className: 'del-btn', textContent: '🗑 מחיקת הניתוח' });
+  clear.addEventListener('click', () => {
     if (!confirm('למחוק את ההסבר, התרגום ושאלות ההמשך? אפשר יהיה לבקש ניתוח חדש.')) return;
     for (const k of ['explanation', 'translation', 'keyQuote', 'sourceLanguage', 'analysisLanguage', 'provider']) delete a[k];
     a.explained = false;
@@ -918,12 +996,13 @@ function analysisSection(entry) {
     render();
   });
   const sub = el('details', { className: 'ana-part', open: !entry.analysisClosed },
-    el('summary', {}, el('span', { textContent: '✨ כיצד המענה מתייחס למכתב' }), canAsk && clear),
+    el('summary', {}, el('span', { textContent: '✨ כיצד המענה מתייחס למכתב' })),
     a.keyQuote && el('div', { className: 'quote', textContent: a.keyQuote }),
     pageParagraph(a.explanation, `E:${entry.id}`, spec),
     a.translation && el('details', { open: true },
       el('summary', { textContent: a.sourceLanguage === 'yiddish' ? 'תרגום מאידיש' : 'תרגום' }),
-      pageParagraph(a.translation, `T:${entry.id}`, spec)));
+      pageParagraph(a.translation, `T:${entry.id}`, spec)),
+    canAsk && el('div', { className: 'del-row' }, clear));
   sub.addEventListener('toggle', () => { entry.analysisClosed = !sub.open; save(); });
   box.append(sub);
 
@@ -971,7 +1050,7 @@ function answerBubble(entry) {
   const a = entry.a;
   const pager = pagerOf(entry);
   const img = el('img', { className: 'page-img', alt: `עמוד מאגרות קודש, ${a.volumeHeading}`, loading: 'lazy' });
-  img.addEventListener('click', () => openLightbox(pager, img.alt));
+  img.addEventListener('click', () => openLightbox(pager, img.alt, entry));
   img.addEventListener('error', () => img.replaceWith(el('div', { className: 'note', textContent: 'תמונת העמוד אינה זמינה עוד (נשמרת בשרת לזמן מוגבל). האגרות עצמן שמורות כאן למטה.' })));
   const pdf = el('a', { target: '_blank', rel: 'noopener', textContent: '📄 PDF' });
   const pageWhere = el('div', { className: 'page-where' });
@@ -984,24 +1063,36 @@ function answerBubble(entry) {
     text.paint();
   };
   pager.onChange = paintPage;
+  pager.onNav = () => { pageWhere.textContent = pager.at === pager.opened ? '' : `📖 ${whereLabel(pager)}`; text.nav(); };
   paintPage();
+  prefetchAround(pager); // the pages before and after are ready before the user turns to them
 
+  const wrap = el('div', { className: 'fav-wrap' }, favPanel(entry));
+  const summary = el('summary', {}, el('span', { className: 'more-label', textContent: a.explanation ? 'הסבר, תרגום והטקסט שבעמוד' : 'פעולות, ניתוח והטקסט שבעמוד' }));
+  const paintStar = () => { summary.querySelector('.star')?.remove(); summary.append(favStar(entry, () => { paintStar(); wrap.replaceChildren(favPanel(entry)); })); };
+  paintStar();
   const more = el('details', { className: 'more' },
-    el('summary', { textContent: a.explanation ? 'הסבר, תרגום והטקסט שבעמוד' : 'פעולות, ניתוח והטקסט שבעמוד' }),
+    summary,
     el('div', { className: 'links' }, pdf, shareButton(entry), textSizeButton(), markerButton(), langSelect(entry)),
-    favRow(entry),
     analysisSection(entry),
     text.box,
     el('div', { className: 'note', textContent: 'העמוד מורכב מהטקסט המקוון של אגרות הקודש, ועימודו אינו זהה לעימוד הספר המודפס. ההסבר הוא הצעה להבנה בלבד ואינו פסק הלכה; לשאלות מעשיות – יש להתייעץ עם רב.' }));
   more.open = !!entry.showMore;
-  more.addEventListener('toggle', () => { entry.showMore = more.open; save(); });
+  // the tags sit right under the row with the star, whether the row is open or closed
+  const placeTags = () => { if (more.open) summary.after(wrap); else more.after(wrap); };
+  more.addEventListener('toggle', () => { entry.showMore = more.open; save(); placeTags(); });
 
-  return el('div', { className: 'msg them' },
-    el('h3', { textContent: `✉️ אגרות קודש · ${a.volumeHeading}${entry.fav ? ' ★' : ''}` }),
+  const fold = el('button', { type: 'button', className: 'fold-btn', textContent: '▴', title: 'מזעור המענה' });
+  fold.setAttribute('aria-label', 'מזעור המענה');
+  fold.addEventListener('click', () => { entry.collapsed = true; save(); render(); });
+  const bubble = el('div', { className: 'msg them' },
+    el('div', { className: 'ans-head' }, el('h3', { textContent: `✉️ אגרות קודש · ${a.volumeHeading}` }), fold),
     pageWhere,
     img,
     more,
     time(entry.ts));
+  placeTags();
+  return bubble;
 }
 
 // ---------- account, sync and sharing (Firebase, loaded only when needed) ----------
@@ -1071,7 +1162,7 @@ function watchAll() {
       const { updated, joinWith, ...fields } = d;
       const local = convById(d.id);
       if (local) Object.assign(local, fields, { cloud: true }); // keeps this device's archived / locked flags
-      else state.convs.push({ ...fields, cloud: true });
+      else state.convs.push({ ...fields, cloud: true, readTs: Date.now() });
       if (!convWatchers.has(d.id)) watchOne(d.id);
     }
     // conversations deleted, or that we left / were removed from
@@ -1084,7 +1175,14 @@ function watchOne(id) {
   convWatchers.set(id, cloud.watchConv(id, {
     onEntries(list) {
       const keep = new Map(entriesOf(id).map((e) => [e.id, e]));
-      const merged = list.map((d) => Object.assign(keep.get(d.id) || {}, d, { conv: id })); // keeps fav / collapsed
+      const conv = convById(id);
+      const merged = list.map((d) => {
+        const before = keep.get(d.id);
+        const fresh = d.a && !before?.a && !inFlight.has(d.id) && conv?.readTs && d.ts > conv.readTs - 5 * 60e3;
+        const e = Object.assign(before || {}, d, { conv: id }); // keeps fav / collapsed / unread
+        if (fresh && !(view.name === 'chat' && view.id === id && !document.hidden)) { e.unread = true; e.collapsed = true; }
+        return e;
+      });
       const pending = entriesOf(id).filter((e) => e.pending && !list.some((d) => d.id === e.id));
       state.entries = state.entries.filter((e) => e.conv !== id).concat(merged, pending);
       save(); renderSoon();
@@ -1249,6 +1347,13 @@ function paintSelection() {
   $('sel-lock').hidden = !convs.length;
   $('sel-more').hidden = convs.length !== 1;
   $('sel-copy').hidden = !!convs.length;
+  // read / unread: answers in a chat, or whole chats in the list
+  const answered = entries.map((id) => state.entries.find((e) => e.id === id)).filter((e) => e?.a);
+  const anyUnread = convs.length ? convs.some((c) => unreadCount(c) || c.markedUnread) : answered.some(isUnread);
+  $('sel-read').hidden = !convs.length && !answered.length;
+  $('sel-read').textContent = anyUnread ? '✓' : '●';
+  $('sel-read').title = anyUnread ? 'סימון כנקרא' : 'סימון כלא נקרא';
+  $('sel-read').setAttribute('aria-label', $('sel-read').title);
   $('sel-move').hidden = !entries.length || !!msgs.length || !owner;
   const canDelete = convs.length ? true
     : owner ? true
@@ -1296,7 +1401,7 @@ $('sel-delete').addEventListener('click', async () => {
   const n = entries.length + msgs.length;
   const conv = convById(view.id);
   const what = conv?.cloud && isShared(conv) ? ' לכל המשתתפים' : '';
-  if (!confirm(n === 1 ? `למחוק${what}?` : `למחוק ${n} פריטים${what}?`)) return;
+  if (!confirm(n === 1 ? `לגנוז${what}? הפריט יימחק מהשיחה.` : `לגנוז ${n} פריטים${what}? הם יימחקו מהשיחה.`)) return;
   const failed = [];
   for (const id of entries) {
     const e = state.entries.find((x) => x.id === id);
@@ -1309,9 +1414,23 @@ $('sel-delete').addEventListener('click', async () => {
     if (!failed.includes(id)) state.messages = state.messages.filter((m) => m.id !== id);
   }
   clearSelection(); save(); render();
-  if (failed.length) alert('חלק מהפריטים לא נמחקו. נסו שוב.');
+  if (failed.length) alert('חלק מהפריטים לא נגנזו. נסו שוב.');
 });
 $('sel-archive').addEventListener('click', () => toggleArchive(selected('c').map(convById).filter(Boolean)));
+$('sel-read').addEventListener('click', () => {
+  const convs = selected('c').map(convById).filter(Boolean);
+  if (convs.length) {
+    const read = convs.some((c) => unreadCount(c) || c.markedUnread);
+    for (const c of convs) {
+      if (read) { for (const e of entriesOf(c.id)) setRead(e); c.readTs = Date.now(); delete c.markedUnread; } else c.markedUnread = true;
+    }
+  } else {
+    const list = selected('e').map((id) => state.entries.find((e) => e.id === id)).filter((e) => e?.a);
+    const read = list.some(isUnread);
+    for (const e of list) { setRead(e, read); if (!read) e.collapsed = true; }
+  }
+  clearSelection(); save(); render();
+});
 $('sel-lock').addEventListener('click', () => toggleLock(selected('c').map(convById).filter(Boolean)));
 $('sel-more').addEventListener('click', (e) => { const c = convById(selected('c')[0]); if (c) showMenu(e.currentTarget, convMenuItems(c)); });
 $('sel-move').addEventListener('click', () => openMoveDialog(selected('e')));
@@ -1358,9 +1477,9 @@ async function moveEntries(ids, from, target) {
 function questionBubble(entry, conv) {
   const tools = el('div', { className: 'q-tools' });
   if (entry.a) {
-    const b = el('button', { type: 'button', className: 'q-tool', textContent: entry.collapsed ? '▸' : '▾', title: entry.collapsed ? 'הרחבת המענה' : 'כיווץ המענה' });
+    const b = el('button', { type: 'button', className: 'q-tool fold-btn', textContent: entry.collapsed ? '▾' : '▴', title: entry.collapsed ? 'הרחבת המענה' : 'מזעור המענה' });
     b.setAttribute('aria-label', b.title);
-    b.addEventListener('click', () => { entry.collapsed = !entry.collapsed; save(); render(); });
+    b.addEventListener('click', () => { if (entry.collapsed) expandEntry(entry); else { entry.collapsed = true; save(); render(); } });
     tools.append(b);
   }
   const mine = isOwner(conv);
@@ -1381,17 +1500,35 @@ function messageBubble(m, conv) {
   return selectable(node, 'm', m.id);
 }
 
+/** A small book whose pages turn, shown while the answer is on its way. */
+function bookAnimation() {
+  const box = el('span', { className: 'book-anim' });
+  box.setAttribute('aria-hidden', 'true');
+  box.innerHTML = '<svg viewBox="0 0 48 32" width="44" height="30"><path class="cover" d="M24 6 C18 2 8 2 3 4 V28 C8 26 18 26 24 30 C30 26 40 26 45 28 V4 C40 2 30 2 24 6 Z"/>'
+    + '<path class="pg" d="M24 7 C30 3 38 3 43 5 V27 C38 25 30 25 24 29 Z"/><path class="pg p2" d="M24 7 C30 3 38 3 43 5 V27 C38 25 30 25 24 29 Z"/>'
+    + '<path class="pg p3" d="M24 7 C30 3 38 3 43 5 V27 C38 25 30 25 24 29 Z"/></svg>';
+  return box;
+}
+
 function entryNodes(entry, conv = convById(entry.conv)) {
   const nodes = [questionBubble(entry, conv)];
   if (entry.a && entry.collapsed) {
-    const chip = el('button', { type: 'button', className: 'msg them collapsed-a', textContent: `✉️ ${entry.a.title}${entry.fav ? ' ★' : ''} – הרחבה` });
-    chip.addEventListener('click', () => { entry.collapsed = false; save(); render(); });
+    const chip = el('button', { type: 'button', className: `msg them collapsed-a${isUnread(entry) ? ' unread' : ''}` },
+      el('span', { className: 'ca-icon', textContent: isUnread(entry) ? '●' : '✉️' }),
+      el('span', { className: 'ca-title', textContent: `${entry.a.title}${entry.fav ? ' ★' : ''}` }),
+      el('span', { className: 'ca-open', textContent: '▾' }));
+    chip.title = isUnread(entry) ? 'מענה חדש – לחצו לקריאה' : 'הרחבת המענה';
+    chip.addEventListener('click', () => expandEntry(entry));
     nodes.push(selectable(chip, 'e', entry.id));
   } else if (entry.a) {
     const bubble = answerBubble(entry);
     if (isShared(conv)) swipeToReply(bubble, { kind: 'answer', id: entry.id, name: 'המענה', text: entry.a.title });
     nodes.push(selectable(bubble, 'e', entry.id));
-  } else if (entry.pending) nodes.push(el('div', { className: 'msg them typing', textContent: 'פותחים את אגרות הקודש…' }));
+  } else if (entry.pending) {
+    nodes.push(el('div', { className: 'msg them typing' },
+      el('div', { className: 'opening' }, bookAnimation(), el('span', { textContent: 'פותחים את אגרות הקודש…' })),
+      el('div', { className: 'note', textContent: 'אפשר לצאת מהשיחה ולחזור אחר כך – נודיע כשהמענה יהיה מוכן.' })));
+  }
   else nodes.push(selectable(el('div', { className: 'msg them error', textContent: entry.error || 'לא התקבל מענה למכתב זה.' }), 'e', entry.id));
   return nodes;
 }
@@ -1399,8 +1536,34 @@ function entryNodes(entry, conv = convById(entry.conv)) {
 // views: list (all chats) | archive | locked | fav | chat (one conversation)
 let view = { name: 'list' };
 let search = '';
+let tagFilter = ''; // in a chat: '' = everything, '*' = all favourites, or one tag
+
+// ---------- read / unread (kept on this device) ----------
+// An answer is unread until it is opened; messages from others are unread until the chat is opened.
+const isUnread = (e) => !!e.a && !!e.unread;
+function unreadCount(conv) {
+  const answers = entriesOf(conv.id).filter(isUnread).length;
+  const msgs = messagesOf(conv.id).filter((m) => (!user || m.uid !== user.uid) && conv.readTs && m.ts > conv.readTs).length;
+  return answers + msgs;
+}
+function setRead(entry, read = true) {
+  if (read) delete entry.unread; else entry.unread = true;
+}
+function expandEntry(entry) {
+  entry.collapsed = false;
+  setRead(entry);
+  save(); render();
+}
 
 function go(next) {
+  if (next.name === 'chat') {
+    const conv = convById(next.id);
+    // a chat always opens with its letters and answers minimized
+    for (const e of entriesOf(next.id)) if (e.a) e.collapsed = true;
+    if (conv) { conv.readTs = Date.now(); delete conv.markedUnread; }
+    save();
+  }
+  if (next.name !== 'chat' || next.id !== view.id) tagFilter = '';
   view = next;
   search = '';
   $('search').value = '';
@@ -1452,14 +1615,15 @@ function convMenuItems(conv) {
   const allCollapsed = answered.length && answered.every((e) => e.collapsed);
   return [
     people && { info: `👥 ${people}` },
-    answered.length && { label: allCollapsed ? '▾ הרחבת כל ההתכתבויות' : '▸ מזעור כל ההתכתבויות', onClick: () => collapseAll(conv, !allCollapsed) },
+    answered.length && { label: allCollapsed ? '▾ הרחבת כל ההתכתבויות' : '▴ מזעור כל ההתכתבויות', onClick: () => collapseAll(conv, !allCollapsed) },
+    entriesOf(conv.id).some((e) => e.fav) && { label: '🏷 סינון לפי תגיות', onClick: () => { tagFilter = tagFilter || '*'; if (view.id !== conv.id) go({ name: 'chat', id: conv.id }); else render(); } },
     owner && { label: '✎ שינוי שם', onClick: () => renameConv(conv) },
     owner && { label: '👥 שיתוף עם אנשי קשר', onClick: () => shareConv(conv) },
     owner && { label: '🔗 העתקת קישור לשיחה', onClick: () => copyConvLink(conv) },
     owner && (isShared(conv) || conv.inviteToken) && { label: '✋ הפסקת השיתוף', onClick: () => stopSharingConv(conv) },
     { label: conv.archived ? '📤 הוצאה מהארכיון' : '🗄 העברה לארכיון', onClick: () => toggleArchive([conv]) },
     { label: conv.locked ? '🔓 ביטול נעילה' : '🔒 נעילת השיחה (במכשיר זה)', onClick: () => toggleLock([conv]) },
-    { label: !conv.cloud ? '🗑 מחיקת השיחה' : owner ? '🗑 מחיקת השיחה לכולם' : '🚪 יציאה מהשיחה', danger: true, onClick: () => deleteConvs([conv]) },
+    { label: !conv.cloud ? '🗑 גניזת השיחה' : owner ? '🗑 גניזת השיחה לכולם' : '🚪 יציאה מהשיחה', danger: true, onClick: () => deleteConvs([conv]) },
   ];
 }
 function homeMenuItems() {
@@ -1471,7 +1635,7 @@ function homeMenuItems() {
 
 /** Minimizes (or expands) every letter-and-answer of a conversation; kept on this device. */
 function collapseAll(conv, on) {
-  for (const e of entriesOf(conv.id)) if (e.a) { if (on) e.collapsed = true; else delete e.collapsed; }
+  for (const e of entriesOf(conv.id)) if (e.a) { if (on) e.collapsed = true; else { delete e.collapsed; setRead(e); } }
   save(); render();
 }
 function paintCollapseAll(conv) {
@@ -1548,12 +1712,16 @@ async function copyConvLink(conv) {
 }
 
 let toastTimer = null;
-function toast(text) {
+let toastAction = null;
+function toast(text, action = null) {
   const t = $('toast');
   t.textContent = text; t.hidden = false;
+  toastAction = action;
+  t.classList.toggle('action', !!action);
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { t.hidden = true; }, 2200);
+  toastTimer = setTimeout(() => { t.hidden = true; toastAction = null; }, action ? 6000 : 2200);
 }
+$('toast').addEventListener('click', () => { const fn = toastAction; $('toast').hidden = true; toastAction = null; fn?.(); });
 
 async function shareConv(conv) {
   clearSelection();
@@ -1577,9 +1745,9 @@ async function deleteConvs(convs) {
   const one = convs.length === 1 ? convs[0] : null;
   const owner = (c) => isOwner(c);
   const question = one
-    ? (!one.cloud ? `למחוק את השיחה "${one.title}" מהמכשיר?`
-      : owner(one) ? `למחוק את השיחה "${one.title}"? היא תימחק לכל המשתתפים ומכל המכשירים.` : `לצאת מהשיחה "${one.title}"?`)
-    : `למחוק ${convs.length} שיחות? שיחות שנשמרו בחשבון יימחקו לכל המשתתפים.`;
+    ? (!one.cloud ? `לגנוז את השיחה "${one.title}"? היא תימחק מהמכשיר.`
+      : owner(one) ? `לגנוז את השיחה "${one.title}"? היא תימחק לכל המשתתפים ומכל המכשירים.` : `לצאת מהשיחה "${one.title}"?`)
+    : `לגנוז ${convs.length} שיחות? הן יימחקו, ושיחות שנשמרו בחשבון יימחקו לכל המשתתפים.`;
   if (!confirm(question)) return;
   for (const conv of convs) {
     try {
@@ -1595,18 +1763,18 @@ async function deleteConvs(convs) {
 function onLongPress(node, fn) {
   let timer = null;
   let fired = false;
-  const fire = () => {
+  const fire = (byTouch) => {
     if (Date.now() - longPressAt < 400) return; // the same press, reported twice (timer + contextmenu)
     longPressAt = Date.now();
-    fired = true;
+    fired = byTouch; // a touch press is followed by a click that must be ignored; a right click is not
     fn();
   };
-  node.addEventListener('contextmenu', (e) => { e.preventDefault(); fire(); });
+  node.addEventListener('contextmenu', (e) => { e.preventDefault(); fire(false); });
   node.addEventListener('touchstart', (e) => {
     fired = false;
     clearTimeout(timer);
     if (e.touches.length !== 1 || e.target.closest?.('.hl, textarea, input, select')) return;
-    timer = setTimeout(fire, 500);
+    timer = setTimeout(() => fire(true), 500);
   }, { passive: true });
   for (const ev of ['touchend', 'touchmove', 'touchcancel']) node.addEventListener(ev, () => clearTimeout(timer), { passive: true });
   node.addEventListener('click', (e) => { if (fired) { e.stopImmediatePropagation(); e.preventDefault(); fired = false; } }, true);
@@ -1620,16 +1788,20 @@ function convRow(conv) {
     : last.text ? `${user && last.uid === user.uid ? 'אני' : last.name}: ${last.text}`
       : last.a ? `✉️ ${last.a.title}` : last.pending ? 'פותחים את אגרות הקודש…' : last.q;
   const favs = entries.filter((e) => e.fav).length;
-  const row = el('button', { type: 'button', className: 'conv' },
-    el('span', { className: 'conv-avatar', textContent: conv.locked ? '🔒' : isShared(conv) ? '👥' : '✉️' }),
+  const unread = unreadCount(conv);
+  const waiting = entries.some((e) => e.pending);
+  const row = el('button', { type: 'button', className: `conv${waiting ? ' waiting' : ''}${unread || conv.markedUnread ? ' has-unread' : ''}` },
+    el('span', { className: 'conv-avatar' }, conv.locked ? '🔒' : isShared(conv) ? '👥' : '✉️', waiting && el('span', { className: 'conv-spin', title: 'ממתין למענה' })),
     el('span', { className: 'conv-main' },
       el('span', { className: 'conv-top' },
         el('b', { className: 'conv-title', textContent: conv.title }),
         el('span', { className: 'conv-time', textContent: shortTime(lastTs(conv)) })),
       el('span', { className: 'conv-bottom' },
         el('span', { className: 'conv-preview', textContent: preview }),
+        waiting ? el('span', { className: 'conv-wait', textContent: '⏳ מענה בדרך' }) : null,
         favs ? el('span', { className: 'conv-badge', textContent: `★ ${favs}` }) : null,
-        entries.length ? el('span', { className: 'conv-count', textContent: String(entries.length) }) : null)));
+        unread ? el('span', { className: 'conv-count', textContent: String(unread), title: 'לא נקראו' })
+          : conv.markedUnread ? el('span', { className: 'conv-count dot', title: 'סומן כלא נקרא' }) : null)));
   row.addEventListener('click', () => go({ name: 'chat', id: conv.id }));
   return selectable(row, 'c', conv.id);
 }
@@ -1687,12 +1859,35 @@ function renderConvList(which) {
   return box;
 }
 
+/** The tags of a chat as filter chips: everything, all favourites, or one tag. */
+function tagFilterBar(conv) {
+  const favs = entriesOf(conv.id).filter((e) => e.fav);
+  const counts = new Map();
+  for (const e of favs) for (const t of e.fav.tags) counts.set(t, (counts.get(t) || 0) + 1);
+  const bar = el('div', { className: 'tag-filter' });
+  const chip = (value, label) => {
+    const b = el('button', { type: 'button', className: `chip${tagFilter === value ? ' on' : ''}`, textContent: label });
+    b.addEventListener('click', () => { tagFilter = value; render(); });
+    return b;
+  };
+  const close = el('button', { type: 'button', className: 'chip close', textContent: '✕', title: 'סגירת הסינון' });
+  close.addEventListener('click', () => { tagFilter = ''; render(); });
+  bar.append(el('span', { className: 'tf-label', textContent: '🏷' }), chip('*', `★ כל המועדפים (${favs.length})`),
+    ...[...counts].sort((a, b) => b[1] - a[1]).map(([t, n]) => chip(t, `${t} (${n})`)), close);
+  return bar;
+}
+
 function renderChat(conv) {
   const box = el('div', { className: 'chat-body' });
   let lastDay = null;
-  const items = [...entriesOf(conv.id).map((e) => ({ ts: e.ts, e })), ...messagesOf(conv.id).map((m) => ({ ts: m.ts, m }))]
+  const passes = (e) => !tagFilter || (e.fav && (tagFilter === '*' || e.fav.tags.includes(tagFilter)));
+  const items = [...entriesOf(conv.id).filter(passes).map((e) => ({ ts: e.ts, e })), ...(tagFilter ? [] : messagesOf(conv.id).map((m) => ({ ts: m.ts, m })))]
     .sort((x, y) => x.ts - y.ts);
-  if (!items.length) {
+  if (tagFilter) {
+    box.append(tagFilterBar(conv));
+    if (!items.length) box.append(el('div', { className: 'empty', textContent: 'אין בשיחה מענים עם התגית הזו.' }));
+  }
+  if (!items.length && !tagFilter) {
     box.append(el('div', { className: 'intro' },
       'כתבו לרבי כפי שכותבים מכתב – מה על הלב, בקשה לברכה או שאלה.', el('br'),
       'בתשובה ייפתח עמוד מאגרות הקודש – עם כל האגרות שבו, תרגום (כשהמענה באידיש) והסבר.'));
@@ -1815,35 +2010,85 @@ async function submit(text) {
     conv.title = text.split(/\s+/).slice(0, 5).join(' ').slice(0, 40);
     if (conv.cloud) cloud.renameConv(conv.id, conv.title).catch(() => {});
   }
-  const entry = { id: newId(), conv: conv.id, q: text, ts: Date.now(), pending: true };
+  const entry = { id: newId(), conv: conv.id, q: text, ts: Date.now(), pending: true, lang: replyLang || undefined };
   if (replyTo) { entry.replyTo = replyTo; setReply(null); }
   state.entries.push(entry);
   save();
   render({ scroll: true });
-  send.disabled = true; $('status').textContent = 'מקליד…';
-  try {
-    const res = await fetch(`${API}/api/letters`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ letter: text, replyLanguage: replyLang || undefined }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (res.ok) entry.a = data;
-    else entry.error = data.message || 'אירעה שגיאה. נסו שוב.';
-  } catch {
-    entry.error = 'אין חיבור לשרת. בדקו את החיבור ונסו שוב.';
-  } finally {
-    delete entry.pending;
-    send.disabled = false;
-    save();
-    if (view.name === 'chat' && view.id === conv.id) render({ scroll: true }); else render();
-    if (conv.cloud && user) cloud.saveEntry(conv.id, entry).catch((e) => console.warn('entry not synced', e));
-  }
+  askNotifyPermission();
+  requestAnswer(entry);
 }
+
+// ---------- the answer is fetched in the background: the user can leave and come back ----------
+const inFlight = new Set(); // entry ids being answered now
+async function requestAnswer(entry) {
+  if (inFlight.has(entry.id)) return;
+  inFlight.add(entry.id);
+  let tries = 0;
+  for (;;) {
+    try {
+      const res = await fetch(`${API}/api/letters`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ letter: entry.q, replyLanguage: entry.lang || undefined }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) entry.a = data;
+      else entry.error = data.message || 'אירעה שגיאה. נסו שוב.';
+      break;
+    } catch {
+      // no connection (or the free server is waking up): try again for a few minutes before giving up
+      if (++tries > 6) { entry.error = 'אין חיבור לשרת. בדקו את החיבור ונסו שוב.'; break; }
+      await new Promise((r) => setTimeout(r, Math.min(30000, 3000 * 2 ** tries)));
+    }
+  }
+  inFlight.delete(entry.id);
+  if (!state.entries.includes(entry)) return; // deleted meanwhile
+  delete entry.pending;
+  const conv = convById(entry.conv);
+  const watching = view.name === 'chat' && view.id === entry.conv && !document.hidden;
+  if (entry.a) {
+    if (watching) entry.collapsed = false; // just arrived in front of the user: shown open, and read
+    else { entry.unread = true; entry.collapsed = true; notifyReady(conv, entry); }
+  }
+  save();
+  if (watching) render({ scroll: true }); else render();
+  if (conv?.cloud && user) cloud.saveEntry(conv.id, entry).catch((e) => console.warn('entry not synced', e));
+}
+
+/** Asks once for permission to notify when an answer is ready. */
+let notifyAsked = false;
+async function askNotifyPermission() {
+  if (notifyAsked) return;
+  notifyAsked = true;
+  try {
+    if (isNativeApp) await window.Capacitor.registerPlugin('LocalNotifications').requestPermissions();
+    else if ('Notification' in window && Notification.permission === 'default') await Notification.requestPermission();
+  } catch { /* no notifications: the toast and the mark on the chat remain */ }
+}
+async function notifyReady(conv, entry) {
+  const title = '✉️ המענה מוכן';
+  const body = `${conv?.title || 'מכתבים לרבי'} – ${entry.a.title}`;
+  toast(`✉️ המענה מוכן ב"${conv?.title || ''}" – לחצו לפתיחה`, () => go({ name: 'chat', id: entry.conv }));
+  if (!document.hidden && !isNativeApp) return; // in front of the user: the toast is enough
+  try {
+    if (isNativeApp) {
+      await window.Capacitor.registerPlugin('LocalNotifications').schedule({
+        notifications: [{ id: Math.floor(Math.random() * 2e9), title, body, extra: { conv: entry.conv } }],
+      });
+    } else if ('Notification' in window && Notification.permission === 'granted') {
+      const reg = await navigator.serviceWorker?.getRegistration?.();
+      if (reg) await reg.showNotification(title, { body, icon: 'icon.svg', tag: entry.id, data: { conv: entry.conv } });
+      else new Notification(title, { body, icon: 'icon.svg' });
+    }
+  } catch (e) { console.warn('notification', e); }
+}
+// a tap on a notification opens the conversation
+navigator.serviceWorker?.addEventListener?.('message', (e) => { if (e.data?.openConv && convById(e.data.openConv)) go({ name: 'chat', id: e.data.openConv }); });
 
 form.addEventListener('submit', (e) => {
   e.preventDefault();
   const text = input.value.trim();
-  if (!text || send.disabled) return;
+  if (!text) return;
   input.value = ''; input.style.height = '';
   submit(text);
 });
@@ -1870,7 +2115,12 @@ try { signedInBefore = localStorage.getItem('mlr-signed-in') === '1'; } catch { 
 if (signedInBefore || state.convs.some((c) => c.cloud)) loadCloud().catch((e) => console.warn('cloud', e));
 if (pendingJoin) joinNow();
 
-render();
+{ // opened from a notification: /?conv=<id>
+  const id = new URLSearchParams(location.search).get('conv');
+  if (id) history.replaceState(null, '', '/');
+  if (id && convById(id)) go({ name: 'chat', id }); else render();
+}
+for (const e of state.entries.filter((x) => x.pending && !x.a)) requestAnswer(e); // the app was closed while waiting
 if (isNativeApp) setupNativeApp();
 if (!isNativeApp && 'serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 
@@ -1890,10 +2140,16 @@ async function setupNativeApp() {
     $('app-version').textContent = info.version;
   } catch { /* plugin missing – keep defaults */ }
 
-  nativeSettings = () => { $('server-input').value = API; dialog.showModal(); };
   // the server address is built into the app; the field is only shown if it is missing
   $('server-section').hidden = !!window.MLR_API_BASE;
 
+  // a tap on an "answer ready" notification opens its chat
+  try {
+    Cap.registerPlugin('LocalNotifications').addListener('localNotificationActionPerformed', ({ notification }) => {
+      const id = notification?.extra?.conv;
+      if (id && convById(id)) go({ name: 'chat', id });
+    });
+  } catch { /* plugin missing in an older build */ }
   // links to shared conversations open the app
   AppInfo.addListener('appUrlOpen', ({ url }) => { pendingJoin = readJoinLink(url); if (pendingJoin) joinNow(); });
 
@@ -1917,55 +2173,78 @@ async function setupNativeApp() {
     try { localStorage.setItem('mlr-auto-update', e.target.checked ? 'on' : 'off'); } catch { /* ignore */ }
   });
 
+  /**
+   * The update part of the dialog shows one step at a time:
+   * idle (check button) → checking → available (install button only) → downloading (progress only) → done.
+   */
+  let phase = 'idle';
+  function paintUpdate(next, text) {
+    if (next) phase = next;
+    if (text !== undefined) status(text);
+    const check = $('check-update'), installBtn = $('install-update'), bar = $('update-progress');
+    check.hidden = !['idle', 'checking'].includes(phase);
+    check.disabled = phase === 'checking';
+    check.textContent = phase === 'checking' ? 'בודק…' : 'בדיקת עדכונים';
+    installBtn.hidden = phase !== 'available';
+    installBtn.textContent = latest ? `הורדה והתקנה של גרסה ${latest.versionName}` : 'הורדה והתקנה';
+    bar.hidden = phase !== 'downloading';
+    $('update-banner').hidden = phase !== 'available' || dialog.open;
+  }
+  const openSettings = () => {
+    $('server-input').value = API;
+    if (phase === 'done' && latest) paintUpdate('available', `גרסה חדשה זמינה: ${latest.versionName} (מותקנת: ${current.version || current.build}).`);
+    dialog.showModal();
+    paintUpdate();
+  };
+  nativeSettings = openSettings;
+  dialog.addEventListener('close', () => paintUpdate());
+
   async function check({ quiet = false } = {}) {
-    if (!API) { if (!quiet) status('יש להגדיר קודם את כתובת השרת.'); return; }
-    if (!quiet) status('בודק…');
+    if (phase === 'downloading') return;
+    if (!API) { if (!quiet) paintUpdate('idle', 'יש להגדיר קודם את כתובת השרת.'); return; }
+    if (!quiet) paintUpdate('checking', '');
     try {
       const res = await fetch(`${API}/api/app/latest`, { cache: 'no-store' });
       const v = await res.json();
-      if (!v.available) { if (!quiet) status('לא נמצאה גרסה בשרת.'); return; }
+      if (!v.available) { if (!quiet) paintUpdate('idle', 'לא נמצאה גרסה בשרת.'); return; }
       if (v.versionCode > current.build) {
         latest = v;
-        status(`גרסה חדשה זמינה: ${v.versionName} (מותקנת: ${current.version || current.build}).`);
-        $('install-update').hidden = false;
         $('update-text').textContent = `גרסה חדשה ${v.versionName} זמינה`;
-        $('update-banner').hidden = false;
+        paintUpdate('available', `גרסה חדשה זמינה: ${v.versionName} (מותקנת: ${current.version || current.build}).`);
       } else if (!quiet) {
-        status(`האפליקציה מעודכנת (${current.version}).`);
-        $('install-update').hidden = true;
+        paintUpdate('idle', `האפליקציה מעודכנת (${current.version}).`);
       }
     } catch {
-      if (!quiet) status('לא ניתן היה לבדוק עדכונים. בדקו את החיבור ואת כתובת השרת.');
+      if (!quiet) paintUpdate('idle', 'לא ניתן היה לבדוק עדכונים. בדקו את החיבור ואת כתובת השרת.');
     }
   }
 
   async function install() {
-    if (!latest) return;
+    if (!latest || phase === 'downloading') return;
     const { allowed } = await Updater.canInstall();
     if (!allowed) {
-      status('יש לאשר לאפליקציה להתקין עדכונים, ואז ללחוץ שוב על "הורדה והתקנה".');
+      paintUpdate('available', 'יש לאשר לאפליקציה להתקין עדכונים, ואז ללחוץ שוב על "הורדה והתקנה".');
       await Updater.openInstallSettings();
       return;
     }
     const bar = $('update-progress');
-    bar.hidden = false; bar.value = 0;
-    $('install-update').disabled = true;
-    status('מוריד את העדכון…');
+    bar.value = 0;
+    paintUpdate('downloading', 'מוריד את העדכון…');
     const sub = await Updater.addListener('progress', ({ percent }) => { bar.value = percent; status(`מוריד… ${percent}%`); });
     try {
       await Updater.downloadAndInstall({ url: `${API}${latest.downloadPath}` });
-      status('ההורדה הסתיימה – אשרו את ההתקנה בחלון שנפתח.');
+      paintUpdate('done', 'ההורדה הסתיימה – אשרו את ההתקנה בחלון שנפתח.');
     } catch (e) {
-      status(e?.code === 'INSTALL_NOT_ALLOWED' ? 'יש לאשר התקנת עדכונים להגדרות האפליקציה.' : 'ההורדה נכשלה. נסו שוב.');
+      paintUpdate('available', e?.code === 'INSTALL_NOT_ALLOWED' ? 'יש לאשר התקנת עדכונים בהגדרות האפליקציה, ואז לנסות שוב.' : 'ההורדה נכשלה. נסו שוב.');
     } finally {
       sub.remove();
-      $('install-update').disabled = false;
     }
   }
 
   $('check-update').addEventListener('click', () => check());
   $('install-update').addEventListener('click', install);
-  $('update-now').addEventListener('click', () => { $('server-input').value = API; dialog.showModal(); install(); });
+  $('update-now').addEventListener('click', () => { openSettings(); install(); });
+  paintUpdate('idle', '');
 
   if ($('auto-check').checked) check({ quiet: true });
 }
