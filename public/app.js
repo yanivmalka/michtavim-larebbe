@@ -1980,6 +1980,7 @@ function convRow(conv) {
   const preview = !last ? (conv.lastPreview || 'אין עדיין מכתבים')
     : last.text ? `${user && last.uid === user.uid ? 'אני' : last.name}: ${last.text}`
       : last.a ? `✉️ ${last.a.title}` : last.pending ? 'פותחים את אגרות הקודש…' : last.q;
+  const hit = search ? searchHit(conv) : null; // while searching, the row shows where the text was found
   const favs = entries.filter((e) => e.fav).length;
   const unread = unreadCount(conv);
   const waiting = entries.some((e) => e.pending);
@@ -1990,7 +1991,7 @@ function convRow(conv) {
         el('b', { className: 'conv-title', textContent: conv.title }),
         el('span', { className: 'conv-time', textContent: shortTime(lastTs(conv)) })),
       el('span', { className: 'conv-bottom' },
-        el('span', { className: 'conv-preview', textContent: preview }),
+        el('span', { className: 'conv-preview', textContent: hit?.text ? `🔍 ${hit.label ? `${hit.label} ` : ''}${hit.text}` : preview }),
         waiting ? el('span', { className: 'conv-wait', textContent: '⏳ מענה בדרך' }) : null,
         favs ? el('span', { className: 'conv-badge', textContent: `★ ${favs}` }) : null,
         unread ? el('span', { className: 'conv-count', textContent: String(unread), title: 'לא נקראו' })
@@ -2008,13 +2009,59 @@ function specialRow(icon, label, count, fn) {
   return row;
 }
 
-const matches = (conv) => {
-  if (!search) return true;
-  const q = search.toLowerCase();
-  return conv.title.toLowerCase().includes(q)
-    || entriesOf(conv.id).some((e) => e.q.toLowerCase().includes(q) || e.a?.title?.includes(q))
-    || messagesOf(conv.id).some((m) => m.text.toLowerCase().includes(q));
-};
+// ---------- search: titles, letters, the answer page's text, the analysis, translation and follow-ups, chat messages ----------
+/** Lower case, no niqqud / cantillation, no quote marks or geresh, single spaces – so "שליט\"א" finds שליטא and vowelled text matches plain. */
+const normSearch = (t) => String(t || '').toLowerCase()
+  .replace(/[\u0591-\u05C7]/g, '').replace(/["'`״׳“”„‘’]/g, '').replace(/\s+/g, ' ');
+
+/** The searchable parts of an entry, each with a label for the result line. */
+function entryParts(e) {
+  const a = e.a || {};
+  return [
+    ['', e.q],
+    ['✉️', [a.title, a.volumeHeading, ...(a.letters || []).flatMap((l) => [l.number, l.pageText])].filter(Boolean).join(' · ')],
+    ['💡', a.explanation],
+    ['🌐', a.translation],
+    ['❝', a.keyQuote],
+    ...(e.followups || []).flatMap((f) => [['❓', f.q], ['💬', f.a]]),
+  ].filter(([, t]) => t);
+}
+
+/** A short excerpt of `text` around the first hit of the (normalized) query, or null. */
+function searchSnippet(text, q) {
+  const words = String(text).replace(/\s+/g, ' ');
+  // normalize character by character, remembering where each normalized character came from
+  let norm = '';
+  const from = [];
+  for (let i = 0; i < words.length; i += 1) {
+    const c = normSearch(words[i]);
+    norm += c;
+    for (let k = 0; k < c.length; k += 1) from.push(i);
+  }
+  const at = norm.indexOf(q);
+  if (at < 0) return null;
+  const start = Math.max(0, from[at] - 30);
+  const end = (from[at + q.length - 1] ?? words.length) + 60;
+  return `${start ? '…' : ''}${words.slice(start, end).trim()}${end < words.length ? '…' : ''}`;
+}
+
+/** The first place `conv` matches the search: { label, text } (text = excerpt), or null. */
+function searchHit(conv) {
+  const q = normSearch(search).trim();
+  if (!q) return null;
+  if (normSearch(conv.title).includes(q)) return { label: '', text: null };
+  for (const e of entriesOf(conv.id)) {
+    for (const [label, text] of entryParts(e)) {
+      if (normSearch(text).includes(q)) return { label, text: searchSnippet(text, q) };
+    }
+  }
+  for (const m of messagesOf(conv.id)) {
+    if (normSearch(m.text).includes(q)) return { label: `${m.name}:`, text: searchSnippet(m.text, q) };
+  }
+  return null;
+}
+
+const matches = (conv) => !search || !!searchHit(conv);
 
 function renderConvList(which) {
   const list = state.convs
