@@ -11,6 +11,35 @@ export const AnswerSchema = z.object({
   keyQuote: z.string(),
 });
 
+/** Translating an existing analysis to another language, and expanding abbreviations – small, shared prompts. */
+export const TRANSLATE_SYSTEM = `אתה מתרגם. תקבל רשימת קטעי טקסט (הסבר ותרגום של עמוד מ"אגרות קודש" של הרבי מליובאוויטש) וקוד שפה. תרגם כל קטע לשפה המבוקשת בנאמנות ובלשון מכובדת, ושמור על מבנה הפסקאות והכותרות ("אגרת <מספר>"). החזר JSON בלבד: { "items": [ ...הקטעים המתורגמים באותו סדר... ] }, באותו מספר קטעים בדיוק.`;
+export const translateSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['items'],
+  properties: { items: { type: 'array', items: { type: 'string' }, description: 'הקטעים המתורגמים, באותו סדר' } },
+};
+export const TranslateSchema = z.object({ items: z.array(z.string()) });
+
+export const ACRONYM_SYSTEM = `לפניך עמוד מתוך "אגרות קודש" של הרבי מליובאוויטש ורשימת ראשי תיבות וקיצורים המופיעים בו. פענח כל אחד מהם כפי שהוא משמש בהקשר של העמוד, בעברית, "על דרך אפשר": תן את הפענוח הסביר ביותר ראשון, ואם יש כמה אפשרויות הגיוניות – תן עד 3, מהסביר לפחות סביר. קיצור שאינך מזהה – החזר לו רשימה ריקה. החזר JSON בלבד.`;
+export const acronymSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['items'],
+  properties: {
+    items: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['word', 'options'],
+        properties: { word: { type: 'string', description: 'הקיצור כפי שנשאל' }, options: { type: 'array', items: { type: 'string' }, description: 'פענוחים אפשריים, הסביר ביותר ראשון' } },
+      },
+    },
+  },
+};
+export const AcronymSchema = z.object({ items: z.array(z.object({ word: z.string(), options: z.array(z.string()) })) });
+
 export const FOLLOWUP_SYSTEM = `אתה ממשיך שיחה עם אדם שכתב מכתב לרבי מליובאוויטש ופתח עמוד ב"אגרות קודש". לפניך המכתב, העמוד שנפתח והניתוח שכבר נכתב. ענה על שאלת ההמשך שלו בחום ובענייניות, בשפה שבה שאל, בקצרה (עד 3 פסקאות קצרות). התבסס על מה שכתוב בעמוד; אם אינך יודע – אמור זאת. אל תפסוק הלכה; בשאלה הלכתית, רפואית או משפטית הפנה לרב או לאיש מקצוע. החזר טקסט רגיל.`;
 
 const jsonSchema = {
@@ -88,4 +117,36 @@ export async function followUpClaude({ context, history, question }) {
   });
   if (response.stop_reason === 'refusal') throw new Error('AI_REFUSED');
   return response.content.filter((b) => b.type === 'text').map((b) => b.text).join('').trim();
+}
+
+const jsonOf = (response) => {
+  if (response.stop_reason === 'refusal') throw new Error('AI_REFUSED');
+  if (response.stop_reason === 'max_tokens') throw new Error('AI_TRUNCATED');
+  return JSON.parse(response.content.filter((b) => b.type === 'text').map((b) => b.text).join(''));
+};
+
+/** Claude: translates `items` (strings) to `language` (ISO 639-1), keeping their order. */
+export async function translateClaude({ language, items }) {
+  if (!hasCredentials()) throw new Error('AI_NOT_CONFIGURED');
+  const response = await getClient().beta.messages.create({
+    model: config.claude.model, max_tokens: 16000,
+    betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default',
+    output_config: { effort: 'low', format: { type: 'json_schema', schema: translateSchema } },
+    system: TRANSLATE_SYSTEM,
+    messages: [{ role: 'user', content: `שפת היעד: ${language}\n\n${JSON.stringify({ items })}` }],
+  });
+  return TranslateSchema.parse(jsonOf(response)).items;
+}
+
+/** Claude: expands abbreviations as used on the page. */
+export async function acronymsClaude({ context, words }) {
+  if (!hasCredentials()) throw new Error('AI_NOT_CONFIGURED');
+  const response = await getClient().beta.messages.create({
+    model: config.claude.model, max_tokens: 4000,
+    betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default',
+    output_config: { effort: 'low', format: { type: 'json_schema', schema: acronymSchema } },
+    system: ACRONYM_SYSTEM,
+    messages: [{ role: 'user', content: `העמוד:\n"""\n${context}\n"""\n\nראשי התיבות לפענוח: ${JSON.stringify(words)}` }],
+  });
+  return AcronymSchema.parse(jsonOf(response)).items;
 }

@@ -3,7 +3,7 @@ import { loadCatalog } from './igrot/catalog.js';
 import { openBook, renderSpec, decodeSpec, encodeSpec, turnPage } from './igrot/openBook.js';
 import { fetchLetter } from './igrot/chabadlibrary.js';
 import { layout, pngsToPdf } from './render/bookPage.js';
-import { analyzePage, followUp } from './ai/index.js';
+import { analyzePage, followUp, translateTexts, expandAcronyms } from './ai/index.js';
 
 /** Small LRU of rendered page images (they can always be drawn again). */
 const pageCache = {
@@ -27,15 +27,36 @@ export async function getPageImage(specStr, deps = {}) {
   return page.png;
 }
 
-/** The neighbouring page (dir 1 = next, -1 = previous) as links, or null at the end of the volume. */
+/** The letters of a drawn page, as the clients see them: the text on the page (same as the image) and the whole letter. */
+const lettersOut = (page) => page.letters.filter((l) => l.pageText.trim()).map((l) => ({
+  id: l.id,
+  number: l.number,
+  startsOnPage: l.startsOnPage,
+  endsOnPage: l.endsOnPage,
+  pageText: l.pageText,
+  fullText: l.full.text,
+  viewerUrl: l.viewerUrl,
+  pdfPath: `/api/igrot/${l.id}.pdf`,
+}));
+const titleOf = (page, letters) => `אגרות קודש, ${page.volumeHeading}, אגרות ${letters.map((l) => l.number).join(', ')}`;
+
+/**
+ * The neighbouring page (dir 1 = next, -1 = previous) with its links and the text on it,
+ * or null at the end of the volume.
+ */
 export async function getTurnedPage(specStr, dir, deps = {}) {
   const volumes = deps.volumes || getCatalog();
   const spec = decodeSpec(specStr, volumes);
   if (!spec) return undefined;
   const next = await turnPage(volumes, spec, dir, deps);
   if (!next) return null;
-  const s = encodeSpec(next);
-  return { spec: s, imagePath: `/api/page/${s}.png`, pdfPath: `/api/page/${s}.pdf`, volumeHeading: volumes[next.v].heading };
+  const page = await renderSpec(volumes, next, deps);
+  pageCache.set(page.spec, page.png);
+  const letters = lettersOut(page);
+  return {
+    spec: page.spec, imagePath: `/api/page/${page.spec}.png`, pdfPath: `/api/page/${page.spec}.pdf`,
+    volumeHeading: page.volumeHeading, title: titleOf(page, letters), letters,
+  };
 }
 
 export async function getPagePdf(specStr, deps = {}) {
@@ -79,8 +100,8 @@ export async function answerLetter({ letter, replyLanguage }, deps = {}) {
   if (trimmed.length > 8000) throw new Error('LETTER_TOO_LONG');
 
   const page = await open(volumes, { random });
-  const letters = page.letters.filter((l) => l.pageText.trim());
-  const title = `אגרות קודש, ${page.volumeHeading}, אגרות ${letters.map((l) => l.number).join(', ')}`;
+  const letters = lettersOut(page);
+  const title = titleOf(page, letters);
   // The explanation is made only on request (POST /api/analysis), not here.
   const ai = { explained: false, replyLanguage: replyLanguage || null };
 
@@ -95,16 +116,7 @@ export async function answerLetter({ letter, replyLanguage }, deps = {}) {
     // stable links: the page can always be drawn again from its spec
     imagePath: `/api/page/${page.spec}.png`,
     pdfPath: `/api/page/${page.spec}.pdf`,
-    letters: letters.map((l) => ({
-      id: l.id,
-      number: l.number,
-      startsOnPage: l.startsOnPage,
-      endsOnPage: l.endsOnPage,
-      pageText: l.pageText,
-      fullText: l.full.text,
-      viewerUrl: l.viewerUrl,
-      pdfPath: `/api/igrot/${l.id}.pdf`,
-    })),
+    letters,
     ...ai,
   };
 }
@@ -167,4 +179,31 @@ export async function askFollowUp({ spec, letter, analysis, history, question },
   const past = (Array.isArray(history) ? history : []).slice(-10).map((h) => ({ q: clip(h?.q, 2000), a: clip(h?.a, 4000) }));
   const run = deps.followUp || followUp;
   return run({ context, history: past, question: clip(q, 2000) });
+}
+
+const LANG = /^[a-z]{2}$/;
+/**
+ * Translates an analysis that was already written (explanation, page translation, key quote and the
+ * answers to follow-up questions) to another language. Strings are returned in the same shape.
+ */
+export async function translateAnalysis({ language, explanation, translation, keyQuote, followups }, deps = {}) {
+  if (!LANG.test(String(language || ''))) throw new Error('LANGUAGE_BAD');
+  const answers = (Array.isArray(followups) ? followups : []).slice(0, 20).map((f) => clip(f?.a, 4000));
+  const items = [clip(explanation, 8000), clip(translation, 16000), clip(keyQuote, 1000), ...answers];
+  if (!items.some(Boolean)) throw new Error('NOTHING_TO_TRANSLATE');
+  const run = deps.translate || translateTexts;
+  const out = await run({ language, items });
+  if (!Array.isArray(out) || out.length !== items.length) throw new Error('AI_EMPTY');
+  const keep = (i) => (items[i] ? out[i] : '');
+  return { replyLanguage: language, explanation: keep(0), translation: keep(1), keyQuote: keep(2), followups: answers.map((_, i) => keep(3 + i)) };
+}
+
+/** Expands abbreviations that the dictionary in the app does not know, in the context of the page. */
+export async function acronyms({ spec, words }, deps = {}) {
+  const list = [...new Set((Array.isArray(words) ? words : []).map((w) => clip(w, 30).trim()).filter(Boolean))].slice(0, 20);
+  if (!list.length) throw new Error('QUESTION_EMPTY');
+  const page = await pageForAi(spec, deps);
+  const run = deps.acronyms || expandAcronyms;
+  const items = await run({ context: page.text, words: list });
+  return { items: list.map((word) => ({ word, options: (items.find((i) => i.word === word)?.options || []).slice(0, 3) })) };
 }

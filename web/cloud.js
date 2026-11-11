@@ -109,13 +109,16 @@ export async function deleteConv(id) {
 // ---------- letters to the Rebbe (owner only) ----------
 const preview = (e) => (e.a ? `✉️ ${e.a.title}` : e.q).slice(0, 120);
 const cleanEntry = (e) => {
-  const { pending, fav, collapsed, showMore, conv, ...rest } = e; // personal flags stay on the device
+  // personal flags stay on the device
+  const { pending, fav, collapsed, showMore, textOpen, analysisClosed, followupsClosed, translating, conv, ...rest } = e;
   return JSON.parse(JSON.stringify(rest));
 };
 export async function saveEntry(convId, entry) {
   await setDoc(doc(db, 'convs', convId, 'entries', entry.id), cleanEntry(entry));
   await updateDoc(convRef(convId), { lastTs: entry.ts, lastPreview: preview(entry) });
 }
+/** Owner: removes a letter and its answer (also used when moving it to another conversation). */
+export const deleteEntry = (convId, id) => deleteDoc(doc(db, 'convs', convId, 'entries', id));
 
 // ---------- chat between the participants ----------
 export async function sendMessage(convId, { id, text, ts, replyTo }) {

@@ -21,7 +21,8 @@ boundaries – no content on intimate matters or matters of femininity.
 | Letter-length learning | `src/igrot/lengths.js` | Records lengths of fetched letters to `LENGTHS_FILE` (lost on Render free – no disk). Meant for future length-weighted draw (not enabled) |
 | App updates | `src/appUpdate.js` | Latest GitHub Release `app-v<code>`; falls back to the releases-page redirect when the API is rate-limited |
 | WhatsApp | `src/whatsapp/webhook.js` | Cloud API webhook, implemented but not configured |
-| Web UI | `public/app.js` (single module), `index.html`, `styles.css`, PWA `sw.js` | WhatsApp-like chats list, chats with date separators, lightbox with page turning, marker (highlights), favourites+tags, archive, locked chats (fingerprint/device code), share sheet |
+| Web UI | `public/app.js` (single module), `index.html`, `styles.css`, PWA `sw.js` | WhatsApp-like chats list, chats with date separators, lightbox with page turning + pinch zoom, marker (highlights), favourites+tags, archive, locked chats (fingerprint/device code), share sheet. Standard ⋮ drop-down menus (home + chat). Long press = WhatsApp-style selection (a letter and its answer are one item; delete / move to another chat / copy; chats: archive / lock / delete). Swipe a bubble sideways = reply (shared chats). One pager per answer keeps the image, the page text and the lightbox on the same page. Text size of letter/analysis by pinch or the Aa slider (`--rs`, all chats). Reply language select sits in the answer's actions row; changing it translates an existing analysis (`POST /api/analysis/translate`) |
+| Abbreviations | `public/rashei-teivot.js` | Tap on ראשי תיבות → popover from a local dictionary (~450 entries, Hebrew prefixes, numbers/years); runs of abbreviations open together; "by context" asks the AI (`POST /api/acronyms`, page text rebuilt from the spec) |
 | Cloud | `web/cloud.js` → bundled to `public/vendor/cloud.js` (`npm run build:web`, esbuild; **commit the bundle**) | Firebase Auth (Google) + Firestore. Loaded lazily |
 | Android | `android/` (Capacitor 7) | Native plugins in `android/app/src/main/java/com/michtavim/larebbe/`: `AppUpdaterPlugin` (download+install APK), `DeviceAuthPlugin` (BiometricPrompt), `MainActivity` (handles system-bar **and keyboard** insets; Capacitor's edge-to-edge is `disable`). Google sign-in via `@capacitor-firebase/authentication` (skipNativeAuth → ID token → JS SDK) |
 
@@ -71,3 +72,4 @@ The keystore itself is **not** in git – the owner keeps it; losing it forces e
 - Light Gemini models sometimes mix in wrong-script characters; consider a stronger model or Claude for production.
 - Length-weighted draw (data being collected), persistent disk on Render, WhatsApp setup, Play Store release build.
 - Answers saved before the spec change (`/api/answers/...`) cannot be redrawn or paged.
+- Pinch zoom, swipe-to-reply and long-press selection were tested with synthetic touches in headless Chromium, not yet on a real phone.
