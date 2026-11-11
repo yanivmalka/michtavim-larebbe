@@ -2229,17 +2229,50 @@ async function setupNativeApp() {
     }
     const bar = $('update-progress');
     bar.value = 0;
+    $('update-detail').textContent = '';
     paintUpdate('downloading', 'מוריד את העדכון…');
     const sub = await Updater.addListener('progress', ({ percent }) => { bar.value = percent; status(`מוריד… ${percent}%`); });
     try {
-      await Updater.downloadAndInstall({ url: `${API}${latest.downloadPath}` });
+      await Updater.downloadAndInstall({ url: `${API}${latest.downloadPath}`, expectedSize: latest.size || 0 });
       paintUpdate('done', 'ההורדה הסתיימה – אשרו את ההתקנה בחלון שנפתח.');
     } catch (e) {
-      paintUpdate('available', e?.code === 'INSTALL_NOT_ALLOWED' ? 'יש לאשר התקנת עדכונים בהגדרות האפליקציה, ואז לנסות שוב.' : 'ההורדה נכשלה. נסו שוב.');
+      failed(DOWNLOAD_ERRORS[e?.code] || `ההורדה נכשלה (${e?.message || e}). נסו שוב.`, e?.message);
     } finally {
       sub.remove();
     }
   }
+
+  // why an update could not be installed – the reason comes from Android itself
+  const MANUAL = 'אפשר גם להתקין ידנית: "הורדה ידנית מהדפדפן" למטה.';
+  const REINSTALL = 'האפליקציה המותקנת חתומה במפתח אחר מהעדכון, ולכן Android לא יעדכן אותה. יש להסיר את האפליקציה ולהתקין את הגרסה החדשה בהורדה ידנית. השיחות השמורות בחשבון Google יחזרו אחרי ההתחברות; מועדפים והדגשות שנשמרו רק במכשיר יימחקו.';
+  const DOWNLOAD_ERRORS = {
+    INSTALL_NOT_ALLOWED: 'יש לאשר התקנת עדכונים בהגדרות האפליקציה, ואז לנסות שוב.',
+    INCOMPLETE: 'ההורדה לא הושלמה (החיבור נקטע). נסו שוב.',
+    INVALID_APK: `הקובץ שהורד פגום. נסו שוב. ${MANUAL}`,
+    WRONG_PACKAGE: 'הקובץ שהורד אינו של האפליקציה הזו.',
+    NOT_NEWER: 'הגרסה שהורדה אינה חדשה מהמותקנת.',
+    SIGNATURE_MISMATCH: REINSTALL,
+  };
+  const INSTALL_ERRORS = { // PackageInstaller.STATUS_*
+    2: `Android חסם את ההתקנה (לרוב Play Protect). אם מופיעה הודעה של Play Protect – בחרו "פרטים נוספים" ואז "התקנה בכל זאת". ${MANUAL}`,
+    3: 'ההתקנה בוטלה.',
+    4: `קובץ העדכון אינו תקין. נסו שוב. ${MANUAL}`,
+    5: REINSTALL,
+    6: 'אין מספיק מקום פנוי במכשיר להתקנת העדכון. פנו מקום ונסו שוב.',
+    7: 'העדכון אינו תואם למכשיר הזה.',
+    8: 'ההתקנה לא הסתיימה בזמן. נסו שוב.',
+  };
+  function failed(text, detail) {
+    paintUpdate('available', text);
+    $('update-detail').textContent = detail ? `פרטים: ${detail}` : '';
+    $('manual-update').hidden = false;
+  }
+  Updater.addListener('installStatus', ({ status: code, message }) => {
+    if (code === -1) { paintUpdate('done', 'אשרו את ההתקנה בחלון שנפתח.'); return; } // waiting for the user
+    if (code === 0) { paintUpdate('done', 'העדכון הותקן.'); return; }
+    failed(INSTALL_ERRORS[code] || `ההתקנה נכשלה. ${MANUAL}`, message || `status ${code}`);
+  });
+  $('manual-update').href = 'https://github.com/yanivmalka/michtavim-larebbe/releases/latest';
 
   $('check-update').addEventListener('click', () => check());
   $('install-update').addEventListener('click', install);
