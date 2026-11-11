@@ -1448,8 +1448,11 @@ let nativeSettings = null; // set in the Android app: opens the settings & updat
 function convMenuItems(conv) {
   const owner = isOwner(conv);
   const people = isShared(conv) ? (conv.members || []).map((u) => nameOf(conv, u) + (u === conv.owner ? ' (פותח השיחה)' : '')).join(', ') : '';
+  const answered = entriesOf(conv.id).filter((e) => e.a);
+  const allCollapsed = answered.length && answered.every((e) => e.collapsed);
   return [
     people && { info: `👥 ${people}` },
+    answered.length && { label: allCollapsed ? '▾ הרחבת כל ההתכתבויות' : '▸ מזעור כל ההתכתבויות', onClick: () => collapseAll(conv, !allCollapsed) },
     owner && { label: '✎ שינוי שם', onClick: () => renameConv(conv) },
     owner && { label: '👥 שיתוף עם אנשי קשר', onClick: () => shareConv(conv) },
     owner && { label: '🔗 העתקת קישור לשיחה', onClick: () => copyConvLink(conv) },
@@ -1462,9 +1465,23 @@ function convMenuItems(conv) {
 function homeMenuItems() {
   return [
     { label: user ? `👤 ${user.displayName || user.email}` : '👤 התחברות עם Google', onClick: openAccount },
-    { label: 'Aa גודל הטקסט', onClick: () => showZoomBar(true) },
     nativeSettings && { label: '⚙ הגדרות ועדכונים', onClick: nativeSettings },
   ];
+}
+
+/** Minimizes (or expands) every letter-and-answer of a conversation; kept on this device. */
+function collapseAll(conv, on) {
+  for (const e of entriesOf(conv.id)) if (e.a) { if (on) e.collapsed = true; else delete e.collapsed; }
+  save(); render();
+}
+function paintCollapseAll(conv) {
+  const answered = conv ? entriesOf(conv.id).filter((e) => e.a) : [];
+  const all = answered.length && answered.every((e) => e.collapsed);
+  const b = $('collapse-all');
+  b.hidden = !answered.length;
+  b.textContent = all ? '⊞' : '⊟';
+  b.title = all ? 'הרחבת כל ההתכתבויות' : 'מזעור כל ההתכתבויות';
+  b.setAttribute('aria-label', b.title);
 }
 
 async function renameConv(conv) {
@@ -1736,6 +1753,7 @@ function render({ scroll = false } = {}) {
   $('new-chat').hidden = view.name !== 'list';
   form.hidden = !conv;
   if (conv) paintComposer(conv);
+  paintCollapseAll(conv);
 
   const keepScroll = !scroll && chat.scrollHeight - chat.scrollTop - chat.clientHeight < 80; // stay at the bottom
   const top = chat.scrollTop;
@@ -1751,6 +1769,10 @@ $('back').addEventListener('click', () => go({ name: view.name === 'chat' && con
   : view.name === 'chat' && convById(view.id)?.locked ? 'locked' : 'list' }));
 $('chat-menu').addEventListener('click', (e) => { const c = convById(view.id); if (c) showMenu(e.currentTarget, convMenuItems(c)); });
 $('home-menu').addEventListener('click', (e) => showMenu(e.currentTarget, homeMenuItems()));
+$('collapse-all').addEventListener('click', () => {
+  const c = convById(view.id);
+  if (c) collapseAll(c, !entriesOf(c.id).filter((e) => e.a).every((e) => e.collapsed));
+});
 $('title-text').addEventListener('click', () => { const c = view.name === 'chat' && convById(view.id); if (c) showMenu($('chat-menu'), convMenuItems(c)); });
 $('new-chat').addEventListener('click', async () => {
   const conv = { id: newId(), title: 'שיחה חדשה', created: Date.now() };
