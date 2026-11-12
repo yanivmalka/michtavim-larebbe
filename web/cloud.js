@@ -111,7 +111,7 @@ const preview = (e) => (e.a ? `✉️ ${e.a.title}` : e.q).slice(0, 120);
 const cleanEntry = (e) => {
   // personal flags stay on the device
   const {
-    pending, fav, collapsed, showMore, textOpen, analysisOpen, translationOpen, followupsOpen, analysisClosed, followupsClosed, translating, unread, tagsOpen, lang, conv, draft, transcribing, ...rest
+    pending, fav, collapsed, showMore, textOpen, analysisOpen, translationOpen, followupsOpen, analysisClosed, followupsClosed, translating, unread, tagsOpen, lang, conv, draft, transcribing, preparing, t0, qOpen, qLocked, ...rest
   } = e;
   return JSON.parse(JSON.stringify(rest));
 };

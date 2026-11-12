@@ -202,3 +202,58 @@ export async function readPhotoClaude({ data, mimeType }) {
   });
   return PhotoSchema.parse(jsonOf(response));
 }
+
+/** A name for the chat and a one-line summary of a letter (shown when the letter is minimized). */
+export const SUMMARY_SYSTEM = `לפניך מכתב שאדם כתב לרבי מליובאוויטש. החזר JSON בלבד:
+- title: שם קצר לשיחה, 2–4 מילים, לפי נושא המכתב (למשל "ברכה לרפואה", "התלבטות בעבודה"). בלי פתיחות כבוד, בלי שמות פרטיים ובלי מירכאות.
+- line: שורה אחת קצרה (עד 8 מילים) המתארת על מה המכתב, בגוף שלישי או כצירוף שמני.
+כתוב בשפת המכתב. ${SCRIPT_RULE}`;
+export const summarySchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['title', 'line'],
+  properties: { title: { type: 'string' }, line: { type: 'string' } },
+};
+export const SummarySchema = z.object({ title: z.string(), line: z.string() });
+
+/** Aramaic in the letters (Zohar, Gemara, Tanya quotes): the phrase around a word, translated, and word by word. */
+export const ARAMAIC_SYSTEM = `לפניך משפט מתוך "אגרות קודש" של הרבי מליובאוויטש, ומילה (או קטע) שהקורא סימן בו. מצא את הרצף הארמי המלא שהמילה שייכת אליו (ציטוט מהזוהר, מהגמרא, מהתרגום וכדומה) ותרגם אותו לשפת היעד.
+החזר JSON בלבד:
+- isAramaic: false אם המילה והרצף שסביבה אינם ארמית (ואז שאר השדות ריקים).
+- phrase: הרצף הארמי כפי שהוא במשפט.
+- translation: תרגום הרצף כמשפט אחד, נאמן וקריא.
+- words: לכל מילה ברצף, לפי הסדר – המילה ופירושה הקצר בשפת היעד.
+${SCRIPT_RULE}`;
+export const aramaicSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['isAramaic', 'phrase', 'translation', 'words'],
+  properties: {
+    isAramaic: { type: 'boolean' },
+    phrase: { type: 'string' },
+    translation: { type: 'string' },
+    words: {
+      type: 'array',
+      items: { type: 'object', additionalProperties: false, required: ['word', 'meaning'], properties: { word: { type: 'string' }, meaning: { type: 'string' } } },
+    },
+  },
+};
+export const AramaicSchema = z.object({
+  isAramaic: z.boolean(),
+  phrase: z.string().default(''),
+  translation: z.string().default(''),
+  words: z.array(z.object({ word: z.string(), meaning: z.string() })).default([]),
+});
+
+/** Claude: a small JSON answer to a small prompt. */
+export async function smallJsonClaude({ system, text, schema }) {
+  if (!hasCredentials()) throw new Error('AI_NOT_CONFIGURED');
+  const response = await getClient().beta.messages.create({
+    model: config.claude.model, max_tokens: 4000,
+    betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default',
+    output_config: { effort: 'low', format: { type: 'json_schema', schema } },
+    system,
+    messages: [{ role: 'user', content: text }],
+  });
+  return jsonOf(response);
+}

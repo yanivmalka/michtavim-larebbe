@@ -1,6 +1,6 @@
 import express from 'express';
 import {
-  answerLetter, getPageImage, getPagePdf, getLetterPdf, getNeighborLetter, getTurnedPage, analyze, askFollowUp, translateAnalysis, acronyms, answerPhoto, transcribe,
+  answerLetter, getPageImage, getPagePdf, getLetterPdf, getNeighborLetter, getTurnedPage, analyze, askFollowUp, translateAnalysis, acronyms, answerPhoto, transcribe, summarize, aramaic,
 } from './letters.js';
 import { userMessage } from './errors.js';
 import { whatsappRouter } from './whatsapp/webhook.js';
@@ -80,6 +80,18 @@ export function createApp(deps = {}) {
   // a photo of a printed page → that page from the library; a voice recording → the text of the letter
   app.post('/api/photo', aiRoute((b) => answerPhoto(b, { ...deps.pages, ...deps.photo })));
   app.post('/api/transcribe', aiRoute((b) => transcribe(b, deps.voice)));
+  app.post('/api/aramaic', aiRoute((b, d) => aramaic(b, d)));
+  // a name for the chat + a line for the minimized letter: light, and limited apart from the analysis quota
+  const sumLimit = rateLimit({ max: Number(process.env.SUMMARY_RATE_PER_HOUR || 60), windowMs: 3600e3 });
+  app.post('/api/summary', async (req, res) => {
+    try {
+      if (!sumLimit(req.ip)) throw new Error('AI_RATE_LIMIT');
+      res.json(await summarize(req.body || {}, deps.ai));
+    } catch (err) {
+      const e = userMessage(err);
+      res.status(e.status).json({ error: e.code, message: e.message });
+    }
+  });
 
   const sendPdf = (res, pdf, name) => {
     if (!pdf) return res.sendStatus(404);

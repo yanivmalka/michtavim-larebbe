@@ -43,7 +43,18 @@
     <div id="menu" class="menu" role="menu" hidden></div>
 
     <div id="search-bar" class="search-bar">
-      <input id="search" type="search" placeholder="🔍 חיפוש שיחות" aria-label="חיפוש שיחות">
+      <div class="search-pill">
+        <button type="button" id="search-close" class="search-icon" title="סגירת החיפוש" aria-label="סגירת החיפוש" hidden>→</button>
+        <span id="search-glass" class="search-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        </span>
+        <input id="search" type="search" placeholder="חיפוש…" aria-label="חיפוש">
+        <button type="button" id="search-date" class="search-icon" title="חיפוש לפי תאריך" aria-label="חיפוש לפי תאריך">
+          <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M20 11V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h5M4 9.5h16M8 3v4M16 3v4"/><circle cx="16.5" cy="16.5" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M19 19l2.2 2.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+        <input type="date" id="search-date-input" class="date-hidden" tabindex="-1" aria-hidden="true">
+      </div>
+      <button type="button" id="search-date-chip" class="date-chip" title="ביטול הסינון לפי תאריך" hidden></button>
     </div>
 
     <div id="update-banner" class="update-banner" hidden>
@@ -95,6 +106,7 @@
     <div id="hl-bar" class="hl-bar" hidden>
       <div class="hl-tools">
         <button type="button" id="hl-add" hidden>🖍 הדגשה</button>
+        <button type="button" id="tool-aramaic" hidden title="תרגום הקטע המסומן מארמית">תרגום מארמית</button>
         <button type="button" id="tool-size" hidden title="גודל הטקסט (או צביטה על הטקסט)">Aa</button>
         <a id="tool-pdf" target="_blank" rel="noopener" hidden>📄 PDF</a>
         <button type="button" id="tool-share" hidden>↗ שיתוף</button>
@@ -176,8 +188,10 @@
       <div id="rec-bar" class="rec-bar" hidden>
         <button type="button" id="rec-cancel" class="pill-btn" title="ביטול ההקלטה" aria-label="ביטול ההקלטה">🗑</button>
         <span class="rec-dot"></span><span id="rec-time" class="rec-time">0:00</span>
-        <span class="rec-label">מקליט… לחצו ✓ לסיום</span>
+        <span id="rec-label" class="rec-label"></span>
       </div>
+      <!-- while the microphone is held: pull up to lock -->
+      <div id="rec-lock" class="rec-lock" hidden aria-hidden="true"><span>🔒</span><span class="rec-lock-arrow">⌃</span></div>
       <button type="submit" id="send" class="send" aria-label="הקלטת מכתב בקול"></button>
       <input type="file" id="pick-camera" accept="image/*" capture="environment" hidden>
       <input type="file" id="pick-gallery" accept="image/*" hidden>

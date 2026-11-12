@@ -5,7 +5,7 @@ import { findLetter, findVolume } from './igrot/letterNumbers.js';
 import { fetchLetter } from './igrot/chabadlibrary.js';
 import { layout, pngsToPdf, drawHighlights } from './render/bookPage.js';
 import { findQuote, stripForeignScript, parseHighlights } from './highlights.js';
-import { analyzePage, followUp, translateTexts, expandAcronyms, readPagePhoto, transcribeAudio } from './ai/index.js';
+import { analyzePage, followUp, translateTexts, expandAcronyms, readPagePhoto, transcribeAudio, summarizeLetter, translateAramaic } from './ai/index.js';
 
 /** Small LRU of rendered page images (they can always be drawn again). */
 const pageCache = {
@@ -318,4 +318,28 @@ export async function acronyms({ spec, words, sentence }, deps = {}) {
   const run = deps.acronyms || expandAcronyms;
   const items = await run({ context, words: list });
   return { items: list.map((word) => ({ word, options: (items.find((i) => i.word === word)?.options || []).slice(0, 3) })) };
+}
+
+const oneLine = (str, n) => stripForeignScript(String(str || '')).replace(/["״\n]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n);
+/** A short name for the chat and a one-line summary of a letter – shown where the letter is minimized. */
+export async function summarize({ letter }, deps = {}) {
+  const q = String(letter || '').trim();
+  if (q.length < 2) throw new Error('LETTER_EMPTY');
+  const out = await (deps.summarize || summarizeLetter)({ letter: clip(q, 4000) });
+  return { title: oneLine(out.title, 40), line: oneLine(out.line, 80) };
+}
+
+/** Aramaic → the language the text is read in: the phrase around the tapped word, as a sentence and word by word. */
+export async function aramaic({ sentence, word, language }, deps = {}) {
+  const s = String(sentence || '').trim();
+  const w = String(word || '').trim();
+  if (s.length < 2 || !w) throw new Error('QUESTION_EMPTY');
+  const lang = LANG.test(String(language || '')) ? language : 'he';
+  const out = await (deps.aramaic || translateAramaic)({ sentence: clip(s, 1500), word: clip(w, 300), language: lang });
+  return {
+    isAramaic: !!out.isAramaic,
+    phrase: clip(out.phrase, 600),
+    translation: stripForeignScript(clip(out.translation, 1200)),
+    words: (out.words || []).slice(0, 60).map((x) => ({ word: clip(x.word, 40), meaning: stripForeignScript(clip(x.meaning, 120)) })),
+  };
 }
