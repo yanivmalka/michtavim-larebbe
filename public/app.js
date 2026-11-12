@@ -26,6 +26,32 @@ const el = (tag, props = {}, ...children) => {
   return node;
 };
 
+// ---------- short sounds: recording started / ended, an answer arrived ----------
+let actx = null;
+function tone(freqs, dur = 0.1, gap = 0.11, vol = 0.14) {
+  try {
+    actx ??= new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+    freqs.forEach((f, i) => {
+      const o = actx.createOscillator();
+      const g = actx.createGain();
+      const t = actx.currentTime + i * gap;
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(vol, t + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g).connect(actx.destination);
+      o.start(t); o.stop(t + dur + 0.03);
+    });
+  } catch { /* no sound on this device */ }
+}
+const SOUND = {
+  recStart: () => tone([880]),
+  recStop: () => tone([587]),
+  recCancel: () => tone([330], 0.14),
+  answer: () => tone([784, 1047, 1319], 0.22, 0.13, 0.16),
+};
+
 // ---------- state (kept on this device only) ----------
 // convs:   conversations, like chats – { id, title, created, archived?, locked? }
 // entries: one per letter written – { id, conv, q, ts, a?, fav?: { tags: [] }, collapsed? }
@@ -49,7 +75,11 @@ const dayLabel = (key) => {
 function loadState() {
   try {
     const s = JSON.parse(localStorage.getItem(STORE));
-    if (s?.convs) return { marks: {}, ...s };
+    if (s?.convs) {
+      s.entries = (s.entries || []).filter((e) => !e.preparing); // a photo that was still loading when the app closed
+      for (const e of s.entries) if (e.qLocked) delete e.qOpen;
+      return { marks: {}, abbr: {}, ...s };
+    }
   } catch { /* fall through */ }
   // migrate v3: day groups (with topic / archived) become conversations
   const state = { convs: [], entries: [], marks: {} };
@@ -196,6 +226,7 @@ function paintTools(found, entry) {
   toolEntry = entry;
   const page = entry && currentPage(pagerOf(entry));
   $('hl-add').hidden = !found;
+  $('tool-aramaic').hidden = !found;
   $('tool-size').hidden = !entry;
   $('tool-share').hidden = !entry;
   $('tool-pdf').hidden = !page?.pdfPath;
@@ -233,7 +264,7 @@ document.addEventListener('selectionchange', () => {
   clearTimeout(markTimer);
   if (markerMode && found) markTimer = setTimeout(() => { const f = selectedRange(); if (f) applyMark(f); }, 900);
 });
-for (const id of ['hl-add', 'hl-mode', 'tool-size', 'tool-pdf', 'tool-share']) $(id).addEventListener('pointerdown', (e) => e.preventDefault()); // keep the selection
+for (const id of ['hl-add', 'hl-mode', 'tool-size', 'tool-pdf', 'tool-share', 'tool-aramaic']) $(id).addEventListener('pointerdown', (e) => e.preventDefault()); // keep the selection
 $('hl-add').addEventListener('click', () => { const f = selectedRange() || lastRange; if (f) applyMark(f); lastRange = null; });
 $('hl-mode').addEventListener('click', () => {
   const on = !markerMode;
@@ -845,11 +876,84 @@ function acronymRun(text, start, end) {
   return words.slice(a, b + 1);
 }
 
+/** Puts the popover above the word, inside the screen. */
+function placePop(p, found) {
+  const pop = $('rt-pop');
+  const r = rangeIn(p, found.start, found.end).getBoundingClientRect();
+  const pr = pop.getBoundingClientRect();
+  let left = r.left + r.width / 2 - pr.width / 2;
+  left = Math.max(8, Math.min(innerWidth - pr.width - 8, left));
+  let top = r.top - pr.height - 8;
+  if (top < 8) top = r.bottom + 8;
+  pop.style.left = `${left}px`;
+  pop.style.top = `${top}px`;
+}
+
+// ---- Aramaic (quotes from the Zohar, the Gemara…): a tap shows the phrase translated, and word by word ----
+const ARAMAIC_WORDS = new Set(`דא הא האי הני הנך מאי מאן כד היכי הכי אמאי אטו דהא איהו איהי אינון אנן לית אית ליה להו בהו ביה מיניה דיליה קמי קמיה קא קאמר
+תנא תניא חזי נמי סגי טפי עלמא עלמין מלכא קדישא רחמנא אורייתא שכינתא עילאה תתאה זעירא יומא ליליא ארעא שמיא נהורא חשוכא סטרא אחרא כולא כולהו חדא תרי תרין תלת
+בריך דכתיב כתיב אתמר איתמר אזיל הוה הוו להוי מילתא פתגמא גברא נשמתא רוחא נפשא גופא ליבא עובדא דרגא רזא רזין עתיקא אנפין אתר פום אורחא קושטא
+שלמא רעוא רעותא דחילו רחימו חדוה חדוותא אתערותא דלעילא דלתתא לעילא לתתא מלגאו מלבר גו בגו כגוונא אלין אילין עביד אתא נפק נפיק
+יתיב קאי קיימא שריא סליק נחית אשתכח איתא איכא ליכא ידעינן שמעינן אמינא בעי בעא תיובתא קשיא מסתברא איפכא לאו ברא ברתא אבוה אחוי`.split(/\s+/));
+const NOT_ARAMAIC = new Set('דוגמא דא"ח קופסא כורסא מלתא'.split(' '));
+const bareWord = (w) => w.normalize('NFC').replace(/[\u0591-\u05c7]/g, '').replace(/^["'(\[]+|["').,;:!?\]]+$/g, '');
+function looksAramaic(word) {
+  const w = bareWord(word);
+  if (!/^[א-ת]{2,}$/.test(w) || NOT_ARAMAIC.has(w)) return false;
+  const core = w.replace(/^[ודבלכ]{1,2}(?=[א-ת]{3,})/, '');
+  return ARAMAIC_WORDS.has(w) || ARAMAIC_WORDS.has(core) || /^ד[א-ת]{2,}א$/.test(w) || (w.length >= 4 && /תא$/.test(w)) || (w.length >= 5 && /(נא|יהו|ייהו)$/.test(w));
+}
+const aramaicCache = new Map(); // sentence | word | language → the translation
+function showAramaicPop(p, found, phrase = found.word) {
+  const pop = $('rt-pop');
+  const lang = replyLang || 'he';
+  const sentence = sentenceAround(found.text, found.start, found.end);
+  const key = `${sentence}|${phrase}|${lang}`;
+  let wordsOpen = false;
+  pop.textContent = '';
+  pop.classList.remove('fade');
+  const close = el('button', { type: 'button', className: 'rt-x', textContent: '✕', title: 'סגירה' });
+  close.addEventListener('click', () => hideAcronymPop());
+  const head = el('div', { className: 'rt-head' });
+  const body = el('div', { className: 'rt-body' });
+  const foot = el('div', { className: 'rt-foot' });
+  const paint = () => {
+    const r = aramaicCache.get(key);
+    head.replaceChildren(el('b', { textContent: r?.phrase || bareWord(phrase) }), el('span', { className: 'rt-count', textContent: 'ארמית' }), close);
+    body.textContent = ''; foot.textContent = '';
+    if (!r) body.append(el('div', { className: 'wait-line' }, el('span', { className: 'spinner' }), 'מתרגמים מארמית…'));
+    else if (r.error) body.append(el('span', { className: 'rt-none', textContent: r.error }));
+    else if (!r.isAramaic) body.append(el('span', { className: 'rt-none', textContent: 'לא זוהתה כאן ארמית.' }));
+    else {
+      body.append(el('div', { className: 'rt-text', textContent: r.translation }));
+      if (wordsOpen) for (const w of r.words) body.append(el('div', { className: 'rt-line' }, el('b', { textContent: w.word }), ` – ${w.meaning}`));
+      if (r.words.length) {
+        const b = el('button', { type: 'button', className: 'rt-btn', textContent: wordsOpen ? 'הסתרת פירוש המילים' : 'פירוש כל מילה' });
+        b.addEventListener('click', () => { wordsOpen = !wordsOpen; paint(); placePop(p, found); });
+        foot.append(b);
+      }
+    }
+    foot.append(el('span', { className: 'rt-note', textContent: 'על דרך אפשר' }));
+  };
+  paint();
+  pop.append(head, body, foot);
+  pop.hidden = false;
+  rtScrollTop = chat.scrollTop;
+  placePop(p, found);
+  if (aramaicCache.has(key) && !aramaicCache.get(key).error) return;
+  aramaicCache.delete(key);
+  postJson('/api/aramaic', { sentence, word: bareWord(phrase) || phrase, language: lang }, 60000)
+    .then((r) => aramaicCache.set(key, r), (e) => aramaicCache.set(key, { error: e.message }))
+    .then(() => { if (!pop.hidden && pop.contains(body)) { paint(); placePop(p, found); } });
+}
+
 function showAcronymPop(p, found) {
   const pop = $('rt-pop');
   const known = expandAcronym(found.word);
   const run = acronymRun(found.text, found.start, found.end).filter((w) => isAcronym(w.word));
-  let options = known?.options || [];
+  const rtKey = found.word.replace(/[.,;:!?]+$/, '');
+  const own = () => state.abbr?.[rtKey] || [];
+  let options = [...new Set([...own(), ...(known?.options || [])])];
   let at = 0;
   pop.textContent = '';
   pop.classList.remove('fade');
@@ -917,30 +1021,46 @@ function showAcronymPop(p, found) {
       });
       foot.append(ai);
     }
+    // the user's own reading of this abbreviation: kept on this device, shown first
+    const mineB = el('button', { type: 'button', className: 'rt-btn', textContent: own().length ? '✎ הפירוש שלי' : '＋ פירוש משלי' });
+    mineB.addEventListener('click', () => {
+      const v = prompt(`הפירוש שלך ל־${rtKey} (ריק = הסרת הפירוש שלך):`, own()[0] || '');
+      if (v === null) return;
+      const before = own();
+      state.abbr ??= {};
+      if (v.trim()) state.abbr[rtKey] = [v.trim().slice(0, 120)]; else delete state.abbr[rtKey];
+      save();
+      options = [...new Set([...own(), ...options.filter((o) => !before.includes(o))])];
+      at = 0;
+      paint(); placePop(p, found);
+    });
+    foot.append(mineB);
     foot.append(el('span', { className: 'rt-note', textContent: 'על דרך אפשר' }));
   };
-  if (rtCache.has(found.word.replace(/[.,;:!?]+$/, ''))) options = [...new Set([...rtCache.get(found.word.replace(/[.,;:!?]+$/, '')), ...options])];
+  if (rtCache.has(rtKey)) options = [...new Set([...own(), ...rtCache.get(rtKey), ...options])];
   paint();
   pop.append(head, body, foot);
   pop.hidden = false;
   rtScrollTop = chat.scrollTop;
-  // above the word, inside the screen
-  const r = rangeIn(p, found.start, found.end).getBoundingClientRect();
-  const pr = pop.getBoundingClientRect();
-  let left = r.left + r.width / 2 - pr.width / 2;
-  left = Math.max(8, Math.min(innerWidth - pr.width - 8, left));
-  let top = r.top - pr.height - 8;
-  if (top < 8) top = r.bottom + 8;
-  pop.style.left = `${left}px`;
-  pop.style.top = `${top}px`;
+  placePop(p, found);
 }
 chat.addEventListener('click', (e) => {
   if (markerMode || selecting() || !getSelection().isCollapsed) return;
   const p = e.target.closest?.('.hl');
   if (!p || e.target.closest('mark')) return;
   const found = wordAtPoint(p, e.clientX, e.clientY);
-  if (!found || !isAcronym(found.word)) { hideAcronymPop(); return; }
-  showAcronymPop(p, found);
+  if (found && isAcronym(found.word)) showAcronymPop(p, found);
+  else if (found && looksAramaic(found.word)) showAramaicPop(p, found);
+  else hideAcronymPop();
+});
+// selected text → "ארמית" in the tools bar: for a phrase the tap did not recognise
+$('tool-aramaic').addEventListener('click', () => {
+  const f = selectedRange() || lastRange;
+  if (!f) return;
+  const [p, start, end] = f;
+  const text = p.dataset.text || p.textContent;
+  getSelection().removeAllRanges();
+  showAramaicPop(p, { word: text.slice(start, end), start, end, text }, text.slice(start, end));
 });
 
 // ---------- rendering ----------
@@ -1029,7 +1149,7 @@ function analysisSection(entry) {
       btn.disabled = true; btn.textContent = '⏳ מנתח את העמוד…'; status.textContent = '';
       const wanted = a.replyLanguage || replyLang || undefined;
       try {
-        const r = await postJson('/api/analysis', { spec, letter: entry.q, replyLanguage: wanted });
+        const r = await postJson('/api/analysis', { spec, letter: letterOf(entry), replyLanguage: wanted });
         Object.assign(a, {
           explained: true, explanation: r.explanation, translation: r.translation, keyQuote: r.keyQuote, sourceLanguage: r.sourceLanguage,
           provider: r.provider, analysisLanguage: (r.replyLanguage || wanted || '').slice(0, 2),
@@ -1095,7 +1215,7 @@ function analysisSection(entry) {
       ask.disabled = true; field.disabled = true; status.textContent = '⏳ חושב…';
       try {
         const r = await postJson('/api/analysis/followup', {
-          spec, letter: entry.q, analysis: { explanation: a.explanation, translation: a.translation }, history: qa, question,
+          spec, letter: letterOf(entry), analysis: { explanation: a.explanation, translation: a.translation }, history: qa, question,
         });
         entry.followups = [...qa, { q: question, a: r.answer, ts: Date.now() }];
         entry.followupsOpen = true;
@@ -1125,18 +1245,31 @@ function analysisSection(entry) {
   return box;
 }
 
+const shownUrls = new Set(); // marked page images that were already loaded once
 function answerBubble(entry) {
   const a = entry.a;
   const pager = pagerOf(entry);
   const img = el('img', { className: 'page-img', alt: `עמוד מאגרות קודש, ${a.volumeHeading}`, loading: 'lazy' });
   img.addEventListener('click', () => openLightbox(pager, img.alt, entry));
-  img.addEventListener('error', () => img.replaceWith(el('div', { className: 'note', textContent: 'תמונת העמוד אינה זמינה עוד (נשמרת בשרת לזמן מוגבל). האגרות עצמן שמורות כאן למטה.' })));
+  img.addEventListener('error', () => pageWrap.replaceWith(el('div', { className: 'note', textContent: 'תמונת העמוד אינה זמינה עוד (נשמרת בשרת לזמן מוגבל). האגרות עצמן שמורות כאן למטה.' })));
   const pageWhere = el('div', { className: 'page-where' });
   const text = pageTextSection(entry, pager);
   const where = () => [pager.at === pager.opened ? '' : `📖 ${whereLabel(pager)}`, hlNote(entry, pager)].filter(Boolean).join(' · ');
+  const pageWrap = el('div', { className: 'page-wrap' }, img, el('span', { className: 'page-wait', textContent: '🖍 מסמנים בעמוד את הקטעים שעליהם נשען ההסבר…' }));
+  let swap = 0;
   const paintPage = () => {
     const page = currentPage(pager);
-    img.src = pageImageUrl(entry, page);
+    const url = pageImageUrl(entry, page);
+    const plain = url.split('?')[0];
+    if (url === plain || shownUrls.has(url) || img.getAttribute('src') === url) { swap += 1; pageWrap.classList.remove('loading'); img.src = url; } else {
+      // the marked image takes a moment to draw: the page stays, with an animation over it, and is replaced when ready
+      if (!img.getAttribute('src')) img.src = plain;
+      const mine = ++swap;
+      pageWrap.classList.add('loading');
+      const pre = new Image();
+      pre.onload = pre.onerror = () => { shownUrls.add(url); if (mine !== swap) return; img.src = url; pageWrap.classList.remove('loading'); };
+      pre.src = url;
+    }
     pageWhere.textContent = where();
     text.paint();
   };
@@ -1167,7 +1300,7 @@ function answerBubble(entry) {
   const bubble = el('div', { className: 'msg them' },
     el('div', { className: 'ans-head' }, el('h3', { textContent: `✉️ אגרות קודש · ${a.volumeHeading}` }), fold),
     pageWhere,
-    img,
+    pageWrap,
     more,
     time(entry.ts));
   placeTags();
@@ -1340,6 +1473,7 @@ function watchOne(id) {
         const fresh = d.a && !before?.a && !inFlight.has(d.id) && conv?.readTs && d.ts > conv.readTs - 5 * 60e3;
         const e = Object.assign(before || {}, d, { conv: id }); // keeps fav / collapsed / unread
         if (fresh && !(view.name === 'chat' && view.id === id && !document.hidden)) { e.unread = true; collapseEntry(e); }
+        if (fresh) SOUND.answer();
         return e;
       });
       const pending = entriesOf(id).filter((e) => (e.pending || e.draft || (e.kind && e.error && !e.a)) && !list.some((d) => d.id === e.id));
@@ -1545,7 +1679,7 @@ chat.addEventListener('click', (e) => {
 $('sel-close').addEventListener('click', clearSelection);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && selecting()) clearSelection(); });
 
-const entryText = (e) => `${e.q}${e.a ? `\n✉️ ${e.a.title}` : ''}`;
+const entryText = (e) => `${e.qLocked ? '🔒 מכתב נעול' : e.q}${e.a ? `\n✉️ ${e.a.title}` : ''}`;
 $('sel-copy').addEventListener('click', async () => {
   const ids = new Set([...selected('e'), ...selected('m')]);
   const items = [...state.entries.filter((e) => ids.has(e.id)).map((e) => ({ ts: e.ts, text: entryText(e) })),
@@ -1734,14 +1868,44 @@ const blobToDataUrl = (blob) => new Promise((resolve, reject) => {
 async function addPhoto(file) {
   const conv = convById(view.id);
   if (!conv || !isOwner(conv) || !file) return;
-  let img;
-  try { img = await loadImage(file); } catch { toast('לא ניתן לפתוח את הקובץ. בחרו תמונה (JPG או PNG).'); return; }
-  const full = await scaledJpeg(img, 2000, 0.85); // sharp enough to read the numbers, small enough to send
-  const thumb = await blobToDataUrl(await scaledJpeg(img, 360, 0.6));
-  const entry = { id: newId(), conv: conv.id, ts: Date.now(), kind: 'photo', draft: true, q: PHOTO_Q, thumb };
-  await media.put(imgKey(entry), full);
+  // the bubble appears at once, with a progress line, and gets the picture when it is ready
+  const entry = { id: newId(), conv: conv.id, ts: Date.now(), kind: 'photo', draft: true, preparing: true, q: PHOTO_Q, t0: Date.now() };
   state.entries.push(entry);
+  render({ scroll: true });
+  try {
+    const img = await loadImage(file);
+    const full = await scaledJpeg(img, 2000, 0.85); // sharp enough to read the numbers, small enough to send
+    entry.thumb = await blobToDataUrl(await scaledJpeg(img, 360, 0.6));
+    await media.put(imgKey(entry), full);
+  } catch {
+    removeEntry(entry);
+    toast('לא ניתן לפתוח את הקובץ. בחרו תמונה (JPG או PNG).');
+    return;
+  }
+  if (!state.entries.includes(entry)) return;
+  delete entry.preparing;
   save(); render({ scroll: true });
+}
+
+/** A line of progress inside a bubble: a spinner, what is happening now (by the time passed), the time, and a running bar. */
+function progressLine(entry, stages) {
+  const text = el('span');
+  const line = el('div', { className: 'progress' },
+    el('div', { className: 'wait-line' }, el('span', { className: 'spinner' }), text), el('div', { className: 'bar-run' }, el('i')));
+  const paint = () => {
+    const t = Math.max(0, (Date.now() - (entry.t0 || Date.now())) / 1000);
+    text.textContent = `${[...stages].reverse().find(([at]) => t >= at)[1]} ${fmtDur(t)}`;
+  };
+  paint();
+  const timer = setInterval(() => { if (line.isConnected) paint(); else clearInterval(timer); }, 1000);
+  return line;
+}
+/** A letter the user may add to a photo or a recording – also while it is being processed. */
+function noteBox(entry, placeholder) {
+  const ta = el('textarea', { className: 'draft-text note', value: entry.note || '', placeholder, dir: 'auto', maxLength: 8000 });
+  ta.dataset.fid = `note:${entry.id}`;
+  ta.addEventListener('input', () => { entry.note = ta.value; save(); });
+  return ta;
 }
 const pickPhoto = (from) => $(from === 'camera' ? 'pick-camera' : 'pick-gallery').click();
 for (const id of ['pick-camera', 'pick-gallery']) {
@@ -1780,11 +1944,13 @@ function sendDraft(entry) {
     if (entry.q.length < 2) { toast('אין טקסט לשליחה. הקליטו שוב או מחקו.'); return; }
   }
   if (conv.title === 'שיחה חדשה' && !entriesOf(conv.id).some((e) => e.a) && entry.kind === 'voice') {
-    conv.title = entry.q.split(/\s+/).slice(0, 5).join(' ').slice(0, 40);
+    conv.title = conv.autoTitle = entry.q.split(/\s+/).slice(0, 5).join(' ').slice(0, 40);
     if (conv.cloud) cloud.renameConv(conv.id, conv.title).catch(() => {});
   }
   delete entry.draft; delete entry.error; delete entry.errorCode;
-  entry.ts = Date.now();
+  if (entry.kind === 'photo') entry.q = PHOTO_Q;
+  entry.ts = entry.t0 = Date.now();
+  if (!entry.sum) summarizeEntry(entry);
   entry.pending = true;
   entry.lang = replyLang || undefined;
   save(); render({ scroll: true });
@@ -1793,14 +1959,22 @@ function sendDraft(entry) {
 }
 
 function photoBody(entry) {
+  if (entry.preparing) return [progressLine(entry, [[0, 'טוענים את התמונה…']])];
   const img = el('img', { className: 'photo-img', alt: 'צילום עמוד מאגרות קודש', src: entry.thumb || '' });
   mediaUrl(imgKey(entry)).then((u) => { if (u) img.src = u; });
   img.addEventListener('click', () => { if (!selecting()) showPhoto(img.src); });
-  const parts = [img];
+  const parts = [el('div', { className: `photo-wrap${entry.pending ? ' scanning' : ''}` }, img)];
   if (entry.draft) {
     parts.push(el('div', { className: 'draft-tag', textContent: 'הצילום טרם נשלח. בשליחה יזוהו מספר העמוד ומספרי האגרות, והטקסט יובא מהמאגר.' }),
+      noteBox(entry, 'אפשר לצרף כאן מכתב לרבי (לא חובה)…'),
       draftActions(entry, '✓ שליחה לעיבוד', () => sendDraft(entry)));
-  } else if (entry.q && entry.q !== PHOTO_Q) parts.push(el('div', { className: 'photo-read', textContent: entry.q }));
+  } else if (entry.pending) {
+    parts.push(progressLine(entry, [[0, 'שולחים את הצילום…'], [3, 'קוראים את מספר העמוד ומספרי האגרות…'], [10, 'מביאים את האגרת מהמאגר…'], [25, 'עוד רגע – השרת מתעורר…']]),
+      noteBox(entry, 'בינתיים אפשר לכתוב כאן מכתב לרבי שיצורף לצילום…'));
+  } else {
+    if (entry.q && entry.q !== PHOTO_Q) parts.push(el('div', { className: 'photo-read', textContent: entry.q }));
+    if (String(entry.note || '').trim()) parts.push(el('p', { className: 'voice-text', textContent: entry.note.trim() }));
+  }
   return parts;
 }
 
@@ -1876,7 +2050,8 @@ function voiceBody(entry) {
   const parts = [voicePlayer(entry)];
   if (!entry.draft) { parts.push(el('p', { className: 'voice-text', textContent: entry.q })); return parts; }
   if (entry.transcribing) {
-    parts.push(el('div', { className: 'wait-line' }, el('span', { className: 'spinner' }), 'ממירים את ההקלטה לטקסט…'));
+    parts.push(progressLine(entry, [[0, 'שולחים את ההקלטה…'], [3, 'ממירים את הדיבור לטקסט…'], [20, 'עוד רגע – השרת מתעורר…']]),
+      noteBox(entry, 'בינתיים אפשר לכתוב כאן מכתב לרבי שיצורף להקלטה…'));
   } else if (entry.error) {
     const again = el('button', { type: 'button', className: 'ok', textContent: '↻ נסו שוב' });
     again.addEventListener('click', () => transcribeEntry(entry));
@@ -1885,6 +2060,7 @@ function voiceBody(entry) {
     parts.push(el('div', { className: 'error', textContent: entry.error }), el('div', { className: 'draft-actions' }, again, del));
   } else {
     const ta = el('textarea', { className: 'draft-text', value: entry.q || '', dir: 'auto' });
+    ta.dataset.fid = `draft:${entry.id}`;
     ta.setAttribute('aria-label', 'הטקסט שזוהה בהקלטה');
     ta.addEventListener('input', () => { entry.q = ta.value; save(); });
     parts.push(el('div', { className: 'draft-tag', textContent: 'זה הטקסט שזוהה בהקלטה. אפשר לתקן אותו, ואז לשלוח לרבי או למחוק.' }), ta,
@@ -1895,12 +2071,15 @@ function voiceBody(entry) {
 
 async function transcribeEntry(entry) {
   entry.transcribing = true; delete entry.error;
+  entry.t0 = Date.now();
   save(); render();
   try {
     const blob = await media.get(audKey(entry));
     if (!blob) throw new Error('ההקלטה אינה שמורה עוד במכשיר. מחקו והקליטו שוב.');
     const data = await postJson('/api/transcribe', { audio: await blobToBase64(blob), mimeType: blob.type || 'audio/webm' });
-    entry.q = data.text;
+    // what the user wrote while waiting comes first, then the words of the recording
+    entry.q = [String(entry.note || '').trim(), data.text].filter(Boolean).join('\n\n');
+    delete entry.note;
   } catch (e) {
     entry.error = String(e?.message || e).replace('הניתוח לוקח', 'ההמרה לוקחת');
   }
@@ -1912,10 +2091,14 @@ async function transcribeEntry(entry) {
 // ---- recording ----
 const MAX_REC = 180; // seconds
 const rec = { active: false, mr: null, stream: null, chunks: [], levels: [], start: 0, timer: null, ctx: null, sample: null, conv: null, cancel: false, dur: 0 };
-async function startRecording() {
+async function startRecording(locked = true) {
   if (isNativeApp && !API && !askServer()) return;
   const conv = convById(view.id);
-  if (!conv || !isOwner(conv) || rec.active) return;
+  if (!conv || !isOwner(conv) || rec.active || rec.starting) return;
+  rec.starting = true;
+  try { await beginRecording(conv, locked); } finally { rec.starting = false; }
+}
+async function beginRecording(conv, locked) {
   if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) { toast('הקלטה אינה נתמכת במכשיר זה.'); return; }
   try {
     rec.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
@@ -1923,9 +2106,16 @@ async function startRecording() {
     toast('אין גישה למיקרופון. אפשרו את ההרשאה בהגדרות ונסו שוב.');
     return;
   }
+  if (!locked && !hold) { // the finger left before the microphone was ready (e.g. while Android asked for permission)
+    rec.stream.getTracks().forEach((t) => t.stop());
+    toast('להקלטה: החזיקו את המיקרופון לחוץ ודברו. משיכה מעלה נועלת את ההקלטה.');
+    return;
+  }
   const type = ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/mp4', 'audio/webm'].find((t) => MediaRecorder.isTypeSupported?.(t));
   rec.mr = new MediaRecorder(rec.stream, type ? { mimeType: type, audioBitsPerSecond: 32000 } : undefined);
-  Object.assign(rec, { active: true, chunks: [], levels: [], cancel: false, conv: conv.id, sample: null });
+  Object.assign(rec, { active: true, locked, chunks: [], levels: [], cancel: false, conv: conv.id, sample: null });
+  SOUND.recStart();
+  navigator.vibrate?.(30);
   rec.mr.ondataavailable = (e) => { if (e.data?.size) rec.chunks.push(e.data); };
   rec.mr.onstop = finishRecording;
   try { // loudness, for the waveform
@@ -1956,6 +2146,7 @@ function stopRecording(cancel = false) {
   if (!rec.active) return;
   rec.active = false;
   rec.cancel = cancel;
+  (cancel ? SOUND.recCancel : SOUND.recStop)();
   rec.dur = (Date.now() - rec.start) / 1000;
   clearInterval(rec.timer);
   try { if (rec.mr.state !== 'inactive') rec.mr.stop(); } catch { /* already stopped */ }
@@ -1977,36 +2168,122 @@ async function finishRecording() {
   const mr = rec.mr;
   rec.mr = null;
   if (rec.cancel) return;
-  if (rec.dur < 1) { toast('ההקלטה קצרה מדי. לחצו על המיקרופון, דברו, ולחצו ✓ לסיום.'); return; }
+  if (rec.dur < 1) { toast('ההקלטה קצרה מדי. החזיקו את המיקרופון לחוץ ודברו; משיכה מעלה נועלת את ההקלטה.'); return; }
   const conv = convById(rec.conv);
   if (!conv) return;
   const blob = new Blob(rec.chunks, { type: (mr?.mimeType || 'audio/webm') });
-  const entry = { id: newId(), conv: conv.id, ts: Date.now(), kind: 'voice', draft: true, q: '', voice: { dur: Math.round(rec.dur), wave: waveOf(rec.levels) } };
-  await media.put(audKey(entry), blob);
-  state.entries.push(entry);
+  const entry = { id: newId(), conv: conv.id, ts: Date.now(), kind: 'voice', draft: true, transcribing: true, t0: Date.now(), q: '', voice: { dur: Math.round(rec.dur), wave: waveOf(rec.levels) } };
+  state.entries.push(entry); // the bubble appears at once
   render({ scroll: true });
+  await media.put(audKey(entry), blob);
   transcribeEntry(entry);
 }
 function paintRecording() {
   $('pill').hidden = rec.active;
   $('rec-bar').hidden = !rec.active;
+  $('rec-lock').hidden = !(rec.active && !rec.locked);
+  $('rec-label').textContent = rec.locked ? '🔒 ההקלטה נעולה – לחצו ✓ לסיום' : 'שחררו לסיום · משכו מעלה לנעילה';
+  $('rec-cancel').hidden = !rec.locked;
   paintSend();
 }
 $('rec-cancel').addEventListener('click', () => stopRecording(true));
+function lockRecording() {
+  if (!rec.active || rec.locked) return;
+  rec.locked = true;
+  navigator.vibrate?.(30);
+  paintRecording();
+}
+// Hold the microphone to record and let go to finish; pull it up to lock (then ✓ finishes); slide sideways to cancel.
+let hold = null; // where the finger went down on the microphone
+let skipSubmit = false; // the click that follows a hold must not start anything
+send.addEventListener('pointerdown', (e) => {
+  skipSubmit = false;
+  if (send.dataset.kind !== 'mic' || rec.active || e.button) return;
+  e.preventDefault();
+  skipSubmit = true;
+  hold = { x: e.clientX, y: e.clientY };
+  try { send.setPointerCapture(e.pointerId); } catch { /* not capturable */ }
+  startRecording(false);
+});
+send.addEventListener('pointermove', (e) => {
+  if (!hold || !rec.active || rec.locked) return;
+  if (hold.y - e.clientY > 60) lockRecording();
+  else if (Math.abs(e.clientX - hold.x) > 90) { hold = null; stopRecording(true); toast('ההקלטה בוטלה'); }
+});
+for (const ev of ['pointerup', 'pointercancel']) {
+  send.addEventListener(ev, () => {
+    if (!hold) return;
+    hold = null;
+    if (rec.active && !rec.locked) stopRecording();
+  });
+}
+send.addEventListener('contextmenu', (e) => e.preventDefault());
 // a recording that was being converted when the app closed: convert it again
 setTimeout(() => { for (const e of state.entries) if (e.transcribing) transcribeEntry(e); }, 0);
 
 /** The round button: a microphone while the letter box is empty, the send arrow once there is text, ✓ while recording. */
 function paintSend() {
   const mic = !rec.active && toRebbe && !input.value.trim();
-  const kind = rec.active ? 'check' : mic ? 'mic' : 'arrow';
+  const kind = rec.active ? (rec.locked ? 'check' : 'holding') : mic ? 'mic' : 'arrow';
   if (send.dataset.kind === kind) return;
   send.dataset.kind = kind;
-  send.className = `send${kind === 'arrow' ? ' arrow' : ''}`;
-  send.innerHTML = ICONS[kind];
-  const label = { check: 'סיום ההקלטה', mic: 'הקלטת מכתב בקול', arrow: 'שליחה' }[kind];
+  send.className = `send${kind === 'arrow' ? ' arrow' : kind === 'holding' ? ' holding' : ''}`;
+  send.innerHTML = ICONS[kind === 'holding' ? 'mic' : kind];
+  const label = { check: 'סיום ההקלטה', holding: 'מקליט – שחררו לסיום', mic: 'הקלטת מכתב בקול: החזיקו לחוץ', arrow: 'שליחה' }[kind];
   send.setAttribute('aria-label', label);
   send.title = label;
+}
+
+// ---- a sent letter folds to one short line (written by the AI, editable); it can be locked behind the fingerprint ----
+const unlockedQ = new Set(); // locked letters that were opened in this session
+const letterOf = (e) => (e.kind === 'photo' ? (String(e.note || '').trim() || e.q) : e.q);
+const shortLine = (t, n = 8) => { const w = String(t || '').trim().split(/\s+/); return w.length > n ? `${w.slice(0, n).join(' ')}…` : w.join(' '); };
+const sumOf = (e) => e.sum || shortLine(e.kind === 'photo' && !String(e.note || '').trim() ? e.q.replace(`${PHOTO_Q} – `, '') : letterOf(e));
+const qSealed = (e) => !!e.qLocked && !unlockedQ.has(e.id);
+const folds = (e) => !e.draft && !(e.kind === 'photo' && e.pending) && (!!e.kind || !!e.qLocked || String(e.q || '').length > 70);
+async function openLetter(entry) {
+  if (qSealed(entry)) {
+    if (!await authenticate('פתיחת המכתב הנעול')) return;
+    unlockedQ.add(entry.id);
+  }
+  entry.qOpen = true;
+  save(); render();
+}
+async function toggleLetterLock(entry) {
+  if (!await canAuthenticate()) { toast('במכשיר זה אין טביעת אצבע או נעילת מסך.'); return; }
+  if (entry.qLocked) {
+    if (!await authenticate('ביטול נעילת המכתב')) return;
+    delete entry.qLocked; unlockedQ.delete(entry.id);
+  } else {
+    entry.qLocked = true; delete entry.qOpen; unlockedQ.delete(entry.id);
+    toast('🔒 המכתב ננעל במכשיר זה. פתיחה – בטביעת אצבע.');
+  }
+  save(); render();
+}
+function editSummary(entry) {
+  const v = prompt('שורה קצרה שתוצג כשהמכתב מכווץ (ריק = ניסוח אוטומטי):', sumOf(entry));
+  if (v === null) return;
+  if (v.trim()) { entry.sum = v.trim().slice(0, 80); entry.sumEdited = true; } else { delete entry.sum; delete entry.sumEdited; }
+  if (entry.a) syncEntry(entry); else save();
+  render();
+}
+/** Asks the AI for a name for the chat (first letter) and a one-line summary of the letter. */
+async function summarizeEntry(entry) {
+  const text = letterOf(entry);
+  if (!text || text === PHOTO_Q || text.trim().split(/\s+/).length < 4) return; // a very short letter is its own summary
+  try {
+    const r = await postJson('/api/summary', { letter: text }, 60000);
+    if (!state.entries.includes(entry)) return;
+    if (r.line && !entry.sumEdited) entry.sum = r.line;
+    const conv = convById(entry.conv);
+    if (r.title && conv?.autoTitle && conv.autoTitle === conv.title) { // still the provisional name (first words)
+      conv.title = r.title;
+      if (conv.cloud && cloud) cloud.renameConv(conv.id, conv.title).catch(() => {});
+    }
+    if (conv) delete conv.autoTitle;
+    if (entry.a) syncEntry(entry); else save();
+    render();
+  } catch (e) { console.warn('summary', e); }
 }
 
 function questionBubble(entry, conv) {
@@ -2019,11 +2296,32 @@ function questionBubble(entry, conv) {
   }
   const mine = isOwner(conv);
   const who = mine ? 'אני' : nameOf(conv, conv.owner);
-  const body = entry.kind === 'photo' ? photoBody(entry) : entry.kind === 'voice' ? voiceBody(entry) : [el('p', { textContent: entry.q })];
-  const node = el('div', { className: `msg ${mine ? 'me' : 'them other'}${entry.kind ? ` ${entry.kind}-msg` : ''}` }, tools,
+  const folding = folds(entry);
+  const open = !folding || (entry.qOpen && !qSealed(entry));
+  let body;
+  if (!open) { // one short line; a tap opens the letter
+    const sealed = qSealed(entry);
+    const line = el('button', { type: 'button', className: 'q-sum', title: sealed ? 'פתיחה בטביעת אצבע' : 'הצגת המכתב המלא' },
+      el('span', { className: 'q-sum-icon', textContent: sealed ? '🔒' : entry.kind === 'voice' ? '🎤' : entry.kind === 'photo' ? '📷' : '✉️' }),
+      el('span', { className: 'q-sum-text', textContent: sealed ? 'מכתב נעול – לחצו לפתיחה' : sumOf(entry) }),
+      el('span', { className: 'chev', textContent: '▾' }));
+    line.addEventListener('click', () => { if (!selecting()) openLetter(entry); });
+    body = [line];
+  } else {
+    body = entry.kind === 'photo' ? photoBody(entry) : entry.kind === 'voice' ? voiceBody(entry) : [el('p', { textContent: entry.q })];
+    if (folding || (!entry.draft && mine && !entry.kind)) {
+      const row = el('div', { className: 'q-row' });
+      const btn = (text, title, fn) => { const b = el('button', { type: 'button', textContent: text, title }); b.addEventListener('click', () => { if (!selecting()) fn(); }); row.append(b); };
+      if (folding) btn('▴ כיווץ', 'כיווץ המכתב לשורה אחת', () => { delete entry.qOpen; if (entry.qLocked) unlockedQ.delete(entry.id); save(); render(); });
+      if (mine && folding) btn('✎ שורת סיכום', 'עריכת השורה שמוצגת כשהמכתב מכווץ', () => editSummary(entry));
+      if (mine) btn(entry.qLocked ? '🔓 ביטול נעילה' : '🔒 נעילה', 'נעילת טקסט המכתב במכשיר זה – פתיחה בטביעת אצבע', () => toggleLetterLock(entry));
+      body.push(row);
+    }
+  }
+  const node = el('div', { className: `msg ${mine ? 'me' : 'them other'}${entry.kind && open ? ` ${entry.kind}-msg` : ''}` }, tools,
     !mine && el('div', { className: 'sender', textContent: `✉️ מכתב של ${who}` }),
-    ...body, entry.kind !== 'voice' && time(entry.ts));
-  if (isShared(conv)) swipeToReply(node, { kind: 'entry', id: entry.id, name: who, text: entry.q.slice(0, 80) });
+    ...body, !(entry.kind === 'voice' && open) && time(entry.ts));
+  if (isShared(conv)) swipeToReply(node, { kind: 'entry', id: entry.id, name: who, text: entry.qLocked ? 'מכתב נעול' : entry.q.slice(0, 80) });
   return selectable(node, 'e', entry.id);
 }
 
@@ -2065,6 +2363,7 @@ function entryNodes(entry, conv = convById(entry.conv)) {
     const bubble = answerBubble(entry);
     if (isShared(conv)) swipeToReply(bubble, { kind: 'answer', id: entry.id, name: 'המענה', text: entry.a.title });
     nodes.push(selectable(bubble, 'e', entry.id));
+  } else if (entry.pending && entry.kind === 'photo') { /* the progress is inside the photo's own bubble */
   } else if (entry.pending) {
     nodes.push(el('div', { className: 'msg them typing' },
       el('div', { className: 'opening' }, bookAnimation(), el('span', { textContent: entry.kind === 'photo' ? 'מזהים את האגרת בצילום ומביאים אותה מהמאגר…' : 'פותחים את אגרות הקודש…' })),
@@ -2097,6 +2396,8 @@ function errorBubble(entry) {
 // views: list (all chats) | archive | locked | fav | chat (one conversation)
 let view = { name: 'list' };
 let search = '';
+let searchDate = ''; // 'YYYY-MM-DD': chats / letters of that day
+let searchOpen = false; // the search bar inside a chat (opened from the ⋮ menu)
 let tagFilter = ''; // in a chat: '' = everything, '*' = all favourites, or one tag
 
 // ---------- read / unread (kept on this device) ----------
@@ -2113,6 +2414,7 @@ function setRead(entry, read = true) {
 /** Minimizes an answer – and every section inside it, so it opens again the way it was first shown. */
 function collapseEntry(entry) {
   entry.collapsed = true;
+  delete entry.qOpen;
   for (const k of ['showMore', 'analysisOpen', 'translationOpen', 'followupsOpen', 'textOpen', 'tagsOpen', 'analysisClosed', 'followupsClosed']) delete entry[k];
 }
 function expandEntry(entry) {
@@ -2131,8 +2433,10 @@ function go(next) {
   }
   if (next.name !== 'chat' || next.id !== view.id) tagFilter = '';
   view = next;
-  search = '';
+  search = ''; searchDate = ''; searchOpen = false;
   $('search').value = '';
+  for (const e of state.entries) if (e.qLocked) delete e.qOpen; // locked letters close when leaving
+  unlockedQ.clear();
   closeMenu();
   clearSelection();
   hideAcronymPop();
@@ -2201,6 +2505,7 @@ function convMenuItems(conv) {
   const allCollapsed = answered.length && answered.every((e) => e.collapsed);
   return [
     people && { info: `👥 ${people}` },
+    { label: '🔍 חיפוש בשיחה', onClick: () => { if (view.id !== conv.id) go({ name: 'chat', id: conv.id }); openChatSearch(); } },
     answered.length && { label: allCollapsed ? '▾ הרחבת כל ההתכתבויות' : '▴ מזעור כל ההתכתבויות', onClick: () => collapseAll(conv, !allCollapsed) },
     entriesOf(conv.id).some((e) => e.fav) && { label: '🏷 סינון לפי תגיות', onClick: () => { tagFilter = tagFilter || '*'; if (view.id !== conv.id) go({ name: 'chat', id: conv.id }); else render(); } },
     owner && { label: '✎ שינוי שם', onClick: () => renameConv(conv) },
@@ -2411,7 +2716,7 @@ const normSearch = (t) => String(t || '').toLowerCase()
 function entryParts(e) {
   const a = e.a || {};
   return [
-    ['', e.q],
+    ...(e.qLocked ? [] : [['', e.q], ['', e.note], ['', e.sum]]), // a locked letter is not found by its text
     ['✉️', [a.title, a.volumeHeading, ...(a.letters || []).flatMap((l) => [l.number, l.pageText])].filter(Boolean).join(' · ')],
     ['💡', a.explanation],
     ['🌐', a.translation],
@@ -2454,7 +2759,8 @@ function searchHit(conv) {
   return null;
 }
 
-const matches = (conv) => !search || !!searchHit(conv);
+const onDay = (conv, day) => entriesOf(conv.id).some((e) => dayKey(e.ts) === day) || messagesOf(conv.id).some((m) => dayKey(m.ts) === day);
+const matches = (conv) => (!search || !!searchHit(conv)) && (!searchDate || onDay(conv, searchDate));
 
 function renderConvList(which) {
   const list = state.convs
@@ -2463,7 +2769,7 @@ function renderConvList(which) {
     .sort((a, b) => lastTs(b) - lastTs(a));
 
   const box = el('div', { className: 'conv-list' });
-  if (which === 'list' && !search) {
+  if (which === 'list' && !search && !searchDate) {
     const lockedCount = state.convs.filter((c) => c.locked).length;
     const archivedCount = state.convs.filter((c) => c.archived && !c.locked).length;
     if (lockedCount) {
@@ -2477,7 +2783,7 @@ function renderConvList(which) {
   }
   for (const c of list) box.append(convRow(c));
   if (!list.length) {
-    box.append(el('div', { className: 'empty', textContent: search ? 'לא נמצאו שיחות.'
+    box.append(el('div', { className: 'empty', textContent: search || searchDate ? 'לא נמצאו שיחות.'
       : which === 'list' ? 'עדיין אין שיחות. לחצו על ✎ כדי לכתוב מכתב ראשון.'
         : which === 'archive' ? 'הארכיון ריק.' : 'אין שיחות נעולות.' }));
   }
@@ -2514,13 +2820,19 @@ function renderChat(conv) {
   const box = el('div', { className: 'chat-body' });
   let lastDay = null;
   const passes = (e) => !tagFilter || (e.fav && (tagFilter === '*' || e.fav.tags.includes(tagFilter)));
-  const items = [...entriesOf(conv.id).filter(passes).map((e) => ({ ts: e.ts, e })), ...(tagFilter ? [] : messagesOf(conv.id).map((m) => ({ ts: m.ts, m })))]
+  // search inside the chat: by text (letters, answers, analysis, messages) and / or by day
+  const sq = normSearch(search).trim();
+  const filtering = !!(sq || searchDate);
+  const found = (ts, texts) => (!searchDate || dayKey(ts) === searchDate) && (!sq || texts.some((t) => normSearch(t).includes(sq)));
+  const items = [...entriesOf(conv.id).filter(passes).filter((e) => !filtering || found(e.ts, entryParts(e).map(([, t]) => t))).map((e) => ({ ts: e.ts, e })),
+    ...(tagFilter ? [] : messagesOf(conv.id).filter((m) => !filtering || found(m.ts, [m.text])).map((m) => ({ ts: m.ts, m })))]
     .sort((x, y) => x.ts - y.ts);
+  if (filtering) box.append(el('div', { className: 'empty', textContent: items.length ? `נמצאו ${items.length} פריטים` : 'לא נמצא דבר בשיחה.' }));
   if (tagFilter) {
     box.append(tagFilterBar(conv));
     if (!items.length) box.append(el('div', { className: 'empty', textContent: 'אין בשיחה מענים עם התגית הזו.' }));
   }
-  if (!items.length && !tagFilter) {
+  if (!items.length && !tagFilter && !filtering) {
     box.append(el('div', { className: 'intro' },
       'כתבו לרבי כפי שכותבים מכתב – מה על הלב, בקשה לברכה או שאלה.', el('br'),
       'בתשובה ייפתח עמוד מאגרות הקודש – עם כל האגרות שבו, תרגום (כשהמענה באידיש) והסבר.'));
@@ -2579,13 +2891,17 @@ function render({ scroll = false } = {}) {
     if ((conv && kinds.has('c')) || (!conv && !kinds.has('c'))) sel.items.clear();
   }
   hideAcronymPop();
-  $('search-bar').hidden = !inList;
+  $('search-bar').hidden = !(inList || (conv && searchOpen));
+  paintSearchBar();
   $('new-chat').hidden = view.name !== 'list';
   form.hidden = !conv;
   if (rec.active && rec.conv !== conv?.id) stopRecording(true);
   if (conv) paintComposer(conv);
   paintCollapseAll(conv);
 
+  const focused = chat.contains(document.activeElement) && document.activeElement.dataset.fid ? document.activeElement : null;
+  const fid = focused?.dataset.fid;
+  const caret = focused ? [focused.selectionStart, focused.selectionEnd] : null;
   const keepScroll = !scroll && chat.scrollHeight - chat.scrollTop - chat.clientHeight < 80; // stay at the bottom
   const top = chat.scrollTop;
   chat.textContent = '';
@@ -2593,6 +2909,10 @@ function render({ scroll = false } = {}) {
   else if (view.name === 'fav') chat.append(renderFav());
   else chat.append(renderChat(conv));
   if (scroll || (conv && keepScroll)) scrollDown(); else chat.scrollTop = top;
+  if (fid) { // the box the user was typing in was rebuilt: the typing goes on (a note becomes part of the draft text)
+    const again = chat.querySelector(`[data-fid="${fid}"]`) || chat.querySelector(`[data-fid="${fid.replace(/^note:/, 'draft:')}"]`);
+    if (again) { again.focus({ preventScroll: true }); try { again.setSelectionRange(caret[0], caret[1]); } catch { /* not a text box */ } }
+  }
   paintSelection();
 }
 
@@ -2615,11 +2935,33 @@ $('new-chat').addEventListener('click', async () => {
     try { await cloud.createConv(conv); Object.assign(conv, { cloud: true, owner: user.uid, members: [user.uid] }); save(); } catch (e) { console.warn(e); }
   }
 });
-$('search').addEventListener('input', (e) => {
-  search = e.target.value.trim();
+const repaintSearch = () => {
+  const conv = view.name === 'chat' ? convById(view.id) : null;
   chat.textContent = '';
-  chat.append(renderConvList(view.name));
+  chat.append(conv ? renderChat(conv) : renderConvList(view.name));
+  paintSearchBar();
+};
+$('search').addEventListener('input', (e) => { search = e.target.value.trim(); repaintSearch(); });
+function paintSearchBar() {
+  const inChat = view.name === 'chat';
+  $('search-close').hidden = !inChat;
+  $('search-glass').hidden = inChat;
+  $('search').placeholder = inChat ? 'חיפוש בשיחה…' : 'חיפוש…';
+  $('search-date').classList.toggle('on', !!searchDate);
+  $('search-date-chip').hidden = !searchDate;
+  if (searchDate) $('search-date-chip').textContent = `📅 ${dayLabel(searchDate)} ✕`;
+}
+// by date: the calendar button opens the device's date picker
+$('search-date').addEventListener('click', () => {
+  const d = $('search-date-input');
+  d.value = searchDate;
+  try { d.showPicker(); } catch { d.focus(); d.click(); }
 });
+$('search-date-input').addEventListener('change', (e) => { searchDate = e.target.value || ''; repaintSearch(); });
+$('search-date-chip').addEventListener('click', () => { searchDate = ''; repaintSearch(); });
+function closeChatSearch() { search = ''; searchDate = ''; searchOpen = false; $('search').value = ''; render(); }
+$('search-close').addEventListener('click', closeChatSearch);
+function openChatSearch() { searchOpen = true; render(); $('search').focus(); }
 
 // ---------- sending ----------
 async function sendChat(conv, text) {
@@ -2643,10 +2985,11 @@ async function submit(text) {
   if (!toRebbe && conv.cloud && user) { await sendChat(conv, text); return; }
   if (!isOwner(conv)) return;
   if (conv.title === 'שיחה חדשה' && !entriesOf(conv.id).length) {
-    conv.title = text.split(/\s+/).slice(0, 5).join(' ').slice(0, 40);
+    conv.title = conv.autoTitle = text.split(/\s+/).slice(0, 5).join(' ').slice(0, 40); // until the AI names the chat by its subject
     if (conv.cloud) cloud.renameConv(conv.id, conv.title).catch(() => {});
   }
   const entry = { id: newId(), conv: conv.id, q: text, ts: Date.now(), pending: true, lang: replyLang || undefined };
+  summarizeEntry(entry);
   if (replyTo) { entry.replyTo = replyTo; setReply(null); }
   state.entries.push(entry);
   save();
@@ -2676,6 +3019,7 @@ async function requestAnswer(entry) {
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
         entry.a = data;
+        SOUND.answer();
         delete entry.error; delete entry.errorCode;
         if (isPhoto) entry.q = photoCaption(data);
       } else { entry.error = data.message || 'אירעה שגיאה. נסו שוב.'; entry.errorCode = data.error; }
@@ -2743,9 +3087,10 @@ navigator.serviceWorker?.addEventListener?.('message', (e) => { if (e.data?.open
 
 form.addEventListener('submit', (e) => {
   e.preventDefault();
-  if (rec.active) { stopRecording(); return; } // ✓ ends the recording; it then waits in the chat for approval
+  if (skipSubmit) { skipSubmit = false; return; } // the end of a hold on the microphone
+  if (rec.active) { stopRecording(); return; } // ✓ ends a locked recording; it then waits in the chat for approval
   const text = input.value.trim();
-  if (!text) { if (toRebbe) startRecording(); return; }
+  if (!text) { if (toRebbe) startRecording(true); return; } // from the keyboard: a locked recording
   input.value = ''; input.style.height = '';
   paintSend();
   submit(text);

@@ -78,3 +78,15 @@ test('POST /api/photo and /api/transcribe take large bodies and explain refusals
     server.close();
   }
 });
+
+test('a letter gets a chat name and a one-line summary; Aramaic is translated', async () => {
+  const { summarize, aramaic } = await import('../src/letters.js');
+  const s = await summarize({ letter: 'אבקש ברכה לרפואה שלמה' }, { summarize: async () => ({ title: '"ברכה לרפואה"\n', line: 'בקשת ברכה   לרפואה שלמה' }) });
+  assert.deepEqual(s, { title: 'ברכה לרפואה', line: 'בקשת ברכה לרפואה שלמה' });
+  await assert.rejects(summarize({ letter: '' }, {}), /LETTER_EMPTY/);
+  const a = await aramaic({ sentence: 'וכמאמר לית אתר פנוי מיניה', word: 'לית', language: 'xx-bad' }, {
+    aramaic: async ({ language }) => ({ isAramaic: true, phrase: 'לית אתר פנוי מיניה', translation: `אין מקום פנוי ממנו (${language})`, words: [{ word: 'לית', meaning: 'אין' }] }),
+  });
+  assert.equal(a.translation, 'אין מקום פנוי ממנו (he)');
+  assert.deepEqual(a.words, [{ word: 'לית', meaning: 'אין' }]);
+});

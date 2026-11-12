@@ -77,7 +77,7 @@ export async function followUpWithGemini({ context, history, question }) {
 }
 
 /** A JSON answer from the first model that is available. */
-async function generateJson({ system, text, schema: responseSchema, temperature = 0.2 }) {
+export async function generateJson({ system, text, schema: responseSchema, temperature = 0.2 }) {
   if (!geminiAvailable()) throw new Error('AI_NOT_CONFIGURED');
   const response = await withFallback((model) => getClient().models.generateContent({
     model,
