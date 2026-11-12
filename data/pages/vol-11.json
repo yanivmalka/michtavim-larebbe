@@ -83,8 +83,7 @@
    "heading": "ג'שפז",
    "bodyLength": 788,
    "pages": [
-    27,
-    28
+    27
    ],
    "coverage": 1,
    "status": "ok"
@@ -95,8 +94,7 @@
    "heading": "ג'שפח",
    "bodyLength": 939,
    "pages": [
-    28,
-    29
+    28
    ],
    "coverage": 1,
    "status": "ok"
@@ -335,8 +333,7 @@
    "heading": "ג'תח",
    "bodyLength": 438,
    "pages": [
-    48,
-    49
+    48
    ],
    "coverage": 1,
    "status": "ok"
@@ -347,8 +344,7 @@
    "heading": "ג'תט",
    "bodyLength": 674,
    "pages": [
-    49,
-    50
+    49
    ],
    "coverage": 1,
    "status": "ok"
@@ -394,8 +390,7 @@
    "heading": "ג'תיג",
    "bodyLength": 524,
    "pages": [
-    52,
-    53
+    52
    ],
    "coverage": 1,
    "status": "ok"
@@ -501,8 +496,7 @@
    "heading": "ג'תכב",
    "bodyLength": 534,
    "pages": [
-    60,
-    61
+    60
    ],
    "coverage": 1,
    "status": "ok"
@@ -514,8 +508,7 @@
    "bodyLength": 3024,
    "pages": [
     61,
-    62,
-    63
+    62
    ],
    "coverage": 1,
    "status": "ok"
@@ -610,8 +603,7 @@
    "heading": "ג'תלא",
    "bodyLength": 612,
    "pages": [
-    70,
-    71
+    70
    ],
    "coverage": 1,
    "status": "ok"
@@ -682,8 +674,7 @@
    "heading": "ג'תלז",
    "bodyLength": 839,
    "pages": [
-    76,
-    77
+    76
    ],
    "coverage": 1,
    "status": "ok"
@@ -977,8 +968,7 @@
    "heading": "ג'תסב",
    "bodyLength": 973,
    "pages": [
-    97,
-    98
+    97
    ],
    "coverage": 1,
    "status": "ok"
@@ -1131,8 +1121,7 @@
    "heading": "ג'תעה",
    "bodyLength": 668,
    "pages": [
-    108,
-    109
+    108
    ],
    "coverage": 1,
    "status": "ok"
@@ -1143,8 +1132,7 @@
    "heading": "ג'תעו",
    "bodyLength": 910,
    "pages": [
-    109,
-    110
+    109
    ],
    "coverage": 1,
    "status": "ok"
@@ -1180,8 +1168,7 @@
    "heading": "ג'תעט",
    "bodyLength": 1076,
    "pages": [
-    113,
-    114
+    113
    ],
    "coverage": 1,
    "status": "ok"
@@ -1205,8 +1192,7 @@
    "bodyLength": 2995,
    "pages": [
     115,
-    116,
-    117
+    116
    ],
    "coverage": 1,
    "status": "ok"
@@ -1241,8 +1227,7 @@
    "heading": "ג'תפד",
    "bodyLength": 800,
    "pages": [
-    119,
-    120
+    119
    ],
    "coverage": 1,
    "status": "ok"
@@ -1288,8 +1273,7 @@
    "heading": "ג'תפח",
    "bodyLength": 749,
    "pages": [
-    122,
-    123
+    122
    ],
    "coverage": 1,
    "status": "ok"
@@ -1312,8 +1296,7 @@
    "heading": "ג'תצ",
    "bodyLength": 1071,
    "pages": [
-    124,
-    125
+    124
    ],
    "coverage": 1,
    "status": "ok"
@@ -1347,8 +1330,7 @@
    "heading": "ג'תצג",
    "bodyLength": 1101,
    "pages": [
-    126,
-    127
+    126
    ],
    "coverage": 1,
    "status": "ok"
@@ -1419,8 +1401,7 @@
    "heading": "ג'תצט",
    "bodyLength": 714,
    "pages": [
-    132,
-    133
+    132
    ],
    "coverage": 1,
    "status": "ok"
@@ -1479,8 +1460,7 @@
    "heading": "ג'תקד",
    "bodyLength": 527,
    "pages": [
-    137,
-    138
+    137
    ],
    "coverage": 1,
    "status": "ok"
@@ -1538,8 +1518,7 @@
    "heading": "ג'תקח",
    "bodyLength": 930,
    "pages": [
-    141,
-    142
+    141
    ],
    "coverage": 1,
    "status": "ok"
@@ -1597,8 +1576,7 @@
    "heading": "ג'תקיג",
    "bodyLength": 590,
    "pages": [
-    145,
-    146
+    145
    ],
    "coverage": 1,
    "status": "ok"
@@ -1609,8 +1587,7 @@
    "heading": "ג'תקיד",
    "bodyLength": 1009,
    "pages": [
-    146,
-    147
+    146
    ],
    "coverage": 1,
    "status": "ok"
@@ -1621,8 +1598,7 @@
    "heading": "ג'תקטו",
    "bodyLength": 956,
    "pages": [
-    147,
-    148
+    147
    ],
    "coverage": 1,
    "status": "ok"
@@ -1715,8 +1691,7 @@
    "heading": "ג'תקכג",
    "bodyLength": 711,
    "pages": [
-    153,
-    154
+    153
    ],
    "coverage": 1,
    "status": "ok"
@@ -1834,8 +1809,7 @@
    "heading": "ג'תקלג",
    "bodyLength": 687,
    "pages": [
-    162,
-    163
+    162
    ],
    "coverage": 1,
    "status": "ok"
@@ -1893,8 +1867,7 @@
    "heading": "ג'תקלח",
    "bodyLength": 529,
    "pages": [
-    166,
-    167
+    166
    ],
    "coverage": 1,
    "status": "ok"
@@ -1940,8 +1913,7 @@
    "heading": "ג'תקמב",
    "bodyLength": 986,
    "pages": [
-    169,
-    170
+    169
    ],
    "coverage": 1,
    "status": "ok"
@@ -1975,8 +1947,7 @@
    "heading": "ג'תקמה",
    "bodyLength": 624,
    "pages": [
-    171,
-    172
+    171
    ],
    "coverage": 1,
    "status": "ok"
@@ -2092,8 +2063,7 @@
    "heading": "ג'תקנה",
    "bodyLength": 564,
    "pages": [
-    179,
-    180
+    179
    ],
    "coverage": 1,
    "status": "ok"
@@ -2104,8 +2074,7 @@
    "heading": "ג'תקנו",
    "bodyLength": 1136,
    "pages": [
-    180,
-    181
+    180
    ],
    "coverage": 1,
    "status": "ok"
@@ -2165,8 +2134,7 @@
    "heading": "ג'תקס",
    "bodyLength": 596,
    "pages": [
-    186,
-    187
+    186
    ],
    "coverage": 1,
    "status": "ok"
@@ -2177,8 +2145,7 @@
    "heading": "ג'תקסא",
    "bodyLength": 687,
    "pages": [
-    187,
-    188
+    187
    ],
    "coverage": 1,
    "status": "ok"
@@ -2189,8 +2156,7 @@
    "heading": "ג'תקסב",
    "bodyLength": 1292,
    "pages": [
-    188,
-    189
+    188
    ],
    "coverage": 1,
    "status": "ok"
@@ -2201,8 +2167,7 @@
    "heading": "ג'תקסג",
    "bodyLength": 1341,
    "pages": [
-    189,
-    190
+    189
    ],
    "coverage": 1,
    "status": "ok"
@@ -2213,8 +2178,7 @@
    "heading": "ג'תקסד",
    "bodyLength": 1048,
    "pages": [
-    190,
-    191
+    190
    ],
    "coverage": 1,
    "status": "ok"
@@ -2249,8 +2213,7 @@
    "heading": "ג'תקסז",
    "bodyLength": 438,
    "pages": [
-    193,
-    194
+    193
    ],
    "coverage": 1,
    "status": "ok"
@@ -2261,8 +2224,7 @@
    "heading": "ג'תקסח",
    "bodyLength": 1211,
    "pages": [
-    194,
-    195
+    194
    ],
    "coverage": 1,
    "status": "ok"
@@ -2368,8 +2330,7 @@
    "heading": "ג'תקעז",
    "bodyLength": 773,
    "pages": [
-    202,
-    203
+    202
    ],
    "coverage": 1,
    "status": "ok"
@@ -2392,8 +2353,7 @@
    "bodyLength": 1588,
    "pages": [
     203,
-    204,
-    205
+    204
    ],
    "coverage": 1,
    "status": "ok"
@@ -2405,8 +2365,7 @@
    "bodyLength": 3073,
    "pages": [
     205,
-    206,
-    207
+    206
    ],
    "coverage": 1,
    "status": "ok"
@@ -2452,8 +2411,7 @@
    "heading": "ג'תקפד",
    "bodyLength": 491,
    "pages": [
-    209,
-    210
+    209
    ],
    "coverage": 1,
    "status": "ok"
@@ -2476,8 +2434,7 @@
    "bodyLength": 1191,
    "pages": [
     210,
-    211,
-    212
+    211
    ],
    "coverage": 1,
    "status": "ok"
@@ -2671,8 +2628,7 @@
    "heading": "ג'תרב",
    "bodyLength": 938,
    "pages": [
-    231,
-    232
+    231
    ],
    "coverage": 1,
    "status": "ok"
@@ -2707,8 +2663,7 @@
    "heading": "ג'תרה",
    "bodyLength": 730,
    "pages": [
-    234,
-    235
+    234
    ],
    "coverage": 1,
    "status": "ok"
@@ -2731,8 +2686,7 @@
    "heading": "ג'תרז",
    "bodyLength": 832,
    "pages": [
-    236,
-    237
+    236
    ],
    "coverage": 1,
    "status": "ok"
@@ -2743,8 +2697,7 @@
    "heading": "ג'תרח",
    "bodyLength": 573,
    "pages": [
-    237,
-    238
+    237
    ],
    "coverage": 1,
    "status": "ok"
@@ -2767,8 +2720,7 @@
    "heading": "ג'תרי",
    "bodyLength": 482,
    "pages": [
-    239,
-    240
+    239
    ],
    "coverage": 1,
    "status": "ok"
@@ -2865,8 +2817,7 @@
    "heading": "ג'תריח",
    "bodyLength": 654,
    "pages": [
-    249,
-    250
+    249
    ],
    "coverage": 1,
    "status": "ok"
@@ -2972,8 +2923,7 @@
    "heading": "ג'תרכז",
    "bodyLength": 718,
    "pages": [
-    257,
-    258
+    257
    ],
    "coverage": 1,
    "status": "ok"
@@ -3008,8 +2958,7 @@
    "bodyLength": 2088,
    "pages": [
     259,
-    260,
-    261
+    260
    ],
    "coverage": 1,
    "status": "ok"
@@ -3055,8 +3004,7 @@
    "heading": "ג'תרלד",
    "bodyLength": 731,
    "pages": [
-    263,
-    264
+    263
    ],
    "coverage": 1,
    "status": "ok"
@@ -3161,8 +3109,7 @@
    "heading": "ג'תרמג",
    "bodyLength": 951,
    "pages": [
-    271,
-    272
+    271
    ],
    "coverage": 1,
    "status": "ok"
@@ -3221,8 +3168,7 @@
    "heading": "ג'תרמח",
    "bodyLength": 799,
    "pages": [
-    276,
-    277
+    276
    ],
    "coverage": 1,
    "status": "ok"
@@ -3342,8 +3288,7 @@
    "heading": "ג'תרנח",
    "bodyLength": 430,
    "pages": [
-    287,
-    288
+    287
    ],
    "coverage": 1,
    "status": "ok"
@@ -3354,8 +3299,7 @@
    "heading": "ג'תרנט",
    "bodyLength": 1430,
    "pages": [
-    288,
-    289
+    288
    ],
    "coverage": 1,
    "status": "ok"
@@ -3414,8 +3358,7 @@
    "heading": "ג'תרסד",
    "bodyLength": 585,
    "pages": [
-    294,
-    295
+    294
    ],
    "coverage": 1,
    "status": "ok"
@@ -3426,8 +3369,7 @@
    "heading": "ג'תרסה",
    "bodyLength": 800,
    "pages": [
-    295,
-    296
+    295
    ],
    "coverage": 1,
    "status": "ok"
@@ -3449,8 +3391,7 @@
    "heading": "ג'תרסז",
    "bodyLength": 279,
    "pages": [
-    296,
-    297
+    296
    ],
    "coverage": 1,
    "status": "ok"
@@ -3521,8 +3462,7 @@
    "bodyLength": 1837,
    "pages": [
     301,
-    302,
-    303
+    302
    ],
    "coverage": 1,
    "status": "ok"
@@ -3619,8 +3559,7 @@
    "pages": [
     310,
     311,
-    312,
-    313
+    312
    ],
    "coverage": 1,
    "status": "ok"
@@ -3645,8 +3584,7 @@
    "bodyLength": 1998,
    "pages": [
     315,
-    316,
-    317
+    316
    ],
    "coverage": 1,
    "status": "ok"
@@ -3657,8 +3595,7 @@
    "heading": "ג'תרפד",
    "bodyLength": 1165,
    "pages": [
-    317,
-    318
+    317
    ],
    "coverage": 1,
    "status": "ok"
@@ -3727,8 +3664,7 @@
    "heading": "ג'תרצ",
    "bodyLength": 466,
    "pages": [
-    321,
-    322
+    321
    ],
    "coverage": 1,
    "status": "ok"
@@ -3774,8 +3710,7 @@
    "heading": "ג'תרצד",
    "bodyLength": 770,
    "pages": [
-    324,
-    325
+    324
    ],
    "coverage": 1,
    "status": "ok"
@@ -3787,8 +3722,7 @@
    "bodyLength": 2795,
    "pages": [
     325,
-    326,
-    327
+    326
    ],
    "coverage": 1,
    "status": "ok"
@@ -3799,8 +3733,7 @@
    "heading": "ג'תרצו",
    "bodyLength": 925,
    "pages": [
-    327,
-    328
+    327
    ],
    "coverage": 1,
    "status": "ok"
@@ -3835,8 +3768,7 @@
    "heading": "ג'תרצט",
    "bodyLength": 630,
    "pages": [
-    330,
-    331
+    330
    ],
    "coverage": 1,
    "status": "ok"
@@ -3847,8 +3779,7 @@
    "heading": "ג'תש",
    "bodyLength": 812,
    "pages": [
-    331,
-    332
+    331
    ],
    "coverage": 1,
    "status": "ok"
@@ -3920,8 +3851,7 @@
    "heading": "ג'תשו",
    "bodyLength": 1337,
    "pages": [
-    338,
-    339
+    338
    ],
    "coverage": 1,
    "status": "ok"
@@ -3955,8 +3885,7 @@
    "heading": "ג'תשט",
    "bodyLength": 806,
    "pages": [
-    340,
-    341
+    340
    ],
    "coverage": 1,
    "status": "ok"
@@ -3979,8 +3908,7 @@
    "heading": "ג'תשיא",
    "bodyLength": 1093,
    "pages": [
-    342,
-    343
+    342
    ],
    "coverage": 1,
    "status": "ok"
@@ -3991,8 +3919,7 @@
    "heading": "ג'תשיב",
    "bodyLength": 978,
    "pages": [
-    343,
-    344
+    343
    ],
    "coverage": 1,
    "status": "ok"
@@ -4039,8 +3966,7 @@
    "heading": "ג'תשטז",
    "bodyLength": 1289,
    "pages": [
-    347,
-    348
+    347
    ],
    "coverage": 1,
    "status": "ok"
@@ -4051,8 +3977,7 @@
    "heading": "ג'תשיז",
    "bodyLength": 739,
    "pages": [
-    348,
-    349
+    348
    ],
    "coverage": 1,
    "status": "ok"
@@ -4063,8 +3988,7 @@
    "heading": "ג'תשיח",
    "bodyLength": 898,
    "pages": [
-    349,
-    350
+    349
    ],
    "coverage": 1,
    "status": "ok"
@@ -4075,8 +3999,7 @@
    "heading": "ג'תשיט",
    "bodyLength": 1280,
    "pages": [
-    350,
-    351
+    350
    ],
    "coverage": 1,
    "status": "ok"
@@ -4087,8 +4010,7 @@
    "heading": "ג'תשכ",
    "bodyLength": 1199,
    "pages": [
-    351,
-    352
+    351
    ],
    "coverage": 1,
    "status": "ok"
@@ -4148,8 +4070,7 @@
    "heading": "ג'תשכה",
    "bodyLength": 469,
    "pages": [
-    357,
-    358
+    357
    ],
    "coverage": 1,
    "status": "ok"
@@ -4195,8 +4116,7 @@
    "heading": "ג'תשכח",
    "bodyLength": 824,
    "pages": [
-    360,
-    361
+    360
    ],
    "coverage": 1,
    "status": "ok"
@@ -4244,8 +4164,7 @@
    "bodyLength": 2355,
    "pages": [
     364,
-    365,
-    366
+    365
    ],
    "coverage": 1,
    "status": "ok"
@@ -4327,8 +4246,7 @@
    "heading": "ג'תשלט",
    "bodyLength": 1218,
    "pages": [
-    371,
-    372
+    371
    ],
    "coverage": 1,
    "status": "ok"
@@ -4339,8 +4257,7 @@
    "heading": "ג'תשמ",
    "bodyLength": 903,
    "pages": [
-    372,
-    373
+    372
    ],
    "coverage": 1,
    "status": "ok"
@@ -4354,8 +4271,7 @@
     373,
     374,
     375,
-    376,
-    377
+    376
    ],
    "coverage": 1,
    "status": "ok"
@@ -4366,8 +4282,7 @@
    "heading": "ג'תשמב",
    "bodyLength": 767,
    "pages": [
-    377,
-    378
+    377
    ],
    "coverage": 1,
    "status": "ok"
@@ -4403,8 +4318,7 @@
    "heading": "ג'תשמה",
    "bodyLength": 1047,
    "pages": [
-    381,
-    382
+    381
    ],
    "coverage": 1,
    "status": "ok"
@@ -4464,8 +4378,7 @@
    "heading": "ג'תשנ",
    "bodyLength": 527,
    "pages": [
-    387,
-    388
+    387
    ],
    "coverage": 1,
    "status": "ok"
@@ -4582,8 +4495,7 @@
    "heading": "ג'תשס",
    "bodyLength": 1272,
    "pages": [
-    395,
-    396
+    395
    ],
    "coverage": 1,
    "status": "ok"
@@ -4747,8 +4659,7 @@
    "heading": "ג'תשעד",
    "bodyLength": 447,
    "pages": [
-    408,
-    409
+    408
    ],
    "coverage": 1,
    "status": "ok"
@@ -4771,8 +4682,7 @@
    "bodyLength": 1261,
    "pages": [
     409,
-    410,
-    411
+    410
    ],
    "coverage": 1,
    "status": "ok"
@@ -4783,8 +4693,7 @@
    "heading": "ג'תשעז",
    "bodyLength": 875,
    "pages": [
-    411,
-    412
+    411
    ],
    "coverage": 1,
    "status": "ok"
@@ -4856,8 +4765,7 @@
    "heading": "ג'תשפג",
    "bodyLength": 898,
    "pages": [
-    419,
-    420
+    419
    ],
    "coverage": 1,
    "status": "ok"
@@ -4869,8 +4777,7 @@
    "bodyLength": 2734,
    "pages": [
     420,
-    421,
-    422
+    421
    ],
    "coverage": 1,
    "status": "ok"
@@ -4940,8 +4847,7 @@
    "heading": "ג'תשצ",
    "bodyLength": 1104,
    "pages": [
-    426,
-    427
+    426
    ],
    "coverage": 1,
    "status": "ok"
@@ -4952,8 +4858,7 @@
    "heading": "ג'תשצא",
    "bodyLength": 1127,
    "pages": [
-    427,
-    428
+    427
    ],
    "coverage": 1,
    "status": "ok"
@@ -4964,8 +4869,7 @@
    "heading": "ג'תשצב",
    "bodyLength": 872,
    "pages": [
-    428,
-    429
+    428
    ],
    "coverage": 1,
    "status": "ok"
@@ -5035,8 +4939,7 @@
    "heading": "ג'תשצח",
    "bodyLength": 525,
    "pages": [
-    433,
-    434
+    433
    ],
    "coverage": 1,
    "status": "ok"
@@ -5362,7 +5265,7 @@
     3
    ],
    "matched": true,
-   "anchorScore": 0.88,
+   "anchorScore": 0.93,
    "pageScore": 0.79,
    "segments": [
     {
@@ -5401,7 +5304,7 @@
     5
    ],
    "matched": true,
-   "anchorScore": 0.95,
+   "anchorScore": 1,
    "pageScore": 0.86,
    "segments": [
     {
@@ -5497,7 +5400,7 @@
    ],
    "matched": true,
    "anchorScore": 0.9,
-   "pageScore": 0.83,
+   "pageScore": 0.84,
    "segments": [
     {
      "i": 5,
@@ -5518,14 +5421,9 @@
     11
    ],
    "matched": true,
-   "anchorScore": 0.88,
-   "pageScore": 0.83,
+   "anchorScore": 0.93,
+   "pageScore": 0.84,
    "segments": [
-    {
-     "i": 6,
-     "from": 788,
-     "to": 788
-    },
     {
      "i": 7,
      "from": 0,
@@ -5543,14 +5441,9 @@
     30
    ],
    "matched": true,
-   "anchorScore": 0.86,
+   "anchorScore": 0.93,
    "pageScore": 0.93,
    "segments": [
-    {
-     "i": 7,
-     "from": 939,
-     "to": 939
-    },
     {
      "i": 8,
      "from": 0,
@@ -5768,7 +5661,7 @@
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.8,
+   "pageScore": 0.81,
    "segments": [
     {
      "i": 17,
@@ -5789,7 +5682,7 @@
     23
    ],
    "matched": true,
-   "anchorScore": 0.81,
+   "anchorScore": 0.84,
    "pageScore": 0.81,
    "segments": [
     {
@@ -5979,7 +5872,7 @@
     {
      "i": 27,
      "from": 0,
-     "to": 432
+     "to": 437
     }
    ]
   },
@@ -5991,18 +5884,13 @@
     409
    ],
    "matched": true,
-   "anchorScore": 0.9,
-   "pageScore": 0.79,
+   "anchorScore": 0.95,
+   "pageScore": 0.8,
    "segments": [
-    {
-     "i": 27,
-     "from": 432,
-     "to": 437
-    },
     {
      "i": 28,
      "from": 0,
-     "to": 669
+     "to": 673
     }
    ]
   },
@@ -6013,14 +5901,9 @@
     33
    ],
    "matched": true,
-   "anchorScore": 0.95,
+   "anchorScore": 1,
    "pageScore": 0.72,
    "segments": [
-    {
-     "i": 28,
-     "from": 669,
-     "to": 673
-    },
     {
      "i": 29,
      "from": 1,
@@ -6065,7 +5948,7 @@
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.86,
+   "pageScore": 0.87,
    "segments": [
     {
      "i": 31,
@@ -6075,7 +5958,7 @@
     {
      "i": 32,
      "from": 0,
-     "to": 515
+     "to": 523
     }
    ]
   },
@@ -6087,14 +5970,9 @@
     414
    ],
    "matched": true,
-   "anchorScore": 0.81,
-   "pageScore": 0.9,
+   "anchorScore": 0.88,
+   "pageScore": 0.91,
    "segments": [
-    {
-     "i": 32,
-     "from": 515,
-     "to": 523
-    },
     {
      "i": 33,
      "from": 0,
@@ -6147,7 +6025,7 @@
     {
      "i": 36,
      "from": 0,
-     "to": 422
+     "to": 430
     }
    ]
   },
@@ -6158,12 +6036,12 @@
     39
    ],
    "matched": true,
-   "anchorScore": 0.88,
+   "anchorScore": 0.95,
    "pageScore": 0.93,
    "segments": [
     {
      "i": 36,
-     "from": 422,
+     "from": 430,
      "to": 429
     },
     {
@@ -6259,7 +6137,7 @@
     {
      "i": 41,
      "from": 0,
-     "to": 528
+     "to": 534
     }
    ]
   },
@@ -6270,14 +6148,9 @@
     44
    ],
    "matched": true,
-   "anchorScore": 0.93,
-   "pageScore": 0.96,
+   "anchorScore": 1,
+   "pageScore": 0.97,
    "segments": [
-    {
-     "i": 41,
-     "from": 528,
-     "to": 534
-    },
     {
      "i": 42,
      "from": 0,
@@ -6298,7 +6171,7 @@
     {
      "i": 42,
      "from": 1363,
-     "to": 3017
+     "to": 3023
     }
    ]
   },
@@ -6309,14 +6182,9 @@
     46
    ],
    "matched": true,
-   "anchorScore": 0.93,
+   "anchorScore": 1,
    "pageScore": 0.96,
    "segments": [
-    {
-     "i": 42,
-     "from": 3017,
-     "to": 3023
-    },
     {
      "i": 43,
      "from": 0,
@@ -6476,7 +6344,7 @@
     {
      "i": 50,
      "from": 0,
-     "to": 607
+     "to": 612
     }
    ]
   },
@@ -6488,18 +6356,13 @@
     432
    ],
    "matched": true,
-   "anchorScore": 0.93,
+   "anchorScore": 1,
    "pageScore": 0.93,
    "segments": [
     {
-     "i": 50,
-     "from": 607,
-     "to": 612
-    },
-    {
      "i": 51,
      "from": 0,
-     "to": 1392
+     "to": 1397
     }
    ]
   },
@@ -6510,12 +6373,12 @@
     55
    ],
    "matched": true,
-   "anchorScore": 0.88,
+   "anchorScore": 0.95,
    "pageScore": 0.86,
    "segments": [
     {
      "i": 51,
-     "from": 1392,
+     "from": 1397,
      "to": 1397
     },
     {
@@ -6611,7 +6474,7 @@
     {
      "i": 56,
      "from": 0,
-     "to": 830
+     "to": 838
     }
    ]
   },
@@ -6622,14 +6485,9 @@
     60
    ],
    "matched": true,
-   "anchorScore": 0.93,
+   "anchorScore": 1,
    "pageScore": 0.81,
    "segments": [
-    {
-     "i": 56,
-     "from": 830,
-     "to": 838
-    },
     {
      "i": 57,
      "from": 0,
@@ -6646,8 +6504,8 @@
     61
    ],
    "matched": true,
-   "anchorScore": 0.95,
-   "pageScore": 0.73,
+   "anchorScore": 1,
+   "pageScore": 0.74,
    "segments": [
     {
      "i": 58,
@@ -6767,7 +6625,7 @@
     446
    ],
    "matched": true,
-   "anchorScore": 0.91,
+   "anchorScore": 0.9,
    "pageScore": 0.83,
    "segments": [
     {
@@ -7116,7 +6974,7 @@
     {
      "i": 81,
      "from": 0,
-     "to": 967
+     "to": 972
     }
    ]
   },
@@ -7129,14 +6987,9 @@
     81
    ],
    "matched": true,
-   "anchorScore": 0.93,
+   "anchorScore": 1,
    "pageScore": 0.89,
    "segments": [
-    {
-     "i": 81,
-     "from": 967,
-     "to": 972
-    },
     {
      "i": 82,
      "from": 0,
@@ -7386,7 +7239,7 @@
     {
      "i": 94,
      "from": 0,
-     "to": 663
+     "to": 668
     }
    ]
   },
@@ -7398,18 +7251,13 @@
     476
    ],
    "matched": true,
-   "anchorScore": 0.93,
-   "pageScore": 0.86,
+   "anchorScore": 1,
+   "pageScore": 0.87,
    "segments": [
-    {
-     "i": 94,
-     "from": 663,
-     "to": 668
-    },
     {
      "i": 95,
      "from": 0,
-     "to": 905
+     "to": 909
     }
    ]
   },
@@ -7422,14 +7270,9 @@
     93
    ],
    "matched": true,
-   "anchorScore": 0.97,
+   "anchorScore": 1,
    "pageScore": 0.92,
    "segments": [
-    {
-     "i": 95,
-     "from": 905,
-     "to": 909
-    },
     {
      "i": 96,
      "from": 0,
@@ -7488,8 +7331,8 @@
     479
    ],
    "matched": true,
-   "anchorScore": 0.88,
-   "pageScore": 0.95,
+   "anchorScore": 0.91,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 97,
@@ -7499,7 +7342,7 @@
     {
      "i": 98,
      "from": 0,
-     "to": 1070
+     "to": 1075
     }
    ]
   },
@@ -7512,18 +7355,13 @@
     97
    ],
    "matched": true,
-   "anchorScore": 0.98,
-   "pageScore": 0.87,
+   "anchorScore": 1,
+   "pageScore": 0.88,
    "segments": [
-    {
-     "i": 98,
-     "from": 1070,
-     "to": 1075
-    },
     {
      "i": 99,
      "from": 0,
-     "to": 1337
+     "to": 1343
     }
    ]
   },
@@ -7535,12 +7373,12 @@
     481
    ],
    "matched": true,
-   "anchorScore": 0.91,
+   "anchorScore": 0.95,
    "pageScore": 0.95,
    "segments": [
     {
      "i": 99,
-     "from": 1337,
+     "from": 1343,
      "to": 1342
     },
     {
@@ -7560,12 +7398,12 @@
    ],
    "matched": true,
    "anchorScore": 0.93,
-   "pageScore": 0.93,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 100,
      "from": 1518,
-     "to": 2989
+     "to": 2994
     }
    ]
   },
@@ -7576,14 +7414,9 @@
     482
    ],
    "matched": true,
-   "anchorScore": 0.93,
+   "anchorScore": 1,
    "pageScore": 0.85,
    "segments": [
-    {
-     "i": 100,
-     "from": 2989,
-     "to": 2994
-    },
     {
      "i": 101,
      "from": 0,
@@ -7625,7 +7458,7 @@
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.87,
+   "pageScore": 0.88,
    "segments": [
     {
      "i": 102,
@@ -7635,7 +7468,7 @@
     {
      "i": 103,
      "from": 0,
-     "to": 795
+     "to": 799
     }
    ]
   },
@@ -7648,14 +7481,9 @@
     103
    ],
    "matched": true,
-   "anchorScore": 0.93,
-   "pageScore": 0.84,
+   "anchorScore": 1,
+   "pageScore": 0.85,
    "segments": [
-    {
-     "i": 103,
-     "from": 795,
-     "to": 799
-    },
     {
      "i": 104,
      "from": 0,
@@ -7703,7 +7531,7 @@
    ],
    "matched": true,
    "anchorScore": 0.84,
-   "pageScore": 0.93,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 106,
@@ -7713,7 +7541,7 @@
     {
      "i": 107,
      "from": 0,
-     "to": 744
+     "to": 749
     }
    ]
   },
@@ -7728,14 +7556,9 @@
     489
    ],
    "matched": true,
-   "anchorScore": 0.88,
-   "pageScore": 0.75,
+   "anchorScore": 0.95,
+   "pageScore": 0.76,
    "segments": [
-    {
-     "i": 107,
-     "from": 744,
-     "to": 749
-    },
     {
      "i": 108,
      "from": 0,
@@ -7762,7 +7585,7 @@
     {
      "i": 109,
      "from": 0,
-     "to": 1065
+     "to": 1070
     }
    ]
   },
@@ -7774,14 +7597,9 @@
     491
    ],
    "matched": true,
-   "anchorScore": 0.83,
+   "anchorScore": 0.9,
    "pageScore": 0.88,
    "segments": [
-    {
-     "i": 109,
-     "from": 1065,
-     "to": 1070
-    },
     {
      "i": 110,
      "from": 0,
@@ -7814,7 +7632,7 @@
     {
      "i": 112,
      "from": 0,
-     "to": 1095
+     "to": 1100
     }
    ]
   },
@@ -7826,14 +7644,9 @@
     494
    ],
    "matched": true,
-   "anchorScore": 0.93,
+   "anchorScore": 1,
    "pageScore": 0.91,
    "segments": [
-    {
-     "i": 112,
-     "from": 1095,
-     "to": 1100
-    },
     {
      "i": 113,
      "from": 0,
@@ -7943,7 +7756,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.96,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 117,
@@ -7953,7 +7766,7 @@
     {
      "i": 118,
      "from": 0,
-     "to": 708
+     "to": 713
     }
    ]
   },
@@ -7964,14 +7777,9 @@
     116
    ],
    "matched": true,
-   "anchorScore": 0.98,
+   "anchorScore": 1,
    "pageScore": 0.93,
    "segments": [
-    {
-     "i": 118,
-     "from": 708,
-     "to": 713
-    },
     {
      "i": 119,
      "from": 0,
@@ -7994,7 +7802,7 @@
    ],
    "matched": true,
    "anchorScore": 0.78,
-   "pageScore": 0.88,
+   "pageScore": 0.89,
    "segments": [
     {
      "i": 120,
@@ -8004,7 +7812,7 @@
     {
      "i": 121,
      "from": 0,
-     "to": 1033
+     "to": 1040
     }
    ]
   },
@@ -8015,12 +7823,12 @@
     118
    ],
    "matched": true,
-   "anchorScore": 0.81,
-   "pageScore": 0.92,
+   "anchorScore": 0.88,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 121,
-     "from": 1033,
+     "from": 1040,
      "to": 1046
     },
     {
@@ -8058,7 +7866,7 @@
    ],
    "matched": true,
    "anchorScore": 0.91,
-   "pageScore": 0.96,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 122,
@@ -8068,7 +7876,7 @@
     {
      "i": 123,
      "from": 0,
-     "to": 519
+     "to": 523
     }
    ]
   },
@@ -8081,14 +7889,9 @@
     121
    ],
    "matched": true,
-   "anchorScore": 0.93,
-   "pageScore": 0.88,
+   "anchorScore": 1,
+   "pageScore": 0.89,
    "segments": [
-    {
-     "i": 123,
-     "from": 519,
-     "to": 523
-    },
     {
      "i": 124,
      "from": 0,
@@ -8134,7 +7937,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.82,
+   "pageScore": 0.83,
    "segments": [
     {
      "i": 126,
@@ -8144,7 +7947,7 @@
     {
      "i": 127,
      "from": 0,
-     "to": 668
+     "to": 678
     }
    ]
   },
@@ -8156,12 +7959,12 @@
     508
    ],
    "matched": true,
-   "anchorScore": 0.88,
+   "anchorScore": 0.95,
    "pageScore": 0.83,
    "segments": [
     {
      "i": 127,
-     "from": 668,
+     "from": 678,
      "to": 678
     },
     {
@@ -8180,14 +7983,9 @@
     125
    ],
    "matched": true,
-   "anchorScore": 0.93,
+   "anchorScore": 1,
    "pageScore": 0.81,
    "segments": [
-    {
-     "i": 128,
-     "from": 930,
-     "to": 930
-    },
     {
      "i": 129,
      "from": 0,
@@ -8203,8 +8001,8 @@
     510
    ],
    "matched": true,
-   "anchorScore": 0.93,
-   "pageScore": 0.85,
+   "anchorScore": 0.95,
+   "pageScore": 0.86,
    "segments": [
     {
      "i": 129,
@@ -8257,7 +8055,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.94,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 132,
@@ -8267,7 +8065,7 @@
     {
      "i": 133,
      "from": 0,
-     "to": 585
+     "to": 590
     }
    ]
   },
@@ -8280,18 +8078,13 @@
     129
    ],
    "matched": true,
-   "anchorScore": 0.86,
-   "pageScore": 0.81,
+   "anchorScore": 0.95,
+   "pageScore": 0.82,
    "segments": [
-    {
-     "i": 133,
-     "from": 585,
-     "to": 590
-    },
     {
      "i": 134,
      "from": 0,
-     "to": 1002
+     "to": 1008
     }
    ]
   },
@@ -8303,18 +8096,13 @@
     515
    ],
    "matched": true,
-   "anchorScore": 0.91,
-   "pageScore": 0.87,
+   "anchorScore": 1,
+   "pageScore": 0.88,
    "segments": [
-    {
-     "i": 134,
-     "from": 1002,
-     "to": 1008
-    },
     {
      "i": 135,
      "from": 0,
-     "to": 950
+     "to": 955
     }
    ]
   },
@@ -8327,14 +8115,9 @@
     131
    ],
    "matched": true,
-   "anchorScore": 0.91,
+   "anchorScore": 1,
    "pageScore": 0.91,
    "segments": [
-    {
-     "i": 135,
-     "from": 950,
-     "to": 955
-    },
     {
      "i": 136,
      "from": 0,
@@ -8451,7 +8234,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.96,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 142,
@@ -8461,7 +8244,7 @@
     {
      "i": 143,
      "from": 0,
-     "to": 705
+     "to": 710
     }
    ]
   },
@@ -8474,14 +8257,9 @@
     137
    ],
    "matched": true,
-   "anchorScore": 0.91,
-   "pageScore": 0.98,
+   "anchorScore": 1,
+   "pageScore": 0.99,
    "segments": [
-    {
-     "i": 143,
-     "from": 705,
-     "to": 710
-    },
     {
      "i": 144,
      "from": 0,
@@ -8670,7 +8448,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.93,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 152,
@@ -8680,7 +8458,7 @@
     {
      "i": 153,
      "from": 0,
-     "to": 679
+     "to": 686
     }
    ]
   },
@@ -8693,14 +8471,9 @@
     534
    ],
    "matched": true,
-   "anchorScore": 0.86,
-   "pageScore": 0.83,
+   "anchorScore": 0.95,
+   "pageScore": 0.84,
    "segments": [
-    {
-     "i": 153,
-     "from": 679,
-     "to": 686
-    },
     {
      "i": 154,
      "from": 0,
@@ -8780,7 +8553,7 @@
     {
      "i": 158,
      "from": 0,
-     "to": 523
+     "to": 529
     }
    ]
   },
@@ -8793,14 +8566,9 @@
     539
    ],
    "matched": true,
-   "anchorScore": 0.86,
-   "pageScore": 0.88,
+   "anchorScore": 0.95,
+   "pageScore": 0.9,
    "segments": [
-    {
-     "i": 158,
-     "from": 523,
-     "to": 529
-    },
     {
      "i": 159,
      "from": 0,
@@ -8809,7 +8577,7 @@
     {
      "i": 160,
      "from": 0,
-     "to": 328
+     "to": 334
     }
    ]
   },
@@ -8822,12 +8590,12 @@
     151
    ],
    "matched": true,
-   "anchorScore": 0.84,
-   "pageScore": 0.89,
+   "anchorScore": 0.93,
+   "pageScore": 0.9,
    "segments": [
     {
      "i": 160,
-     "from": 328,
+     "from": 334,
      "to": 340
     },
     {
@@ -8856,7 +8624,7 @@
     {
      "i": 162,
      "from": 0,
-     "to": 981
+     "to": 985
     }
    ]
   },
@@ -8869,14 +8637,9 @@
     153
    ],
    "matched": true,
-   "anchorScore": 0.81,
+   "anchorScore": 0.86,
    "pageScore": 0.81,
    "segments": [
-    {
-     "i": 162,
-     "from": 981,
-     "to": 985
-    },
     {
      "i": 163,
      "from": 0,
@@ -8912,7 +8675,7 @@
     {
      "i": 165,
      "from": 0,
-     "to": 619
+     "to": 624
     }
    ]
   },
@@ -8925,14 +8688,9 @@
     155
    ],
    "matched": true,
-   "anchorScore": 0.86,
-   "pageScore": 0.79,
+   "anchorScore": 0.93,
+   "pageScore": 0.8,
    "segments": [
-    {
-     "i": 165,
-     "from": 619,
-     "to": 624
-    },
     {
      "i": 166,
      "from": 0,
@@ -9003,8 +8761,8 @@
     550
    ],
    "matched": true,
-   "anchorScore": 0.9,
-   "pageScore": 0.87,
+   "anchorScore": 0.95,
+   "pageScore": 0.88,
    "segments": [
     {
      "i": 170,
@@ -9023,7 +8781,7 @@
    ],
    "matched": true,
    "anchorScore": 0.9,
-   "pageScore": 0.95,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 170,
@@ -9033,7 +8791,7 @@
     {
      "i": 171,
      "from": 0,
-     "to": 917
+     "to": 921
     }
    ]
   },
@@ -9045,12 +8803,12 @@
     552
    ],
    "matched": true,
-   "anchorScore": 0.86,
+   "anchorScore": 0.9,
    "pageScore": 0.96,
    "segments": [
     {
      "i": 171,
-     "from": 917,
+     "from": 921,
      "to": 925
     },
     {
@@ -9108,7 +8866,7 @@
     {
      "i": 175,
      "from": 0,
-     "to": 560
+     "to": 563
     }
    ]
   },
@@ -9121,14 +8879,9 @@
     163
    ],
    "matched": true,
-   "anchorScore": 0.93,
-   "pageScore": 0.86,
+   "anchorScore": 1,
+   "pageScore": 0.87,
    "segments": [
-    {
-     "i": 175,
-     "from": 560,
-     "to": 563
-    },
     {
      "i": 176,
      "from": 0,
@@ -9146,14 +8899,9 @@
     557
    ],
    "matched": true,
-   "anchorScore": 0.84,
-   "pageScore": 0.88,
+   "anchorScore": 0.91,
+   "pageScore": 0.89,
    "segments": [
-    {
-     "i": 176,
-     "from": 1136,
-     "to": 1136
-    },
     {
      "i": 177,
      "from": 0,
@@ -9285,18 +9033,13 @@
     561
    ],
    "matched": true,
-   "anchorScore": 0.9,
-   "pageScore": 0.96,
+   "anchorScore": 0.97,
+   "pageScore": 0.97,
    "segments": [
-    {
-     "i": 181,
-     "from": 596,
-     "to": 596
-    },
     {
      "i": 182,
      "from": 0,
-     "to": 681
+     "to": 687
     }
    ]
   },
@@ -9309,18 +9052,13 @@
     171
    ],
    "matched": true,
-   "anchorScore": 0.91,
+   "anchorScore": 1,
    "pageScore": 0.97,
    "segments": [
     {
-     "i": 182,
-     "from": 681,
-     "to": 687
-    },
-    {
      "i": 183,
      "from": 0,
-     "to": 1286
+     "to": 1291
     }
    ]
   },
@@ -9332,18 +9070,13 @@
     563
    ],
    "matched": true,
-   "anchorScore": 0.91,
-   "pageScore": 0.96,
+   "anchorScore": 0.97,
+   "pageScore": 0.97,
    "segments": [
-    {
-     "i": 183,
-     "from": 1286,
-     "to": 1291
-    },
     {
      "i": 184,
      "from": 0,
-     "to": 1336
+     "to": 1341
     }
    ]
   },
@@ -9356,18 +9089,13 @@
     173
    ],
    "matched": true,
-   "anchorScore": 0.91,
-   "pageScore": 0.81,
+   "anchorScore": 1,
+   "pageScore": 0.82,
    "segments": [
-    {
-     "i": 184,
-     "from": 1336,
-     "to": 1341
-    },
     {
      "i": 185,
      "from": 0,
-     "to": 1040
+     "to": 1047
     }
    ]
   },
@@ -9379,14 +9107,9 @@
     565
    ],
    "matched": true,
-   "anchorScore": 0.84,
-   "pageScore": 0.86,
+   "anchorScore": 0.93,
+   "pageScore": 0.87,
    "segments": [
-    {
-     "i": 185,
-     "from": 1040,
-     "to": 1047
-    },
     {
      "i": 186,
      "from": 0,
@@ -9452,14 +9175,9 @@
     178
    ],
    "matched": true,
-   "anchorScore": 0.79,
-   "pageScore": 0.84,
+   "anchorScore": 0.84,
+   "pageScore": 0.85,
    "segments": [
-    {
-     "i": 188,
-     "from": 438,
-     "to": 438
-    },
     {
      "i": 189,
      "from": 0,
@@ -9475,14 +9193,9 @@
     569
    ],
    "matched": true,
-   "anchorScore": 0.86,
+   "anchorScore": 0.93,
    "pageScore": 0.87,
    "segments": [
-    {
-     "i": 189,
-     "from": 1211,
-     "to": 1211
-    },
     {
      "i": 190,
      "from": 0,
@@ -9568,7 +9281,7 @@
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.87,
+   "pageScore": 0.88,
    "segments": [
     {
      "i": 193,
@@ -9591,7 +9304,7 @@
     183
    ],
    "matched": true,
-   "anchorScore": 0.83,
+   "anchorScore": 0.86,
    "pageScore": 0.84,
    "segments": [
     {
@@ -9655,7 +9368,7 @@
     {
      "i": 198,
      "from": 0,
-     "to": 768
+     "to": 773
     }
    ]
   },
@@ -9668,14 +9381,9 @@
     578
    ],
    "matched": true,
-   "anchorScore": 0.81,
-   "pageScore": 0.81,
+   "anchorScore": 0.86,
+   "pageScore": 0.82,
    "segments": [
-    {
-     "i": 198,
-     "from": 768,
-     "to": 773
-    },
     {
      "i": 199,
      "from": 0,
@@ -9698,12 +9406,12 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.91,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 200,
      "from": 204,
-     "to": 1582
+     "to": 1587
     }
    ]
   },
@@ -9716,14 +9424,9 @@
     580
    ],
    "matched": true,
-   "anchorScore": 0.93,
-   "pageScore": 0.87,
+   "anchorScore": 1,
+   "pageScore": 0.88,
    "segments": [
-    {
-     "i": 200,
-     "from": 1582,
-     "to": 1587
-    },
     {
      "i": 201,
      "from": 0,
@@ -9746,7 +9449,7 @@
     {
      "i": 201,
      "from": 1274,
-     "to": 3067
+     "to": 3072
     }
    ]
   },
@@ -9758,14 +9461,9 @@
     581
    ],
    "matched": true,
-   "anchorScore": 0.91,
-   "pageScore": 0.93,
+   "anchorScore": 1,
+   "pageScore": 0.94,
    "segments": [
-    {
-     "i": 201,
-     "from": 3067,
-     "to": 3072
-    },
     {
      "i": 202,
      "from": 0,
@@ -9822,7 +9520,7 @@
     {
      "i": 205,
      "from": 0,
-     "to": 485
+     "to": 490
     }
    ]
   },
@@ -9835,14 +9533,9 @@
     193
    ],
    "matched": true,
-   "anchorScore": 0.95,
-   "pageScore": 0.77,
+   "anchorScore": 1,
+   "pageScore": 0.78,
    "segments": [
-    {
-     "i": 205,
-     "from": 485,
-     "to": 490
-    },
     {
      "i": 206,
      "from": 0,
@@ -9864,7 +9557,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.92,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 207,
@@ -9882,14 +9575,9 @@
     195
    ],
    "matched": true,
-   "anchorScore": 0.93,
-   "pageScore": 0.9,
+   "anchorScore": 1,
+   "pageScore": 0.91,
    "segments": [
-    {
-     "i": 207,
-     "from": 1191,
-     "to": 1191
-    },
     {
      "i": 208,
      "from": 0,
@@ -10033,7 +9721,7 @@
     {
      "i": 214,
      "from": 0,
-     "to": 1059
+     "to": 1066
     }
    ]
   },
@@ -10045,12 +9733,12 @@
     594
    ],
    "matched": true,
-   "anchorScore": 0.86,
+   "anchorScore": 0.95,
    "pageScore": 0.95,
    "segments": [
     {
      "i": 214,
-     "from": 1059,
+     "from": 1066,
      "to": 1064
     },
     {
@@ -10311,13 +9999,13 @@
     602
    ],
    "matched": true,
-   "anchorScore": 0.93,
-   "pageScore": 0.97,
+   "anchorScore": 1,
+   "pageScore": 0.98,
    "segments": [
     {
      "i": 223,
      "from": 0,
-     "to": 932
+     "to": 937
     }
    ]
   },
@@ -10330,14 +10018,9 @@
     215
    ],
    "matched": true,
-   "anchorScore": 0.84,
+   "anchorScore": 0.9,
    "pageScore": 0.95,
    "segments": [
-    {
-     "i": 223,
-     "from": 932,
-     "to": 937
-    },
     {
      "i": 224,
      "from": 0,
@@ -10390,7 +10073,7 @@
     {
      "i": 226,
      "from": 0,
-     "to": 725
+     "to": 730
     }
    ]
   },
@@ -10401,14 +10084,9 @@
     218
    ],
    "matched": true,
-   "anchorScore": 0.93,
-   "pageScore": 0.91,
+   "anchorScore": 1,
+   "pageScore": 0.92,
    "segments": [
-    {
-     "i": 226,
-     "from": 725,
-     "to": 730
-    },
     {
      "i": 227,
      "from": 0,
@@ -10436,7 +10114,7 @@
     {
      "i": 228,
      "from": 0,
-     "to": 826
+     "to": 831
     }
    ]
   },
@@ -10448,18 +10126,13 @@
     608
    ],
    "matched": true,
-   "anchorScore": 0.93,
-   "pageScore": 0.8,
+   "anchorScore": 1,
+   "pageScore": 0.82,
    "segments": [
-    {
-     "i": 228,
-     "from": 826,
-     "to": 831
-    },
     {
      "i": 229,
      "from": 0,
-     "to": 567
+     "to": 573
     }
    ]
   },
@@ -10472,14 +10145,9 @@
     221
    ],
    "matched": true,
-   "anchorScore": 0.95,
+   "anchorScore": 0.98,
    "pageScore": 0.92,
    "segments": [
-    {
-     "i": 229,
-     "from": 567,
-     "to": 573
-    },
     {
      "i": 230,
      "from": 0,
@@ -10496,7 +10164,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.85,
+   "pageScore": 0.86,
    "segments": [
     {
      "i": 230,
@@ -10506,7 +10174,7 @@
     {
      "i": 231,
      "from": 0,
-     "to": 477
+     "to": 482
     }
    ]
   },
@@ -10519,14 +10187,9 @@
     223
    ],
    "matched": true,
-   "anchorScore": 0.91,
+   "anchorScore": 1,
    "pageScore": 0.95,
    "segments": [
-    {
-     "i": 231,
-     "from": 477,
-     "to": 482
-    },
     {
      "i": 232,
      "from": 0,
@@ -10731,7 +10394,7 @@
     {
      "i": 239,
      "from": 0,
-     "to": 649
+     "to": 653
     }
    ]
   },
@@ -10744,18 +10407,13 @@
     233
    ],
    "matched": true,
-   "anchorScore": 0.91,
+   "anchorScore": 1,
    "pageScore": 0.9,
    "segments": [
     {
-     "i": 239,
-     "from": 649,
-     "to": 653
-    },
-    {
      "i": 240,
      "from": 0,
-     "to": 1831
+     "to": 1837
     }
    ]
   },
@@ -10771,12 +10429,12 @@
     620
    ],
    "matched": true,
-   "anchorScore": 0.86,
-   "pageScore": 0.88,
+   "anchorScore": 0.95,
+   "pageScore": 0.89,
    "segments": [
     {
      "i": 240,
-     "from": 1831,
+     "from": 1837,
      "to": 1836
     },
     {
@@ -10927,7 +10585,7 @@
     {
      "i": 248,
      "from": 0,
-     "to": 713
+     "to": 718
     }
    ]
   },
@@ -10940,14 +10598,9 @@
     241
    ],
    "matched": true,
-   "anchorScore": 0.88,
-   "pageScore": 0.96,
+   "anchorScore": 0.97,
+   "pageScore": 0.97,
    "segments": [
-    {
-     "i": 248,
-     "from": 713,
-     "to": 718
-    },
     {
      "i": 249,
      "from": 0,
@@ -10995,12 +10648,12 @@
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.93,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 251,
      "from": 528,
-     "to": 2081
+     "to": 2086
     }
    ]
   },
@@ -11012,14 +10665,9 @@
     631
    ],
    "matched": true,
-   "anchorScore": 0.91,
+   "anchorScore": 1,
    "pageScore": 0.89,
    "segments": [
-    {
-     "i": 251,
-     "from": 2081,
-     "to": 2086
-    },
     {
      "i": 252,
      "from": 0,
@@ -11067,7 +10715,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.92,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 254,
@@ -11077,7 +10725,7 @@
     {
      "i": 255,
      "from": 0,
-     "to": 721
+     "to": 730
     }
    ]
   },
@@ -11088,14 +10736,9 @@
     247
    ],
    "matched": true,
-   "anchorScore": 0.95,
-   "pageScore": 0.81,
+   "anchorScore": 1,
+   "pageScore": 0.82,
    "segments": [
-    {
-     "i": 255,
-     "from": 721,
-     "to": 730
-    },
     {
      "i": 256,
      "from": 0,
@@ -11266,7 +10909,7 @@
     {
      "i": 264,
      "from": 0,
-     "to": 945
+     "to": 951
     }
    ]
   },
@@ -11279,14 +10922,9 @@
     255
    ],
    "matched": true,
-   "anchorScore": 0.91,
-   "pageScore": 0.79,
+   "anchorScore": 1,
+   "pageScore": 0.8,
    "segments": [
-    {
-     "i": 264,
-     "from": 945,
-     "to": 951
-    },
     {
      "i": 265,
      "from": 0,
@@ -11385,7 +11023,7 @@
     {
      "i": 269,
      "from": 0,
-     "to": 796
+     "to": 798
     }
    ]
   },
@@ -11397,14 +11035,9 @@
     649
    ],
    "matched": true,
-   "anchorScore": 0.95,
-   "pageScore": 0.8,
+   "anchorScore": 1,
+   "pageScore": 0.81,
    "segments": [
-    {
-     "i": 269,
-     "from": 796,
-     "to": 798
-    },
     {
      "i": 270,
      "from": 0,
@@ -11421,8 +11054,8 @@
     261
    ],
    "matched": true,
-   "anchorScore": 0.95,
-   "pageScore": 0.92,
+   "anchorScore": 0.97,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 270,
@@ -11634,7 +11267,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.75,
+   "pageScore": 0.76,
    "segments": [
     {
      "i": 278,
@@ -11644,7 +11277,7 @@
     {
      "i": 279,
      "from": 0,
-     "to": 426
+     "to": 429
     }
    ]
   },
@@ -11657,18 +11290,13 @@
     271
    ],
    "matched": true,
-   "anchorScore": 0.93,
-   "pageScore": 0.89,
+   "anchorScore": 1,
+   "pageScore": 0.9,
    "segments": [
-    {
-     "i": 279,
-     "from": 426,
-     "to": 429
-    },
     {
      "i": 280,
      "from": 0,
-     "to": 1424
+     "to": 1429
     }
    ]
   },
@@ -11680,14 +11308,9 @@
     640
    ],
    "matched": true,
-   "anchorScore": 0.95,
+   "anchorScore": 1,
    "pageScore": 0.78,
    "segments": [
-    {
-     "i": 280,
-     "from": 1424,
-     "to": 1429
-    },
     {
      "i": 281,
      "from": 0,
@@ -11770,7 +11393,7 @@
     663
    ],
    "matched": true,
-   "anchorScore": 0.93,
+   "anchorScore": 1,
    "pageScore": 0.91,
    "segments": [
     {
@@ -11800,7 +11423,7 @@
     {
      "i": 285,
      "from": 0,
-     "to": 576
+     "to": 584
     }
    ]
   },
@@ -11811,18 +11434,13 @@
     278
    ],
    "matched": true,
-   "anchorScore": 0.9,
-   "pageScore": 0.87,
+   "anchorScore": 1,
+   "pageScore": 0.88,
    "segments": [
-    {
-     "i": 285,
-     "from": 576,
-     "to": 584
-    },
     {
      "i": 286,
      "from": 0,
-     "to": 796
+     "to": 799
     }
    ]
   },
@@ -11835,14 +11453,9 @@
     279
    ],
    "matched": true,
-   "anchorScore": 0.93,
-   "pageScore": 0.75,
+   "anchorScore": 1,
+   "pageScore": 0.76,
    "segments": [
-    {
-     "i": 286,
-     "from": 796,
-     "to": 799
-    },
     {
      "i": 287,
      "from": 0,
@@ -11851,7 +11464,7 @@
     {
      "i": 288,
      "from": 0,
-     "to": 273
+     "to": 278
     }
    ]
   },
@@ -11864,14 +11477,9 @@
     668
    ],
    "matched": true,
-   "anchorScore": 0.97,
-   "pageScore": 0.85,
+   "anchorScore": 1,
+   "pageScore": 0.86,
    "segments": [
-    {
-     "i": 288,
-     "from": 273,
-     "to": 278
-    },
     {
      "i": 289,
      "from": 0,
@@ -11996,7 +11604,7 @@
     {
      "i": 294,
      "from": 231,
-     "to": 1832
+     "to": 1836
     }
    ]
   },
@@ -12009,14 +11617,9 @@
     674
    ],
    "matched": true,
-   "anchorScore": 0.91,
+   "anchorScore": 1,
    "pageScore": 0.96,
    "segments": [
-    {
-     "i": 294,
-     "from": 1832,
-     "to": 1836
-    },
     {
      "i": 295,
      "from": 0,
@@ -12217,12 +11820,12 @@
    ],
    "matched": true,
    "anchorScore": 0.84,
-   "pageScore": 0.96,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 302,
      "from": 1682,
-     "to": 3002
+     "to": 3009
     }
    ]
   },
@@ -12233,14 +11836,9 @@
     296
    ],
    "matched": true,
-   "anchorScore": 0.81,
+   "anchorScore": 0.9,
    "pageScore": 0.85,
    "segments": [
-    {
-     "i": 302,
-     "from": 3002,
-     "to": 3009
-    },
     {
      "i": 303,
      "from": 0,
@@ -12305,7 +11903,7 @@
     {
      "i": 304,
      "from": 296,
-     "to": 1998
+     "to": 1997
     }
    ]
   },
@@ -12316,18 +11914,13 @@
     300
    ],
    "matched": true,
-   "anchorScore": 0.93,
-   "pageScore": 0.97,
+   "anchorScore": 1,
+   "pageScore": 0.98,
    "segments": [
-    {
-     "i": 304,
-     "from": 1998,
-     "to": 1997
-    },
     {
      "i": 305,
      "from": 0,
-     "to": 1159
+     "to": 1164
     }
    ]
   },
@@ -12338,14 +11931,9 @@
     301
    ],
    "matched": true,
-   "anchorScore": 0.88,
+   "anchorScore": 0.95,
    "pageScore": 0.65,
    "segments": [
-    {
-     "i": 305,
-     "from": 1159,
-     "to": 1164
-    },
     {
      "i": 306,
      "from": 0,
@@ -12433,7 +12021,7 @@
     {
      "i": 311,
      "from": 0,
-     "to": 460
+     "to": 465
     }
    ]
   },
@@ -12446,14 +12034,9 @@
     305
    ],
    "matched": true,
-   "anchorScore": 0.9,
-   "pageScore": 0.9,
+   "anchorScore": 0.93,
+   "pageScore": 0.91,
    "segments": [
-    {
-     "i": 311,
-     "from": 460,
-     "to": 465
-    },
     {
      "i": 312,
      "from": 0,
@@ -12527,14 +12110,9 @@
     695
    ],
    "matched": true,
-   "anchorScore": 0.93,
+   "anchorScore": 1,
    "pageScore": 0.94,
    "segments": [
-    {
-     "i": 315,
-     "from": 770,
-     "to": 770
-    },
     {
      "i": 316,
      "from": 0,
@@ -12551,12 +12129,12 @@
    ],
    "matched": true,
    "anchorScore": 0.98,
-   "pageScore": 0.89,
+   "pageScore": 0.9,
    "segments": [
     {
      "i": 316,
      "from": 1348,
-     "to": 2785
+     "to": 2794
     }
    ]
   },
@@ -12569,18 +12147,13 @@
     696
    ],
    "matched": true,
-   "anchorScore": 0.93,
-   "pageScore": 0.95,
+   "anchorScore": 1,
+   "pageScore": 0.97,
    "segments": [
-    {
-     "i": 316,
-     "from": 2785,
-     "to": 2794
-    },
     {
      "i": 317,
      "from": 0,
-     "to": 919
+     "to": 924
     }
    ]
   },
@@ -12593,14 +12166,9 @@
     311
    ],
    "matched": true,
-   "anchorScore": 0.91,
-   "pageScore": 0.86,
+   "anchorScore": 1,
+   "pageScore": 0.87,
    "segments": [
-    {
-     "i": 317,
-     "from": 919,
-     "to": 924
-    },
     {
      "i": 318,
      "from": 0,
@@ -12640,7 +12208,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.91,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 319,
@@ -12650,7 +12218,7 @@
     {
      "i": 320,
      "from": 0,
-     "to": 625
+     "to": 629
     }
    ]
   },
@@ -12663,18 +12231,13 @@
     700
    ],
    "matched": true,
-   "anchorScore": 0.95,
-   "pageScore": 0.9,
+   "anchorScore": 1,
+   "pageScore": 0.91,
    "segments": [
-    {
-     "i": 320,
-     "from": 625,
-     "to": 629
-    },
     {
      "i": 321,
      "from": 0,
-     "to": 806
+     "to": 812
     }
    ]
   },
@@ -12687,14 +12250,9 @@
     315
    ],
    "matched": true,
-   "anchorScore": 0.95,
-   "pageScore": 0.89,
+   "anchorScore": 1,
+   "pageScore": 0.9,
    "segments": [
-    {
-     "i": 321,
-     "from": 806,
-     "to": 812
-    },
     {
      "i": 322,
      "from": 0,
@@ -12734,7 +12292,7 @@
     317
    ],
    "matched": true,
-   "anchorScore": 0.79,
+   "anchorScore": 0.84,
    "pageScore": 0.84,
    "segments": [
     {
@@ -12770,7 +12328,7 @@
     {
      "i": 325,
      "from": 0,
-     "to": 374
+     "to": 381
     }
    ]
   },
@@ -12783,12 +12341,12 @@
     319
    ],
    "matched": true,
-   "anchorScore": 0.9,
+   "anchorScore": 0.97,
    "pageScore": 0.87,
    "segments": [
     {
      "i": 325,
-     "from": 374,
+     "from": 381,
      "to": 380
     },
     {
@@ -12836,7 +12394,7 @@
     {
      "i": 327,
      "from": 0,
-     "to": 1331
+     "to": 1336
     }
    ]
   },
@@ -12849,14 +12407,9 @@
     707
    ],
    "matched": true,
-   "anchorScore": 0.93,
+   "anchorScore": 1,
    "pageScore": 0.89,
    "segments": [
-    {
-     "i": 327,
-     "from": 1331,
-     "to": 1336
-    },
     {
      "i": 328,
      "from": 0,
@@ -12889,7 +12442,7 @@
     {
      "i": 330,
      "from": 0,
-     "to": 800
+     "to": 805
     }
    ]
   },
@@ -12901,14 +12454,9 @@
     710
    ],
    "matched": true,
-   "anchorScore": 0.93,
+   "anchorScore": 1,
    "pageScore": 0.91,
    "segments": [
-    {
-     "i": 330,
-     "from": 800,
-     "to": 805
-    },
     {
      "i": 331,
      "from": 0,
@@ -12936,7 +12484,7 @@
     {
      "i": 332,
      "from": 0,
-     "to": 1088
+     "to": 1092
     }
    ]
   },
@@ -12949,18 +12497,13 @@
     712
    ],
    "matched": true,
-   "anchorScore": 0.91,
+   "anchorScore": 1,
    "pageScore": 0.91,
    "segments": [
     {
-     "i": 332,
-     "from": 1088,
-     "to": 1092
-    },
-    {
      "i": 333,
      "from": 0,
-     "to": 965
+     "to": 976
     }
    ]
   },
@@ -12973,14 +12516,9 @@
     327
    ],
    "matched": true,
-   "anchorScore": 0.91,
-   "pageScore": 0.9,
+   "anchorScore": 1,
+   "pageScore": 0.91,
    "segments": [
-    {
-     "i": 333,
-     "from": 965,
-     "to": 976
-    },
     {
      "i": 334,
      "from": 0,
@@ -13045,7 +12583,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.94,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 336,
@@ -13055,7 +12593,7 @@
     {
      "i": 337,
      "from": 0,
-     "to": 1282
+     "to": 1289
     }
    ]
   },
@@ -13068,18 +12606,13 @@
     331
    ],
    "matched": true,
-   "anchorScore": 0.86,
+   "anchorScore": 0.95,
    "pageScore": 0.93,
    "segments": [
     {
-     "i": 337,
-     "from": 1282,
-     "to": 1289
-    },
-    {
      "i": 338,
      "from": 0,
-     "to": 739
+     "to": 738
     }
    ]
   },
@@ -13091,18 +12624,13 @@
     718
    ],
    "matched": true,
-   "anchorScore": 0.93,
-   "pageScore": 0.83,
+   "anchorScore": 1,
+   "pageScore": 0.84,
    "segments": [
-    {
-     "i": 338,
-     "from": 739,
-     "to": 738
-    },
     {
      "i": 339,
      "from": 0,
-     "to": 889
+     "to": 897
     }
    ]
   },
@@ -13115,18 +12643,13 @@
     333
    ],
    "matched": true,
-   "anchorScore": 0.81,
-   "pageScore": 0.85,
+   "anchorScore": 0.9,
+   "pageScore": 0.86,
    "segments": [
-    {
-     "i": 339,
-     "from": 889,
-     "to": 897
-    },
     {
      "i": 340,
      "from": 0,
-     "to": 1272
+     "to": 1279
     }
    ]
   },
@@ -13138,18 +12661,13 @@
     720
    ],
    "matched": true,
-   "anchorScore": 0.93,
-   "pageScore": 0.94,
+   "anchorScore": 1,
+   "pageScore": 0.95,
    "segments": [
-    {
-     "i": 340,
-     "from": 1272,
-     "to": 1279
-    },
     {
      "i": 341,
      "from": 0,
-     "to": 1193
+     "to": 1198
     }
    ]
   },
@@ -13162,14 +12680,9 @@
     335
    ],
    "matched": true,
-   "anchorScore": 0.91,
-   "pageScore": 0.84,
+   "anchorScore": 1,
+   "pageScore": 0.85,
    "segments": [
-    {
-     "i": 341,
-     "from": 1193,
-     "to": 1198
-    },
     {
      "i": 342,
      "from": 0,
@@ -13294,7 +12807,7 @@
     {
      "i": 346,
      "from": 0,
-     "to": 463
+     "to": 468
     }
    ]
   },
@@ -13307,14 +12820,9 @@
     341
    ],
    "matched": true,
-   "anchorScore": 0.91,
+   "anchorScore": 0.93,
    "pageScore": 0.9,
    "segments": [
-    {
-     "i": 346,
-     "from": 463,
-     "to": 468
-    },
     {
      "i": 347,
      "from": 0,
@@ -13359,7 +12867,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.94,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 349,
@@ -13369,7 +12877,7 @@
     {
      "i": 350,
      "from": 0,
-     "to": 819
+     "to": 824
     }
    ]
   },
@@ -13381,14 +12889,9 @@
     729
    ],
    "matched": true,
-   "anchorScore": 0.91,
+   "anchorScore": 1,
    "pageScore": 0.91,
    "segments": [
-    {
-     "i": 350,
-     "from": 819,
-     "to": 824
-    },
     {
      "i": 351,
      "from": 0,
@@ -13477,12 +12980,12 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.94,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 354,
      "from": 1087,
-     "to": 2352
+     "to": 2354
     }
    ]
   },
@@ -13495,14 +12998,9 @@
     349
    ],
    "matched": true,
-   "anchorScore": 0.9,
+   "anchorScore": 0.93,
    "pageScore": 0.91,
    "segments": [
-    {
-     "i": 354,
-     "from": 2352,
-     "to": 2354
-    },
     {
      "i": 355,
      "from": 0,
@@ -13627,7 +13125,7 @@
     {
      "i": 361,
      "from": 0,
-     "to": 1210
+     "to": 1217
     }
    ]
   },
@@ -13640,18 +13138,13 @@
     355
    ],
    "matched": true,
-   "anchorScore": 0.93,
-   "pageScore": 0.85,
+   "anchorScore": 1,
+   "pageScore": 0.86,
    "segments": [
-    {
-     "i": 361,
-     "from": 1210,
-     "to": 1217
-    },
     {
      "i": 362,
      "from": 0,
-     "to": 898
+     "to": 902
     }
    ]
   },
@@ -13664,14 +13157,9 @@
     741
    ],
    "matched": true,
-   "anchorScore": 0.88,
+   "anchorScore": 0.93,
    "pageScore": 0.75,
    "segments": [
-    {
-     "i": 362,
-     "from": 898,
-     "to": 902
-    },
     {
      "i": 363,
      "from": 0,
@@ -13731,7 +13219,7 @@
     {
      "i": 363,
      "from": 5186,
-     "to": 6641
+     "to": 6652
     }
    ]
   },
@@ -13743,18 +13231,13 @@
     742
    ],
    "matched": true,
-   "anchorScore": 0.91,
-   "pageScore": 0.87,
+   "anchorScore": 1,
+   "pageScore": 0.89,
    "segments": [
-    {
-     "i": 363,
-     "from": 6641,
-     "to": 6652
-    },
     {
      "i": 364,
      "from": 0,
-     "to": 760
+     "to": 766
     }
    ]
   },
@@ -13767,14 +13250,9 @@
     361
    ],
    "matched": true,
-   "anchorScore": 0.91,
+   "anchorScore": 1,
    "pageScore": 0.82,
    "segments": [
-    {
-     "i": 364,
-     "from": 760,
-     "to": 766
-    },
     {
      "i": 365,
      "from": 0,
@@ -13832,7 +13310,7 @@
     745
    ],
    "matched": true,
-   "anchorScore": 0.86,
+   "anchorScore": 0.95,
    "pageScore": 0.9,
    "segments": [
     {
@@ -13856,14 +13334,9 @@
     365
    ],
    "matched": true,
-   "anchorScore": 0.93,
+   "anchorScore": 1,
    "pageScore": 0.8,
    "segments": [
-    {
-     "i": 367,
-     "from": 1047,
-     "to": 1047
-    },
     {
      "i": 368,
      "from": 0,
@@ -13980,7 +13453,7 @@
     {
      "i": 372,
      "from": 0,
-     "to": 517
+     "to": 527
     }
    ]
   },
@@ -13993,14 +13466,9 @@
     371
    ],
    "matched": true,
-   "anchorScore": 0.91,
-   "pageScore": 0.92,
+   "anchorScore": 1,
+   "pageScore": 0.93,
    "segments": [
-    {
-     "i": 372,
-     "from": 517,
-     "to": 527
-    },
     {
      "i": 373,
      "from": 0,
@@ -14181,7 +13649,7 @@
     {
      "i": 382,
      "from": 0,
-     "to": 1267
+     "to": 1271
     }
    ]
   },
@@ -14194,14 +13662,9 @@
     379
    ],
    "matched": true,
-   "anchorScore": 0.93,
-   "pageScore": 0.86,
+   "anchorScore": 1,
+   "pageScore": 0.87,
    "segments": [
-    {
-     "i": 382,
-     "from": 1267,
-     "to": 1271
-    },
     {
      "i": 383,
      "from": 0,
@@ -14218,8 +13681,8 @@
     762
    ],
    "matched": true,
-   "anchorScore": 0.93,
-   "pageScore": 0.87,
+   "anchorScore": 1,
+   "pageScore": 0.88,
    "segments": [
     {
      "i": 384,
@@ -14331,8 +13794,8 @@
     385
    ],
    "matched": true,
-   "anchorScore": 0.78,
-   "pageScore": 0.75,
+   "anchorScore": 0.84,
+   "pageScore": 0.76,
    "segments": [
     {
      "i": 389,
@@ -14484,7 +13947,7 @@
     {
      "i": 396,
      "from": 0,
-     "to": 440
+     "to": 446
     }
    ]
   },
@@ -14496,14 +13959,9 @@
     775
    ],
    "matched": true,
-   "anchorScore": 0.91,
+   "anchorScore": 1,
    "pageScore": 0.86,
    "segments": [
-    {
-     "i": 396,
-     "from": 440,
-     "to": 446
-    },
     {
      "i": 397,
      "from": 0,
@@ -14531,7 +13989,7 @@
     {
      "i": 398,
      "from": 158,
-     "to": 1253
+     "to": 1260
     }
    ]
   },
@@ -14543,18 +14001,13 @@
     777
    ],
    "matched": true,
-   "anchorScore": 0.91,
-   "pageScore": 0.79,
+   "anchorScore": 1,
+   "pageScore": 0.8,
    "segments": [
-    {
-     "i": 398,
-     "from": 1253,
-     "to": 1260
-    },
     {
      "i": 399,
      "from": 0,
-     "to": 869
+     "to": 874
     }
    ]
   },
@@ -14567,14 +14020,9 @@
     395
    ],
    "matched": true,
-   "anchorScore": 0.97,
-   "pageScore": 0.91,
+   "anchorScore": 1,
+   "pageScore": 0.92,
    "segments": [
-    {
-     "i": 399,
-     "from": 869,
-     "to": 874
-    },
     {
      "i": 400,
      "from": 0,
@@ -14614,8 +14062,8 @@
     397
    ],
    "matched": true,
-   "anchorScore": 0.95,
-   "pageScore": 0.85,
+   "anchorScore": 1,
+   "pageScore": 0.86,
    "segments": [
     {
      "i": 402,
@@ -14706,7 +14154,7 @@
     {
      "i": 404,
      "from": 755,
-     "to": 2413
+     "to": 2418
     }
    ]
   },
@@ -14719,18 +14167,18 @@
     783
    ],
    "matched": true,
-   "anchorScore": 0.88,
-   "pageScore": 0.79,
+   "anchorScore": 0.97,
+   "pageScore": 0.8,
    "segments": [
     {
      "i": 404,
-     "from": 2413,
+     "from": 2418,
      "to": 2417
     },
     {
      "i": 405,
      "from": 0,
-     "to": 892
+     "to": 897
     }
    ]
   },
@@ -14744,14 +14192,9 @@
     403
    ],
    "matched": true,
-   "anchorScore": 0.91,
+   "anchorScore": 1,
    "pageScore": 0.83,
    "segments": [
-    {
-     "i": 405,
-     "from": 892,
-     "to": 897
-    },
     {
      "i": 406,
      "from": 0,
@@ -14769,12 +14212,12 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.94,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 406,
      "from": 1277,
-     "to": 2727
+     "to": 2733
     }
    ]
   },
@@ -14787,14 +14230,9 @@
     405
    ],
    "matched": true,
-   "anchorScore": 0.98,
+   "anchorScore": 1,
    "pageScore": 0.9,
    "segments": [
-    {
-     "i": 406,
-     "from": 2727,
-     "to": 2733
-    },
     {
      "i": 407,
      "from": 0,
@@ -14897,7 +14335,7 @@
     {
      "i": 412,
      "from": 0,
-     "to": 1099
+     "to": 1104
     }
    ]
   },
@@ -14910,18 +14348,13 @@
     791
    ],
    "matched": true,
-   "anchorScore": 0.91,
-   "pageScore": 0.92,
+   "anchorScore": 1,
+   "pageScore": 0.93,
    "segments": [
-    {
-     "i": 412,
-     "from": 1099,
-     "to": 1104
-    },
     {
      "i": 413,
      "from": 0,
-     "to": 1121
+     "to": 1126
     }
    ]
   },
@@ -14934,18 +14367,13 @@
     411
    ],
    "matched": true,
-   "anchorScore": 0.91,
-   "pageScore": 0.9,
+   "anchorScore": 1,
+   "pageScore": 0.92,
    "segments": [
-    {
-     "i": 413,
-     "from": 1121,
-     "to": 1126
-    },
     {
      "i": 414,
      "from": 0,
-     "to": 867
+     "to": 871
     }
    ]
   },
@@ -14957,14 +14385,9 @@
     840
    ],
    "matched": true,
-   "anchorScore": 0.88,
-   "pageScore": 0.78,
+   "anchorScore": 0.95,
+   "pageScore": 0.79,
    "segments": [
-    {
-     "i": 414,
-     "from": 867,
-     "to": 871
-    },
     {
      "i": 415,
      "from": 0,
@@ -15068,7 +14491,7 @@
     {
      "i": 420,
      "from": 0,
-     "to": 517
+     "to": 524
     }
    ]
   },
@@ -15081,14 +14504,9 @@
     417
    ],
    "matched": true,
-   "anchorScore": 0.83,
+   "anchorScore": 0.91,
    "pageScore": 0.88,
    "segments": [
-    {
-     "i": 420,
-     "from": 517,
-     "to": 524
-    },
     {
      "i": 421,
      "from": 0,
