@@ -3,6 +3,7 @@
  "pdf": "vol-10.pdf",
  "pdfPages": 455,
  "printedOffset": 17,
+ "offsetChanges": [],
  "letters": [
   {
    "i": 0,
@@ -104,8 +105,7 @@
    "bodyLength": 1708,
    "pages": [
     25,
-    26,
-    27
+    26
    ],
    "coverage": 1,
    "status": "ok"
@@ -4902,7 +4902,7 @@
    "printed": null,
    "headerNumbers": [],
    "matched": false,
-   "anchorScore": 0.1,
+   "anchorScore": 0,
    "pageScore": null,
    "segments": []
   },
@@ -4914,7 +4914,7 @@
     90
    ],
    "matched": false,
-   "anchorScore": 0.16,
+   "anchorScore": 0,
    "pageScore": null,
    "segments": []
   },
@@ -4934,10 +4934,11 @@
    "pdf": 6,
    "printed": null,
    "headerNumbers": [
-    528
+    40,
+    408
    ],
    "matched": false,
-   "anchorScore": 0.29,
+   "anchorScore": 0,
    "pageScore": null,
    "segments": []
   },
@@ -4945,10 +4946,11 @@
    "pdf": 7,
    "printed": null,
    "headerNumbers": [
-    528
+    40,
+    408
    ],
    "matched": false,
-   "anchorScore": 0.1,
+   "anchorScore": 0,
    "pageScore": null,
    "segments": []
   },
@@ -4956,10 +4958,11 @@
    "pdf": 8,
    "printed": null,
    "headerNumbers": [
-    528
+    40,
+    408
    ],
    "matched": false,
-   "anchorScore": 0.1,
+   "anchorScore": 0,
    "pageScore": null,
    "segments": []
   },
@@ -4967,19 +4970,23 @@
    "pdf": 9,
    "printed": null,
    "headerNumbers": [
-    528
+    40,
+    408
    ],
    "matched": false,
-   "anchorScore": 0.1,
+   "anchorScore": 0,
    "pageScore": null,
    "segments": []
   },
   {
    "pdf": 10,
    "printed": null,
-   "headerNumbers": [],
+   "headerNumbers": [
+    40,
+    8
+   ],
    "matched": false,
-   "anchorScore": 0.12,
+   "anchorScore": 0,
    "pageScore": null,
    "segments": []
   },
@@ -4987,10 +4994,11 @@
    "pdf": 11,
    "printed": null,
    "headerNumbers": [
-    528
+    40,
+    408
    ],
    "matched": false,
-   "anchorScore": 0.1,
+   "anchorScore": 0,
    "pageScore": null,
    "segments": []
   },
@@ -4998,10 +5006,11 @@
    "pdf": 12,
    "printed": null,
    "headerNumbers": [
-    525
+    40,
+    405
    ],
    "matched": false,
-   "anchorScore": 0.09,
+   "anchorScore": 0,
    "pageScore": null,
    "segments": []
   },
@@ -5009,10 +5018,11 @@
    "pdf": 13,
    "printed": null,
    "headerNumbers": [
-    528
+    40,
+    408
    ],
    "matched": false,
-   "anchorScore": 0.12,
+   "anchorScore": 0,
    "pageScore": null,
    "segments": []
   },
@@ -5020,10 +5030,11 @@
    "pdf": 14,
    "printed": null,
    "headerNumbers": [
-    525
+    40,
+    405
    ],
    "matched": false,
-   "anchorScore": 0.14,
+   "anchorScore": 0,
    "pageScore": null,
    "segments": []
   },
@@ -5031,10 +5042,11 @@
    "pdf": 15,
    "printed": null,
    "headerNumbers": [
-    528
+    40,
+    408
    ],
    "matched": false,
-   "anchorScore": 0.21,
+   "anchorScore": 0,
    "pageScore": null,
    "segments": []
   },
@@ -5042,10 +5054,11 @@
    "pdf": 16,
    "printed": null,
    "headerNumbers": [
-    528
+    40,
+    408
    ],
    "matched": false,
-   "anchorScore": 0.12,
+   "anchorScore": 0,
    "pageScore": null,
    "segments": []
   },
@@ -5053,10 +5066,11 @@
    "pdf": 17,
    "printed": null,
    "headerNumbers": [
-    528
+    40,
+    408
    ],
    "matched": false,
-   "anchorScore": 0.09,
+   "anchorScore": 0,
    "pageScore": null,
    "segments": []
   },
@@ -5066,7 +5080,7 @@
    "headerNumbers": [],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.71,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 0,
@@ -5078,10 +5092,17 @@
   {
    "pdf": 19,
    "printed": 2,
-   "headerNumbers": [],
+   "headerNumbers": [
+    2,
+    400,
+    106,
+    3,
+    960,
+    565
+   ],
    "matched": true,
    "anchorScore": 0.93,
-   "pageScore": 0.78,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 0,
@@ -5103,7 +5124,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.76,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 2,
@@ -5120,7 +5141,14 @@
   {
    "pdf": 21,
    "printed": 4,
-   "headerNumbers": [],
+   "headerNumbers": [
+    4,
+    400,
+    106,
+    302,
+    960,
+    568
+   ],
    "matched": true,
    "anchorScore": 1,
    "pageScore": 0.95,
@@ -5140,7 +5168,7 @@
    ],
    "matched": true,
    "anchorScore": 0.88,
-   "pageScore": 0.84,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 3,
@@ -5158,11 +5186,13 @@
    "pdf": 23,
    "printed": 6,
    "headerNumbers": [
+    6,
+    370,
     970
    ],
    "matched": true,
    "anchorScore": 0.84,
-   "pageScore": 0.86,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 4,
@@ -5201,10 +5231,17 @@
   {
    "pdf": 25,
    "printed": 8,
-   "headerNumbers": [],
+   "headerNumbers": [
+    8,
+    400,
+    106,
+    370,
+    970,
+    572
+   ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.88,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 7,
@@ -5226,28 +5263,31 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.93,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 8,
      "from": 233,
-     "to": 1694
+     "to": 1706
     }
    ]
   },
   {
    "pdf": 27,
    "printed": 10,
-   "headerNumbers": [],
+   "headerNumbers": [
+    11,
+    10,
+    400,
+    106,
+    302,
+    970,
+    574
+   ],
    "matched": true,
-   "anchorScore": 0.86,
-   "pageScore": 0.94,
+   "anchorScore": 1,
+   "pageScore": 0.98,
    "segments": [
-    {
-     "i": 8,
-     "from": 1694,
-     "to": 1706
-    },
     {
      "i": 9,
      "from": 0,
@@ -5263,7 +5303,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.93,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 9,
@@ -5281,11 +5321,15 @@
    "pdf": 29,
    "printed": 12,
    "headerNumbers": [
-    12
+    12,
+    1,
+    2,
+    970,
+    575
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.93,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 10,
@@ -5307,7 +5351,7 @@
    ],
    "matched": true,
    "anchorScore": 0.83,
-   "pageScore": 0.72,
+   "pageScore": 0.91,
    "segments": [
     {
      "i": 11,
@@ -5325,11 +5369,17 @@
    "pdf": 31,
    "printed": 14,
    "headerNumbers": [
-    14
+    14,
+    1,
+    400,
+    106,
+    370,
+    970,
+    577
    ],
    "matched": true,
    "anchorScore": 0.98,
-   "pageScore": 0.92,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 12,
@@ -5346,7 +5396,7 @@
    ],
    "matched": true,
    "anchorScore": 0.93,
-   "pageScore": 0.84,
+   "pageScore": 0.86,
    "segments": [
     {
      "i": 12,
@@ -5369,11 +5419,17 @@
    "pdf": 33,
    "printed": 16,
    "headerNumbers": [
-    16
+    16,
+    1,
+    400,
+    106,
+    2,
+    970,
+    579
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.94,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 14,
@@ -5391,9 +5447,10 @@
    "pdf": 34,
    "printed": 17,
    "headerNumbers": [
-    57,
     4,
-    17
+    17,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 1,
@@ -5409,10 +5466,17 @@
   {
    "pdf": 35,
    "printed": 18,
-   "headerNumbers": [],
+   "headerNumbers": [
+    1,
+    400,
+    106,
+    2,
+    980,
+    582
+   ],
    "matched": true,
    "anchorScore": 0.97,
-   "pageScore": 0.9,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 17,
@@ -5429,7 +5493,7 @@
    ],
    "matched": true,
    "anchorScore": 0.91,
-   "pageScore": 0.79,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 17,
@@ -5452,11 +5516,16 @@
    "pdf": 37,
    "printed": 20,
    "headerNumbers": [
-    2
+    2,
+    21,
+    20,
+    300,
+    980,
+    10
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.88,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 19,
@@ -5473,7 +5542,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.92,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 20,
@@ -5486,11 +5555,17 @@
    "pdf": 39,
    "printed": 22,
    "headerNumbers": [
-    22
+    22,
+    1,
+    400,
+    106,
+    2,
+    980,
+    585
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.97,
+   "pageScore": 0.99,
    "segments": [
     {
      "i": 20,
@@ -5507,7 +5582,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.72,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 21,
@@ -5519,7 +5594,14 @@
   {
    "pdf": 41,
    "printed": 24,
-   "headerNumbers": [],
+   "headerNumbers": [
+    24,
+    400,
+    106,
+    2,
+    980,
+    587
+   ],
    "matched": true,
    "anchorScore": 1,
    "pageScore": 0.97,
@@ -5557,7 +5639,11 @@
    "pdf": 43,
    "printed": 26,
    "headerNumbers": [
-    2
+    2,
+    26,
+    300,
+    980,
+    588
    ],
    "matched": true,
    "anchorScore": 1,
@@ -5574,13 +5660,14 @@
    "pdf": 44,
    "printed": 27,
    "headerNumbers": [
-    51,
     6,
-    27
+    27,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 0.9,
-   "pageScore": 0.73,
+   "pageScore": 0.88,
    "segments": [
     {
      "i": 24,
@@ -5599,11 +5686,15 @@
    "printed": 28,
    "headerNumbers": [
     28,
+    1,
+    400,
+    106,
+    2,
     990
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.93,
+   "pageScore": 0.98,
    "segments": [
     {
      "i": 25,
@@ -5620,7 +5711,7 @@
    ],
    "matched": true,
    "anchorScore": 0.88,
-   "pageScore": 0.93,
+   "pageScore": 0.98,
    "segments": [
     {
      "i": 25,
@@ -5638,11 +5729,18 @@
    "pdf": 47,
    "printed": 30,
    "headerNumbers": [
-    2
+    2,
+    31,
+    30,
+    400,
+    106,
+    300,
+    990,
+    591
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.89,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 26,
@@ -5660,9 +5758,10 @@
    "pdf": 48,
    "printed": 31,
    "headerNumbers": [
-    51,
     6,
-    31
+    31,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 0.95,
@@ -5684,7 +5783,13 @@
    "pdf": 49,
    "printed": 32,
    "headerNumbers": [
-    32
+    32,
+    1,
+    400,
+    106,
+    2,
+    990,
+    593
    ],
    "matched": true,
    "anchorScore": 0.97,
@@ -5706,9 +5811,10 @@
    "pdf": 50,
    "printed": 33,
    "headerNumbers": [
-    51,
     6,
-    33
+    33,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 1,
@@ -5730,11 +5836,17 @@
    "pdf": 51,
    "printed": 34,
    "headerNumbers": [
-    34
+    34,
+    1,
+    400,
+    106,
+    2,
+    990,
+    596
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.92,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 31,
@@ -5756,7 +5868,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.88,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 32,
@@ -5775,11 +5887,17 @@
    "printed": 36,
    "headerNumbers": [
     36,
-    2
+    2,
+    1,
+    400,
+    106,
+    300,
+    990,
+    598
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.94,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 33,
@@ -5801,7 +5919,7 @@
    ],
    "matched": true,
    "anchorScore": 0.93,
-   "pageScore": 0.76,
+   "pageScore": 0.91,
    "segments": [
     {
      "i": 34,
@@ -5820,11 +5938,12 @@
    "printed": 38,
    "headerNumbers": [
     38,
-    1
+    1,
+    340
    ],
    "matched": true,
    "anchorScore": 0.97,
-   "pageScore": 0.95,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 36,
@@ -5841,7 +5960,7 @@
    ],
    "matched": true,
    "anchorScore": 0.81,
-   "pageScore": 0.85,
+   "pageScore": 0.89,
    "segments": [
     {
      "i": 36,
@@ -5859,11 +5978,16 @@
    "pdf": 57,
    "printed": 40,
    "headerNumbers": [
-    2
+    2,
+    41,
+    40,
+    400,
+    106,
+    3
    ],
    "matched": true,
    "anchorScore": 0.9,
-   "pageScore": 0.76,
+   "pageScore": 0.89,
    "segments": [
     {
      "i": 37,
@@ -5885,7 +6009,7 @@
    ],
    "matched": true,
    "anchorScore": 0.86,
-   "pageScore": 0.9,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 38,
@@ -5910,7 +6034,11 @@
    "headerNumbers": [
     42,
     3,
-    5
+    5,
+    1,
+    400,
+    106,
+    300
    ],
    "matched": true,
    "anchorScore": 0.93,
@@ -5945,7 +6073,7 @@
    ],
    "matched": true,
    "anchorScore": 0.98,
-   "pageScore": 0.81,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 42,
@@ -5963,7 +6091,9 @@
    "pdf": 61,
    "printed": 44,
    "headerNumbers": [
-    8
+    8,
+    44,
+    303
    ],
    "matched": true,
    "anchorScore": 1,
@@ -5984,7 +6114,7 @@
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.92,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 43,
@@ -6002,11 +6132,13 @@
    "pdf": 63,
    "printed": 46,
    "headerNumbers": [
-    10
+    10,
+    46,
+    3
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.79,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 45,
@@ -6028,7 +6160,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.92,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 46,
@@ -6042,11 +6174,15 @@
    "printed": 48,
    "headerNumbers": [
     3,
+    48,
+    400,
+    106,
+    300,
     12
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.96,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 47,
@@ -6077,6 +6213,9 @@
    "printed": 50,
    "headerNumbers": [
     3,
+    51,
+    50,
+    300,
     13
    ],
    "matched": true,
@@ -6098,7 +6237,7 @@
    ],
    "matched": true,
    "anchorScore": 0.98,
-   "pageScore": 0.9,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 48,
@@ -6115,7 +6254,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.91,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 49,
@@ -6132,7 +6271,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.93,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 49,
@@ -6151,14 +6290,17 @@
    "printed": 54,
    "headerNumbers": [
     54,
-    8,
     400,
     3,
+    1,
+    4,
+    30,
+    300,
     15
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.89,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 50,
@@ -6202,7 +6344,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.92,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 53,
@@ -6219,7 +6361,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.92,
+   "pageScore": 0.99,
    "segments": [
     {
      "i": 54,
@@ -6238,7 +6380,11 @@
    "printed": 58,
    "headerNumbers": [
     3,
-    20
+    20,
+    58,
+    400,
+    106,
+    300
    ],
    "matched": true,
    "anchorScore": 1,
@@ -6259,7 +6405,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.91,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 56,
@@ -6272,11 +6418,15 @@
    "pdf": 77,
    "printed": 60,
    "headerNumbers": [
-    25
+    61,
+    60,
+    300,
+    3,
+    22
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.93,
+   "pageScore": 0.99,
    "segments": [
     {
      "i": 57,
@@ -6293,7 +6443,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.9,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 58,
@@ -6307,11 +6457,15 @@
    "printed": 62,
    "headerNumbers": [
     62,
+    1,
+    400,
+    106,
+    3,
     23
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.91,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 58,
@@ -6333,7 +6487,7 @@
    ],
    "matched": true,
    "anchorScore": 0.86,
-   "pageScore": 0.89,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 59,
@@ -6352,6 +6506,10 @@
    "printed": 64,
    "headerNumbers": [
     3,
+    64,
+    400,
+    106,
+    300,
     26
    ],
    "matched": true,
@@ -6386,11 +6544,14 @@
    "pdf": 83,
    "printed": 66,
    "headerNumbers": [
-    110
+    66,
+    400,
+    106,
+    4
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.95,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 61,
@@ -6407,7 +6568,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.95,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 62,
@@ -6419,10 +6580,15 @@
   {
    "pdf": 85,
    "printed": 68,
-   "headerNumbers": [],
+   "headerNumbers": [
+    68,
+    400,
+    106,
+    28
+   ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.88,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 63,
@@ -6439,7 +6605,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.91,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 64,
@@ -6451,10 +6617,16 @@
   {
    "pdf": 87,
    "printed": 70,
-   "headerNumbers": [],
+   "headerNumbers": [
+    71,
+    70,
+    400,
+    106,
+    30
+   ],
    "matched": true,
    "anchorScore": 0.97,
-   "pageScore": 0.89,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 65,
@@ -6476,7 +6648,7 @@
    ],
    "matched": true,
    "anchorScore": 0.79,
-   "pageScore": 0.83,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 67,
@@ -6495,13 +6667,16 @@
    "printed": 72,
    "headerNumbers": [
     72,
-    204,
     400,
+    1,
+    200,
+    106,
+    303,
     33
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.8,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 68,
@@ -6541,7 +6716,11 @@
    "pdf": 91,
    "printed": 74,
    "headerNumbers": [
-    74
+    74,
+    1,
+    400,
+    106,
+    35
    ],
    "matched": true,
    "anchorScore": 1,
@@ -6563,13 +6742,14 @@
    "pdf": 92,
    "printed": 75,
    "headerNumbers": [
-    51,
     6,
+    1,
+    46,
     75
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.87,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 71,
@@ -6589,11 +6769,15 @@
    "headerNumbers": [
     76,
     3,
+    1,
+    400,
+    106,
+    300,
     38
    ],
    "matched": true,
    "anchorScore": 0.98,
-   "pageScore": 0.87,
+   "pageScore": 0.91,
    "segments": [
     {
      "i": 72,
@@ -6611,13 +6795,14 @@
    "pdf": 94,
    "printed": 77,
    "headerNumbers": [
-    51,
     6,
-    77
+    77,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.9,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 74,
@@ -6632,11 +6817,15 @@
    "headerNumbers": [
     78,
     3,
+    1,
+    400,
+    106,
+    300,
     39
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.92,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 74,
@@ -6659,13 +6848,14 @@
    "pdf": 96,
    "printed": 79,
    "headerNumbers": [
-    51,
     6,
-    79
+    79,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.9,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 76,
@@ -6678,6 +6868,9 @@
    "pdf": 97,
    "printed": 80,
    "headerNumbers": [
+    81,
+    80,
+    340,
     42
    ],
    "matched": true,
@@ -6718,9 +6911,12 @@
    "printed": 82,
    "headerNumbers": [
     82,
-    204,
     400,
     3,
+    1,
+    200,
+    106,
+    300,
     43
    ],
    "matched": true,
@@ -6742,7 +6938,7 @@
    ],
    "matched": true,
    "anchorScore": 0.93,
-   "pageScore": 0.82,
+   "pageScore": 0.91,
    "segments": [
     {
      "i": 78,
@@ -6761,11 +6957,12 @@
    "printed": 84,
    "headerNumbers": [
     84,
-    8,
     400,
     100,
-    304,
     3,
+    1,
+    4,
+    300,
     45
    ],
    "matched": true,
@@ -6805,11 +7002,13 @@
    "pdf": 103,
    "printed": 86,
    "headerNumbers": [
-    86
+    86,
+    1,
+    100
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.92,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 82,
@@ -6826,7 +7025,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.76,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 83,
@@ -6840,11 +7039,15 @@
    "printed": 88,
    "headerNumbers": [
     88,
+    1,
+    400,
+    106,
+    3,
     49
    ],
    "matched": true,
    "anchorScore": 0.91,
-   "pageScore": 0.8,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 83,
@@ -6867,9 +7070,10 @@
    "pdf": 106,
    "printed": 89,
    "headerNumbers": [
-    51,
     6,
-    89
+    89,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 1,
@@ -6887,11 +7091,16 @@
    "printed": 90,
    "headerNumbers": [
     50,
+    91,
+    90,
+    400,
+    106,
+    300,
     51
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.82,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 86,
@@ -6904,13 +7113,14 @@
    "pdf": 108,
    "printed": 91,
    "headerNumbers": [
-    52,
     6,
-    91
+    91,
+    1,
+    47
    ],
    "matched": true,
    "anchorScore": 0.88,
-   "pageScore": 0.9,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 86,
@@ -6928,11 +7138,13 @@
    "pdf": 109,
    "printed": 92,
    "headerNumbers": [
-    92
+    92,
+    1,
+    300
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.85,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 88,
@@ -6954,7 +7166,7 @@
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.95,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 89,
@@ -6972,13 +7184,16 @@
    "pdf": 111,
    "printed": 94,
    "headerNumbers": [
-    304,
     3,
+    1,
+    100,
+    4,
+    300,
     55
    ],
    "matched": true,
    "anchorScore": 0.97,
-   "pageScore": 0.8,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 90,
@@ -7000,7 +7215,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.82,
+   "pageScore": 0.9,
    "segments": [
     {
      "i": 91,
@@ -7019,6 +7234,10 @@
    "printed": 96,
    "headerNumbers": [
     96,
+    1,
+    400,
+    106,
+    3,
     57
    ],
    "matched": true,
@@ -7041,13 +7260,14 @@
    "pdf": 114,
    "printed": 97,
    "headerNumbers": [
-    51,
     10,
-    97
+    97,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.95,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 94,
@@ -7061,11 +7281,13 @@
    "printed": 98,
    "headerNumbers": [
     98,
+    1,
+    3,
     59
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.92,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 94,
@@ -7082,7 +7304,7 @@
    ],
    "matched": true,
    "anchorScore": 0.9,
-   "pageScore": 0.9,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 94,
@@ -7101,7 +7323,12 @@
    "printed": 100,
    "headerNumbers": [
     3,
-    60
+    60,
+    101,
+    100,
+    400,
+    106,
+    300
    ],
    "matched": true,
    "anchorScore": 1,
@@ -7118,12 +7345,13 @@
    "pdf": 118,
    "printed": 101,
    "headerNumbers": [
-    51,
-    6
+    6,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 0.9,
-   "pageScore": 0.88,
+   "pageScore": 0.91,
    "segments": [
     {
      "i": 95,
@@ -7142,11 +7370,16 @@
    "printed": 102,
    "headerNumbers": [
     102,
-    110
+    1,
+    400,
+    106,
+    303,
+    60,
+    50
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.91,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 97,
@@ -7163,7 +7396,7 @@
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.83,
+   "pageScore": 0.89,
    "segments": [
     {
      "i": 98,
@@ -7182,11 +7415,15 @@
    "printed": 104,
    "headerNumbers": [
     104,
+    1,
+    400,
+    106,
+    340,
     64
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.91,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 99,
@@ -7208,7 +7445,7 @@
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.83,
+   "pageScore": 0.89,
    "segments": [
     {
      "i": 100,
@@ -7228,7 +7465,9 @@
    "headerNumbers": [
     110,
     100,
-    310
+    310,
+    1,
+    400
    ],
    "matched": true,
    "anchorScore": 1,
@@ -7254,7 +7493,7 @@
    ],
    "matched": true,
    "anchorScore": 0.93,
-   "pageScore": 0.92,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 102,
@@ -7268,11 +7507,15 @@
    "printed": 108,
    "headerNumbers": [
     108,
+    1,
+    400,
+    106,
+    340,
     68
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.9,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 103,
@@ -7289,7 +7532,7 @@
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.85,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 104,
@@ -7307,11 +7550,15 @@
    "pdf": 127,
    "printed": 110,
    "headerNumbers": [
-    70
+    70,
+    1,
+    400,
+    106,
+    340
    ],
    "matched": true,
    "anchorScore": 0.91,
-   "pageScore": 0.87,
+   "pageScore": 0.91,
    "segments": [
     {
      "i": 105,
@@ -7351,11 +7598,15 @@
    "pdf": 129,
    "printed": 112,
    "headerNumbers": [
+    112,
+    400,
+    106,
+    3,
     72
    ],
    "matched": true,
    "anchorScore": 0.97,
-   "pageScore": 0.86,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 107,
@@ -7377,7 +7628,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.89,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 108,
@@ -7396,6 +7647,10 @@
    "printed": 114,
    "headerNumbers": [
     114,
+    1,
+    400,
+    106,
+    50,
     75
    ],
    "matched": true,
@@ -7418,13 +7673,14 @@
    "pdf": 132,
    "printed": 115,
    "headerNumbers": [
-    51,
     6,
-    115
+    115,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.85,
+   "pageScore": 0.87,
    "segments": [
     {
      "i": 111,
@@ -7444,6 +7700,10 @@
    "headerNumbers": [
     116,
     50,
+    1,
+    400,
+    106,
+    300,
     77
    ],
    "matched": true,
@@ -7465,7 +7725,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.95,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 112,
@@ -7480,11 +7740,15 @@
    "headerNumbers": [
     118,
     50,
+    1,
+    400,
+    106,
+    300,
     78
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.9,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 113,
@@ -7523,11 +7787,15 @@
    "printed": 120,
    "headerNumbers": [
     120,
-    80
+    80,
+    1,
+    400,
+    106,
+    340
    ],
    "matched": true,
    "anchorScore": 0.93,
-   "pageScore": 0.92,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 115,
@@ -7554,7 +7822,7 @@
    ],
    "matched": true,
    "anchorScore": 0.93,
-   "pageScore": 0.87,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 117,
@@ -7573,11 +7841,15 @@
    "printed": 122,
    "headerNumbers": [
     122,
+    1,
+    400,
+    106,
+    3,
     83
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.84,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 118,
@@ -7595,9 +7867,10 @@
    "pdf": 140,
    "printed": 123,
    "headerNumbers": [
-    52,
     6,
-    123
+    123,
+    1,
+    47
    ],
    "matched": true,
    "anchorScore": 1,
@@ -7615,11 +7888,14 @@
    "printed": 124,
    "headerNumbers": [
     124,
-    483
+    1,
+    300,
+    3,
+    400
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.95,
+   "pageScore": 0.98,
    "segments": [
     {
      "i": 119,
@@ -7641,7 +7917,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.88,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 120,
@@ -7660,11 +7936,15 @@
    "printed": 126,
    "headerNumbers": [
     126,
+    1,
+    400,
+    106,
+    3,
     88
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.96,
+   "pageScore": 0.98,
    "segments": [
     {
      "i": 121,
@@ -7686,7 +7966,7 @@
    ],
    "matched": true,
    "anchorScore": 0.86,
-   "pageScore": 0.78,
+   "pageScore": 0.91,
    "segments": [
     {
      "i": 122,
@@ -7711,11 +7991,15 @@
    "headerNumbers": [
     128,
     3,
+    1,
+    400,
+    106,
+    300,
     89
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.95,
+   "pageScore": 0.98,
    "segments": [
     {
      "i": 124,
@@ -7733,13 +8017,14 @@
    "pdf": 146,
    "printed": 129,
    "headerNumbers": [
-    51,
     6,
-    129
+    129,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.91,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 125,
@@ -7754,11 +8039,15 @@
    "headerNumbers": [
     130,
     3,
+    1,
+    400,
+    106,
+    300,
     91
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.92,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 126,
@@ -7775,7 +8064,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.77,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 127,
@@ -7794,11 +8083,15 @@
    "printed": 132,
    "headerNumbers": [
     132,
+    1,
+    400,
+    106,
+    3,
     93
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.92,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 128,
@@ -7833,11 +8126,13 @@
    "pdf": 151,
    "printed": 134,
    "headerNumbers": [
-    134
+    134,
+    1,
+    94
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.93,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 129,
@@ -7878,11 +8173,14 @@
    "printed": 136,
    "headerNumbers": [
     140,
-    130
+    1,
+    3,
+    90,
+    40
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.81,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 131,
@@ -7905,13 +8203,14 @@
    "pdf": 154,
    "printed": 137,
    "headerNumbers": [
-    52,
     6,
-    137
+    137,
+    1,
+    47
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.87,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 133,
@@ -7931,11 +8230,13 @@
    "headerNumbers": [
     138,
     3,
-    100
+    100,
+    1,
+    300
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.95,
+   "pageScore": 0.98,
    "segments": [
     {
      "i": 135,
@@ -7952,7 +8253,7 @@
    ],
    "matched": true,
    "anchorScore": 0.93,
-   "pageScore": 0.86,
+   "pageScore": 0.98,
    "segments": [
     {
      "i": 135,
@@ -7971,11 +8272,13 @@
    "printed": 140,
    "headerNumbers": [
     140,
+    1,
+    340,
     101
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.91,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 136,
@@ -7993,13 +8296,14 @@
    "pdf": 158,
    "printed": 141,
    "headerNumbers": [
-    57,
     6,
-    141
+    141,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.84,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 137,
@@ -8018,13 +8322,16 @@
    "printed": 142,
    "headerNumbers": [
     142,
-    411,
     3,
+    1,
+    400,
+    107,
+    300,
     103
    ],
    "matched": true,
    "anchorScore": 0.97,
-   "pageScore": 0.91,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 138,
@@ -8042,13 +8349,14 @@
    "pdf": 160,
    "printed": 143,
    "headerNumbers": [
-    51,
     6,
-    143
+    143,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 0.91,
-   "pageScore": 0.78,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 139,
@@ -8067,11 +8375,14 @@
    "printed": 144,
    "headerNumbers": [
     144,
-    106
+    1,
+    400,
+    106,
+    3
    ],
    "matched": true,
    "anchorScore": 0.91,
-   "pageScore": 0.81,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 140,
@@ -8107,6 +8418,10 @@
    "printed": 146,
    "headerNumbers": [
     146,
+    1,
+    400,
+    106,
+    3,
     107
    ],
    "matched": true,
@@ -8129,13 +8444,14 @@
    "pdf": 164,
    "printed": 147,
    "headerNumbers": [
-    51,
     6,
-    147
+    147,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.85,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 143,
@@ -8153,11 +8469,15 @@
    "pdf": 165,
    "printed": 148,
    "headerNumbers": [
-    148
+    148,
+    1,
+    400,
+    106,
+    109
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.88,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 144,
@@ -8179,7 +8499,7 @@
    ],
    "matched": true,
    "anchorScore": 0.93,
-   "pageScore": 0.92,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 145,
@@ -8199,11 +8519,15 @@
    "headerNumbers": [
     150,
     3,
+    1,
+    400,
+    106,
+    300,
     111
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.85,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 146,
@@ -8225,7 +8549,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.95,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 148,
@@ -8240,11 +8564,15 @@
    "headerNumbers": [
     152,
     3,
+    1,
+    400,
+    106,
+    300,
     114
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.85,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 149,
@@ -8261,7 +8589,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.82,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 150,
@@ -8275,11 +8603,15 @@
    "printed": 154,
    "headerNumbers": [
     154,
+    1,
+    400,
+    106,
+    301,
     116
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.95,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 151,
@@ -8301,7 +8633,7 @@
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.75,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 153,
@@ -8315,11 +8647,15 @@
    "printed": 156,
    "headerNumbers": [
     156,
+    1,
+    400,
+    106,
+    3,
     118
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.9,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 153,
@@ -8341,7 +8677,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.84,
+   "pageScore": 0.9,
    "segments": [
     {
      "i": 155,
@@ -8360,11 +8696,15 @@
    "printed": 158,
    "headerNumbers": [
     158,
+    1,
+    400,
+    106,
+    3,
     121
    ],
    "matched": true,
    "anchorScore": 0.97,
-   "pageScore": 0.92,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 156,
@@ -8382,13 +8722,14 @@
    "pdf": 176,
    "printed": 159,
    "headerNumbers": [
-    51,
     6,
-    159
+    159,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.86,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 157,
@@ -8408,11 +8749,15 @@
    "headerNumbers": [
     160,
     3,
+    1,
+    400,
+    106,
+    300,
     123
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.87,
+   "pageScore": 0.98,
    "segments": [
     {
      "i": 158,
@@ -8434,7 +8779,7 @@
    ],
    "matched": true,
    "anchorScore": 0.81,
-   "pageScore": 0.94,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 159,
@@ -8449,6 +8794,10 @@
    "headerNumbers": [
     162,
     3,
+    1,
+    400,
+    106,
+    300,
     125
    ],
    "matched": true,
@@ -8475,7 +8824,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.9,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 161,
@@ -8494,6 +8843,10 @@
    "printed": 164,
    "headerNumbers": [
     164,
+    1,
+    400,
+    106,
+    340,
     128
    ],
    "matched": true,
@@ -8516,9 +8869,10 @@
    "pdf": 182,
    "printed": 165,
    "headerNumbers": [
-    52,
     6,
-    165
+    165,
+    1,
+    47
    ],
    "matched": true,
    "anchorScore": 1,
@@ -8541,11 +8895,15 @@
    "printed": 166,
    "headerNumbers": [
     166,
+    1,
+    400,
+    106,
+    303,
     130
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.87,
+   "pageScore": 0.98,
    "segments": [
     {
      "i": 165,
@@ -8563,9 +8921,10 @@
    "pdf": 184,
    "printed": 167,
    "headerNumbers": [
-    51,
     6,
-    167
+    167,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 1,
@@ -8589,11 +8948,15 @@
    "headerNumbers": [
     560,
     50,
+    1,
+    400,
+    106,
+    300,
     133
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.94,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 168,
@@ -8624,13 +8987,16 @@
    "printed": 170,
    "headerNumbers": [
     170,
-    411,
     3,
+    1,
+    400,
+    107,
+    300,
     134
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.97,
+   "pageScore": 0.98,
    "segments": [
     {
      "i": 168,
@@ -8652,7 +9018,7 @@
    ],
    "matched": true,
    "anchorScore": 0.97,
-   "pageScore": 0.88,
+   "pageScore": 0.89,
    "segments": [
     {
      "i": 170,
@@ -8667,11 +9033,15 @@
    "headerNumbers": [
     172,
     3,
+    1,
+    400,
+    106,
+    300,
     136
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.88,
+   "pageScore": 0.9,
    "segments": [
     {
      "i": 171,
@@ -8693,7 +9063,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.92,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 172,
@@ -8713,11 +9083,15 @@
    "headerNumbers": [
     174,
     3,
+    1,
+    400,
+    106,
+    300,
     139
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.91,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 174,
@@ -8734,7 +9108,7 @@
    ],
    "matched": true,
    "anchorScore": 0.88,
-   "pageScore": 0.81,
+   "pageScore": 0.87,
    "segments": [
     {
      "i": 174,
@@ -8753,11 +9127,15 @@
    "printed": 176,
    "headerNumbers": [
     176,
+    1,
+    400,
+    107,
+    3,
     141
    ],
    "matched": true,
    "anchorScore": 0.93,
-   "pageScore": 0.93,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 176,
@@ -8770,13 +9148,14 @@
    "pdf": 194,
    "printed": 177,
    "headerNumbers": [
-    57,
     200,
-    177
+    177,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 0.83,
-   "pageScore": 0.85,
+   "pageScore": 0.87,
    "segments": [
     {
      "i": 176,
@@ -8801,11 +9180,15 @@
    "headerNumbers": [
     178,
     3,
+    1,
+    400,
+    106,
+    300,
     143
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.93,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 178,
@@ -8818,13 +9201,14 @@
    "pdf": 196,
    "printed": 179,
    "headerNumbers": [
-    51,
     200,
-    179
+    179,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 0.91,
-   "pageScore": 0.86,
+   "pageScore": 0.87,
    "segments": [
     {
      "i": 178,
@@ -8842,11 +9226,16 @@
    "pdf": 197,
    "printed": 180,
    "headerNumbers": [
+    181,
+    180,
+    400,
+    106,
+    340,
     145
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.74,
+   "pageScore": 0.88,
    "segments": [
     {
      "i": 180,
@@ -8868,7 +9257,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.9,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 181,
@@ -8887,15 +9276,17 @@
    "printed": 182,
    "headerNumbers": [
     182,
-    8,
     400,
-    411,
     3,
+    1,
+    4,
+    107,
+    300,
     148
    ],
    "matched": true,
    "anchorScore": 0.88,
-   "pageScore": 0.91,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 183,
@@ -8912,7 +9303,7 @@
    ],
    "matched": true,
    "anchorScore": 0.86,
-   "pageScore": 0.79,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 183,
@@ -8931,11 +9322,15 @@
    "printed": 184,
    "headerNumbers": [
     184,
+    1,
+    400,
+    106,
+    340,
     150
    ],
    "matched": true,
    "anchorScore": 0.97,
-   "pageScore": 0.91,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 185,
@@ -8952,7 +9347,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.67,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 185,
@@ -8971,11 +9366,15 @@
    "printed": 186,
    "headerNumbers": [
     186,
+    1,
+    400,
+    106,
+    340,
     151
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.92,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 186,
@@ -8992,7 +9391,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.85,
+   "pageScore": 0.86,
    "segments": [
     {
      "i": 187,
@@ -9012,11 +9411,15 @@
    "headerNumbers": [
     188,
     3,
+    1,
+    400,
+    106,
+    300,
     140
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.93,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 188,
@@ -9034,13 +9437,14 @@
    "pdf": 206,
    "printed": 189,
    "headerNumbers": [
-    51,
     6,
-    189
+    189,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.88,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 189,
@@ -9059,6 +9463,10 @@
    "printed": 190,
    "headerNumbers": [
     190,
+    1,
+    400,
+    106,
+    340,
     156
    ],
    "matched": true,
@@ -9085,7 +9493,7 @@
    ],
    "matched": true,
    "anchorScore": 0.9,
-   "pageScore": 0.8,
+   "pageScore": 0.84,
    "segments": [
     {
      "i": 192,
@@ -9099,11 +9507,15 @@
    "printed": 192,
    "headerNumbers": [
     192,
-    100
+    100,
+    1,
+    400,
+    106,
+    340
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.88,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 192,
@@ -9125,7 +9537,7 @@
    ],
    "matched": true,
    "anchorScore": 0.86,
-   "pageScore": 0.85,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 193,
@@ -9144,11 +9556,15 @@
    "printed": 194,
    "headerNumbers": [
     194,
+    1,
+    400,
+    106,
+    300,
     160
    ],
    "matched": true,
    "anchorScore": 0.9,
-   "pageScore": 0.83,
+   "pageScore": 0.9,
    "segments": [
     {
      "i": 195,
@@ -9165,7 +9581,7 @@
    ],
    "matched": true,
    "anchorScore": 0.86,
-   "pageScore": 0.77,
+   "pageScore": 0.91,
    "segments": [
     {
      "i": 195,
@@ -9184,11 +9600,15 @@
    "printed": 196,
    "headerNumbers": [
     196,
+    1,
+    400,
+    106,
+    340,
     162
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.82,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 197,
@@ -9201,9 +9621,10 @@
    "pdf": 214,
    "printed": 197,
    "headerNumbers": [
-    51,
     6,
-    197
+    197,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 0.95,
@@ -9221,6 +9642,10 @@
    "printed": 198,
    "headerNumbers": [
     198,
+    1,
+    400,
+    106,
+    313,
     164
    ],
    "matched": true,
@@ -9247,7 +9672,7 @@
    ],
    "matched": true,
    "anchorScore": 0.78,
-   "pageScore": 0.76,
+   "pageScore": 0.87,
    "segments": [
     {
      "i": 199,
@@ -9265,11 +9690,16 @@
    "pdf": 217,
    "printed": 200,
    "headerNumbers": [
+    201,
+    200,
+    6,
+    106,
+    340,
     166
    ],
    "matched": true,
    "anchorScore": 0.88,
-   "pageScore": 0.74,
+   "pageScore": 0.86,
    "segments": [
     {
      "i": 200,
@@ -9292,13 +9722,14 @@
    "pdf": 218,
    "printed": 201,
    "headerNumbers": [
-    51,
     6,
-    201
+    201,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.81,
+   "pageScore": 0.85,
    "segments": [
     {
      "i": 202,
@@ -9317,11 +9748,15 @@
    "printed": 202,
    "headerNumbers": [
     202,
+    1,
+    400,
+    106,
+    300,
     168
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.92,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 203,
@@ -9343,7 +9778,7 @@
    ],
    "matched": true,
    "anchorScore": 0.88,
-   "pageScore": 0.81,
+   "pageScore": 0.87,
    "segments": [
     {
      "i": 204,
@@ -9362,11 +9797,13 @@
    "printed": 204,
    "headerNumbers": [
     204,
+    1,
+    3,
     170
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.79,
+   "pageScore": 0.89,
    "segments": [
     {
      "i": 205,
@@ -9407,13 +9844,16 @@
    "printed": 206,
    "headerNumbers": [
     206,
-    416,
     3,
+    1,
+    400,
+    106,
+    300,
     172
    ],
    "matched": true,
    "anchorScore": 0.91,
-   "pageScore": 0.83,
+   "pageScore": 0.86,
    "segments": [
     {
      "i": 207,
@@ -9431,13 +9871,14 @@
    "pdf": 224,
    "printed": 207,
    "headerNumbers": [
-    51,
     10,
-    207
+    207,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 0.91,
-   "pageScore": 0.73,
+   "pageScore": 0.88,
    "segments": [
     {
      "i": 208,
@@ -9456,16 +9897,18 @@
    "printed": 208,
    "headerNumbers": [
     208,
-    204,
     6,
     100,
-    304,
     3,
+    1,
+    200,
+    4,
+    300,
     174
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.58,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 209,
@@ -9501,11 +9944,15 @@
    "printed": 210,
    "headerNumbers": [
     210,
+    1,
+    400,
+    106,
+    340,
     175
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.91,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 210,
@@ -9518,13 +9965,14 @@
    "pdf": 228,
    "printed": 211,
    "headerNumbers": [
-    57,
     200,
-    211
+    211,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 0.78,
-   "pageScore": 0.81,
+   "pageScore": 0.86,
    "segments": [
     {
      "i": 210,
@@ -9543,11 +9991,13 @@
    "printed": 212,
    "headerNumbers": [
     212,
+    1,
+    340,
     176
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.94,
+   "pageScore": 0.98,
    "segments": [
     {
      "i": 211,
@@ -9564,7 +10014,7 @@
    ],
    "matched": true,
    "anchorScore": 0.69,
-   "pageScore": 0.81,
+   "pageScore": 0.82,
    "segments": [
     {
      "i": 211,
@@ -9583,11 +10033,15 @@
    "printed": 214,
    "headerNumbers": [
     214,
+    1,
+    400,
+    106,
+    3,
     178
    ],
    "matched": true,
    "anchorScore": 0.88,
-   "pageScore": 0.79,
+   "pageScore": 0.86,
    "segments": [
     {
      "i": 212,
@@ -9628,11 +10082,15 @@
    "printed": 216,
    "headerNumbers": [
     216,
+    1,
+    400,
+    106,
+    3,
     180
    ],
    "matched": true,
    "anchorScore": 0.9,
-   "pageScore": 0.84,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 215,
@@ -9645,13 +10103,14 @@
    "pdf": 234,
    "printed": 217,
    "headerNumbers": [
-    51,
     6,
-    217
+    217,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.91,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 215,
@@ -9671,12 +10130,15 @@
    "headerNumbers": [
     218,
     100,
-    304,
+    1,
+    400,
+    4,
+    300,
     181
    ],
    "matched": true,
    "anchorScore": 0.97,
-   "pageScore": 0.88,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 216,
@@ -9694,13 +10156,14 @@
    "pdf": 236,
    "printed": 219,
    "headerNumbers": [
-    51,
     6,
-    219
+    219,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 0.78,
-   "pageScore": 0.75,
+   "pageScore": 0.84,
    "segments": [
     {
      "i": 217,
@@ -9719,6 +10182,10 @@
    "printed": 220,
    "headerNumbers": [
     220,
+    1,
+    400,
+    106,
+    340,
     183
    ],
    "matched": true,
@@ -9741,9 +10208,10 @@
    "pdf": 238,
    "printed": 221,
    "headerNumbers": [
-    51,
     6,
-    221
+    221,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 0.93,
@@ -9766,11 +10234,15 @@
    "printed": 222,
    "headerNumbers": [
     222,
+    1,
+    400,
+    106,
+    303,
     186
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.83,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 221,
@@ -9807,11 +10279,15 @@
    "printed": 224,
    "headerNumbers": [
     224,
+    1,
+    400,
+    106,
+    303,
     187
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.94,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 222,
@@ -9829,13 +10305,14 @@
    "pdf": 242,
    "printed": 225,
    "headerNumbers": [
-    51,
     6,
-    225
+    225,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 0.84,
-   "pageScore": 0.78,
+   "pageScore": 0.87,
    "segments": [
     {
      "i": 223,
@@ -9854,11 +10331,15 @@
    "printed": 226,
    "headerNumbers": [
     226,
+    1,
+    400,
+    106,
+    340,
     189
    ],
    "matched": true,
    "anchorScore": 0.86,
-   "pageScore": 0.72,
+   "pageScore": 0.88,
    "segments": [
     {
      "i": 224,
@@ -9876,13 +10357,14 @@
    "pdf": 244,
    "printed": 227,
    "headerNumbers": [
-    51,
     200,
-    227
+    227,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 0.74,
-   "pageScore": 0.7,
+   "pageScore": 0.76,
    "segments": [
     {
      "i": 225,
@@ -9901,11 +10383,15 @@
    "printed": 228,
    "headerNumbers": [
     228,
+    1,
+    400,
+    106,
+    3,
     192
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.86,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 227,
@@ -9918,9 +10404,10 @@
    "pdf": 246,
    "printed": 229,
    "headerNumbers": [
-    57,
     200,
-    229
+    229,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 0.93,
@@ -9938,11 +10425,15 @@
    "printed": 230,
    "headerNumbers": [
     230,
+    1,
+    400,
+    106,
+    340,
     194
    ],
    "matched": true,
    "anchorScore": 0.91,
-   "pageScore": 0.8,
+   "pageScore": 0.88,
    "segments": [
     {
      "i": 229,
@@ -9959,7 +10450,7 @@
    ],
    "matched": true,
    "anchorScore": 0.84,
-   "pageScore": 0.7,
+   "pageScore": 0.75,
    "segments": [
     {
      "i": 229,
@@ -9978,11 +10469,16 @@
    "printed": 232,
    "headerNumbers": [
     232,
-    200
+    1,
+    400,
+    106,
+    340,
+    190,
+    10
    ],
    "matched": true,
    "anchorScore": 0.97,
-   "pageScore": 0.92,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 231,
@@ -9999,7 +10495,7 @@
    ],
    "matched": true,
    "anchorScore": 0.86,
-   "pageScore": 0.89,
+   "pageScore": 0.9,
    "segments": [
     {
      "i": 231,
@@ -10013,11 +10509,13 @@
    "printed": 234,
    "headerNumbers": [
     234,
+    1,
+    340,
     197
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.87,
+   "pageScore": 0.9,
    "segments": [
     {
      "i": 232,
@@ -10034,7 +10532,7 @@
    ],
    "matched": true,
    "anchorScore": 0.83,
-   "pageScore": 0.66,
+   "pageScore": 0.75,
    "segments": [
     {
      "i": 232,
@@ -10053,11 +10551,15 @@
    "printed": 236,
    "headerNumbers": [
     236,
+    1,
+    400,
+    106,
+    3,
     199
    ],
    "matched": true,
    "anchorScore": 0.74,
-   "pageScore": 0.79,
+   "pageScore": 0.9,
    "segments": [
     {
      "i": 233,
@@ -10084,7 +10586,7 @@
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.89,
+   "pageScore": 0.91,
    "segments": [
     {
      "i": 235,
@@ -10098,7 +10600,11 @@
    "printed": 238,
    "headerNumbers": [
     238,
-    200
+    200,
+    1,
+    400,
+    106,
+    3
    ],
    "matched": true,
    "anchorScore": 0.95,
@@ -10119,7 +10625,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.87,
+   "pageScore": 0.91,
    "segments": [
     {
      "i": 235,
@@ -10138,11 +10644,13 @@
    "printed": 240,
    "headerNumbers": [
     240,
+    1,
+    340,
     202
    ],
    "matched": true,
    "anchorScore": 0.88,
-   "pageScore": 0.76,
+   "pageScore": 0.9,
    "segments": [
     {
      "i": 236,
@@ -10183,11 +10691,15 @@
    "printed": 242,
    "headerNumbers": [
     3,
+    242,
+    400,
+    106,
+    300,
     203
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.86,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 238,
@@ -10209,7 +10721,7 @@
    ],
    "matched": true,
    "anchorScore": 0.9,
-   "pageScore": 0.82,
+   "pageScore": 0.85,
    "segments": [
     {
      "i": 239,
@@ -10228,6 +10740,10 @@
    "printed": 244,
    "headerNumbers": [
     244,
+    1,
+    400,
+    106,
+    3,
     205
    ],
    "matched": true,
@@ -10273,6 +10789,10 @@
    "headerNumbers": [
     246,
     3,
+    1,
+    400,
+    106,
+    300,
     207
    ],
    "matched": true,
@@ -10299,7 +10819,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.94,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 243,
@@ -10319,6 +10839,10 @@
    "headerNumbers": [
     248,
     3,
+    1,
+    400,
+    106,
+    300,
     209
    ],
    "matched": true,
@@ -10340,7 +10864,7 @@
    ],
    "matched": true,
    "anchorScore": 0.9,
-   "pageScore": 0.87,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 245,
@@ -10359,11 +10883,15 @@
    "printed": 250,
    "headerNumbers": [
     250,
+    1,
+    400,
+    106,
+    300,
     211
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.94,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 246,
@@ -10386,13 +10914,14 @@
    "pdf": 268,
    "printed": 251,
    "headerNumbers": [
-    51,
     6,
+    1,
+    46,
     401
    ],
    "matched": true,
    "anchorScore": 0.86,
-   "pageScore": 0.87,
+   "pageScore": 0.91,
    "segments": [
     {
      "i": 248,
@@ -10407,6 +10936,10 @@
    "headerNumbers": [
     252,
     3,
+    1,
+    400,
+    106,
+    300,
     214
    ],
    "matched": true,
@@ -10428,7 +10961,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.56,
+   "pageScore": 0.77,
    "segments": [
     {
      "i": 250,
@@ -10443,11 +10976,15 @@
    "headerNumbers": [
     254,
     50,
+    1,
+    400,
+    106,
+    300,
     215
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.91,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 250,
@@ -10464,7 +11001,7 @@
    ],
    "matched": true,
    "anchorScore": 0.9,
-   "pageScore": 0.79,
+   "pageScore": 0.84,
    "segments": [
     {
      "i": 250,
@@ -10482,11 +11019,15 @@
    "pdf": 273,
    "printed": 256,
    "headerNumbers": [
+    406,
+    400,
+    106,
+    3,
     217
    ],
    "matched": true,
    "anchorScore": 0.93,
-   "pageScore": 0.92,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 251,
@@ -10508,7 +11049,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.84,
+   "pageScore": 0.91,
    "segments": [
     {
      "i": 253,
@@ -10522,11 +11063,15 @@
    "printed": 258,
    "headerNumbers": [
     258,
+    1,
+    400,
+    106,
+    3,
     219
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.84,
+   "pageScore": 0.91,
    "segments": [
     {
      "i": 254,
@@ -10548,7 +11093,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.95,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 255,
@@ -10567,11 +11112,15 @@
    "printed": 260,
    "headerNumbers": [
     260,
+    1,
+    400,
+    106,
+    3,
     221
    ],
    "matched": true,
    "anchorScore": 0.86,
-   "pageScore": 0.88,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 256,
@@ -10593,7 +11142,7 @@
    ],
    "matched": true,
    "anchorScore": 0.83,
-   "pageScore": 0.82,
+   "pageScore": 0.83,
    "segments": [
     {
      "i": 257,
@@ -10612,11 +11161,16 @@
    "printed": 262,
    "headerNumbers": [
     262,
-    28
+    1,
+    400,
+    106,
+    50,
+    4,
+    24
    ],
    "matched": true,
    "anchorScore": 0.67,
-   "pageScore": 0.81,
+   "pageScore": 0.9,
    "segments": [
     {
      "i": 258,
@@ -10638,7 +11192,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.83,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 259,
@@ -10657,6 +11211,10 @@
    "printed": 264,
    "headerNumbers": [
     264,
+    1,
+    6,
+    106,
+    3,
     225
    ],
    "matched": true,
@@ -10678,7 +11236,7 @@
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.81,
+   "pageScore": 0.89,
    "segments": [
     {
      "i": 261,
@@ -10697,13 +11255,16 @@
    "printed": 266,
    "headerNumbers": [
     266,
-    8,
     400,
-    31
+    1,
+    4,
+    106,
+    303,
+    27
    ],
    "matched": true,
    "anchorScore": 0.97,
-   "pageScore": 0.95,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 262,
@@ -10720,7 +11281,7 @@
    ],
    "matched": true,
    "anchorScore": 0.86,
-   "pageScore": 0.89,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 262,
@@ -10744,11 +11305,13 @@
    "printed": 268,
    "headerNumbers": [
     268,
-    10,
     400,
     100,
-    304,
     3,
+    1,
+    6,
+    4,
+    300,
     29
    ],
    "matched": true,
@@ -10766,13 +11329,14 @@
    "pdf": 286,
    "printed": 269,
    "headerNumbers": [
-    51,
     6,
-    269
+    269,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.89,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 265,
@@ -10786,11 +11350,15 @@
    "printed": 270,
    "headerNumbers": [
     270,
+    1,
+    400,
+    107,
+    3,
     230
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.87,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 265,
@@ -10812,7 +11380,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.86,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 266,
@@ -10831,6 +11399,10 @@
    "printed": 272,
    "headerNumbers": [
     272,
+    1,
+    400,
+    107,
+    340,
     232
    ],
    "matched": true,
@@ -10848,13 +11420,14 @@
    "pdf": 290,
    "printed": 273,
    "headerNumbers": [
-    51,
     200,
-    273
+    273,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 0.97,
-   "pageScore": 0.87,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 268,
@@ -10868,11 +11441,15 @@
    "printed": 274,
    "headerNumbers": [
     274,
+    1,
+    400,
+    106,
+    303,
     234
    ],
    "matched": true,
    "anchorScore": 0.88,
-   "pageScore": 0.77,
+   "pageScore": 0.78,
    "segments": [
     {
      "i": 269,
@@ -10889,7 +11466,7 @@
    ],
    "matched": true,
    "anchorScore": 0.93,
-   "pageScore": 0.84,
+   "pageScore": 0.85,
    "segments": [
     {
      "i": 269,
@@ -10908,6 +11485,10 @@
    "printed": 276,
    "headerNumbers": [
     276,
+    1,
+    400,
+    106,
+    340,
     235
    ],
    "matched": true,
@@ -10938,7 +11519,7 @@
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.93,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 271,
@@ -10957,11 +11538,15 @@
    "printed": 278,
    "headerNumbers": [
     278,
+    1,
+    400,
+    106,
+    340,
     237
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.91,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 272,
@@ -10983,7 +11568,7 @@
    ],
    "matched": true,
    "anchorScore": 0.91,
-   "pageScore": 0.9,
+   "pageScore": 0.91,
    "segments": [
     {
      "i": 273,
@@ -10998,6 +11583,8 @@
    "headerNumbers": [
     280,
     3,
+    1,
+    300,
     239
    ],
    "matched": true,
@@ -11024,7 +11611,7 @@
    ],
    "matched": true,
    "anchorScore": 0.93,
-   "pageScore": 0.94,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 274,
@@ -11039,7 +11626,7 @@
     {
      "i": 276,
      "from": 0,
-     "to": 206
+     "to": 226
     }
    ]
   },
@@ -11050,12 +11637,12 @@
     282
    ],
    "matched": true,
-   "anchorScore": 0.78,
-   "pageScore": 0.87,
+   "anchorScore": 1,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 276,
-     "from": 206,
+     "from": 226,
      "to": 1316
     }
    ]
@@ -11068,7 +11655,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.83,
+   "pageScore": 0.89,
    "segments": [
     {
      "i": 276,
@@ -11088,11 +11675,15 @@
    "headerNumbers": [
     284,
     3,
+    1,
+    400,
+    106,
+    300,
     243
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.9,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 278,
@@ -11123,11 +11714,15 @@
    "printed": 286,
    "headerNumbers": [
     3,
+    286,
+    400,
+    106,
+    300,
     244
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.81,
+   "pageScore": 0.84,
    "segments": [
     {
      "i": 279,
@@ -11140,13 +11735,14 @@
    "pdf": 304,
    "printed": 287,
    "headerNumbers": [
-    51,
     6,
-    287
+    287,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 0.84,
-   "pageScore": 0.81,
+   "pageScore": 0.83,
    "segments": [
     {
      "i": 279,
@@ -11163,10 +11759,15 @@
   {
    "pdf": 305,
    "printed": 288,
-   "headerNumbers": [],
+   "headerNumbers": [
+    288,
+    400,
+    106,
+    300
+   ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.93,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 281,
@@ -11207,11 +11808,16 @@
    "printed": 290,
    "headerNumbers": [
     290,
-    58
+    1,
+    400,
+    106,
+    3,
+    10,
+    48
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.85,
+   "pageScore": 0.86,
    "segments": [
     {
      "i": 283,
@@ -11233,7 +11839,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.89,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 284,
@@ -11252,7 +11858,10 @@
    "printed": 292,
    "headerNumbers": [
     292,
-    400
+    400,
+    1,
+    107,
+    3
    ],
    "matched": true,
    "anchorScore": 0.93,
@@ -11297,11 +11906,15 @@
    "printed": 294,
    "headerNumbers": [
     294,
+    1,
+    400,
+    106,
+    3,
     253
    ],
    "matched": true,
    "anchorScore": 0.88,
-   "pageScore": 0.9,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 288,
@@ -11318,7 +11931,7 @@
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.84,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 289,
@@ -11332,11 +11945,15 @@
    "printed": 296,
    "headerNumbers": [
     296,
+    1,
+    400,
+    107,
+    3,
     254
    ],
    "matched": true,
    "anchorScore": 0.93,
-   "pageScore": 0.96,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 289,
@@ -11353,7 +11970,7 @@
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.82,
+   "pageScore": 0.87,
    "segments": [
     {
      "i": 289,
@@ -11372,13 +11989,16 @@
    "printed": 298,
    "headerNumbers": [
     298,
-    411,
     3,
+    1,
+    400,
+    107,
+    300,
     405
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.9,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 290,
@@ -11400,7 +12020,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.86,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 291,
@@ -11418,11 +12038,17 @@
    "pdf": 317,
    "printed": 300,
    "headerNumbers": [
-    263
+    301,
+    300,
+    400,
+    106,
+    340,
+    256,
+    7
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.87,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 293,
@@ -11435,13 +12061,14 @@
    "pdf": 318,
    "printed": 301,
    "headerNumbers": [
-    51,
     6,
-    301
+    301,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 0.93,
-   "pageScore": 0.79,
+   "pageScore": 0.9,
    "segments": [
     {
      "i": 293,
@@ -11460,11 +12087,15 @@
    "printed": 302,
    "headerNumbers": [
     302,
+    1,
+    400,
+    106,
+    303,
     259
    ],
    "matched": true,
    "anchorScore": 0.9,
-   "pageScore": 0.81,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 294,
@@ -11500,13 +12131,16 @@
    "printed": 304,
    "headerNumbers": [
     304,
-    416,
     3,
+    1,
+    400,
+    106,
+    300,
     260
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.93,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 295,
@@ -11523,7 +12157,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.85,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 295,
@@ -11543,11 +12177,15 @@
    "headerNumbers": [
     306,
     50,
+    1,
+    400,
+    106,
+    300,
     261
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.85,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 296,
@@ -11569,7 +12207,7 @@
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.96,
+   "pageScore": 0.98,
    "segments": [
     {
      "i": 297,
@@ -11584,11 +12222,15 @@
    "headerNumbers": [
     308,
     3,
+    1,
+    400,
+    106,
+    300,
     262
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.87,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 297,
@@ -11610,7 +12252,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.83,
+   "pageScore": 0.91,
    "segments": [
     {
      "i": 298,
@@ -11628,11 +12270,15 @@
    "pdf": 327,
    "printed": 310,
    "headerNumbers": [
-    310
+    310,
+    1,
+    400,
+    106,
+    264
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.9,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 299,
@@ -11654,7 +12300,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.93,
+   "pageScore": 0.98,
    "segments": [
     {
      "i": 301,
@@ -11667,6 +12313,10 @@
    "pdf": 329,
    "printed": 312,
    "headerNumbers": [
+    1,
+    400,
+    106,
+    3,
     266
    ],
    "matched": true,
@@ -11693,7 +12343,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.93,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 302,
@@ -11712,11 +12362,15 @@
    "printed": 314,
    "headerNumbers": [
     3,
+    1,
+    400,
+    106,
+    300,
     268
    ],
    "matched": true,
    "anchorScore": 0.88,
-   "pageScore": 0.87,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 303,
@@ -11739,9 +12393,10 @@
    "pdf": 332,
    "printed": 315,
    "headerNumbers": [
-    51,
     6,
-    315
+    315,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 0.95,
@@ -11765,11 +12420,15 @@
    "headerNumbers": [
     316,
     3,
+    1,
+    400,
+    106,
+    300,
     271
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.89,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 307,
@@ -11791,7 +12450,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.81,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 308,
@@ -11810,11 +12469,15 @@
    "printed": 318,
    "headerNumbers": [
     3,
+    318,
+    400,
+    106,
+    300,
     273
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.89,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 309,
@@ -11836,7 +12499,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.96,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 311,
@@ -11850,7 +12513,10 @@
    "printed": 320,
    "headerNumbers": [
     320,
-    275
+    1,
+    300,
+    70,
+    205
    ],
    "matched": true,
    "anchorScore": 0.95,
@@ -11867,13 +12533,14 @@
    "pdf": 338,
    "printed": 321,
    "headerNumbers": [
-    51,
     6,
-    321
+    321,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.87,
+   "pageScore": 0.91,
    "segments": [
     {
      "i": 312,
@@ -11893,6 +12560,10 @@
    "headerNumbers": [
     322,
     3,
+    1,
+    400,
+    106,
+    300,
     277
    ],
    "matched": true,
@@ -11919,7 +12590,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.75,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 315,
@@ -11938,8 +12609,11 @@
    "printed": 324,
    "headerNumbers": [
     324,
-    8,
     3,
+    1,
+    4,
+    410,
+    300,
     280
    ],
    "matched": true,
@@ -11986,11 +12660,15 @@
    "headerNumbers": [
     326,
     3,
+    1,
+    400,
+    106,
+    300,
     284
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.93,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 320,
@@ -12007,7 +12685,7 @@
    ],
    "matched": true,
    "anchorScore": 0.9,
-   "pageScore": 0.84,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 320,
@@ -12031,14 +12709,17 @@
    "printed": 328,
    "headerNumbers": [
     328,
-    8,
     400,
     3,
+    1,
+    4,
+    106,
+    300,
     280
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.94,
+   "pageScore": 0.98,
    "segments": [
     {
      "i": 322,
@@ -12055,7 +12736,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.95,
+   "pageScore": 0.98,
    "segments": [
     {
      "i": 323,
@@ -12070,11 +12751,15 @@
    "headerNumbers": [
     330,
     3,
+    1,
+    400,
+    106,
+    300,
     287
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.96,
+   "pageScore": 0.99,
    "segments": [
     {
      "i": 323,
@@ -12096,7 +12781,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.91,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 324,
@@ -12115,6 +12800,10 @@
    "printed": 332,
    "headerNumbers": [
     332,
+    1,
+    400,
+    106,
+    340,
     290
    ],
    "matched": true,
@@ -12132,13 +12821,14 @@
    "pdf": 350,
    "printed": 333,
    "headerNumbers": [
-    57,
     200,
-    333
+    333,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.88,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 327,
@@ -12152,11 +12842,15 @@
    "printed": 334,
    "headerNumbers": [
     334,
+    1,
+    400,
+    106,
+    340,
     291
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.93,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 327,
@@ -12178,7 +12872,7 @@
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.76,
+   "pageScore": 0.8,
    "segments": [
     {
      "i": 328,
@@ -12197,11 +12891,13 @@
    "printed": 336,
    "headerNumbers": [
     336,
+    1,
+    3,
     293
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.92,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 329,
@@ -12232,11 +12928,15 @@
    "printed": 338,
    "headerNumbers": [
     338,
+    1,
+    400,
+    106,
+    3,
     295
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.91,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 330,
@@ -12258,7 +12958,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.92,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 332,
@@ -12273,11 +12973,15 @@
    "headerNumbers": [
     340,
     3,
+    1,
+    400,
+    106,
+    300,
     297
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.94,
+   "pageScore": 0.98,
    "segments": [
     {
      "i": 333,
@@ -12294,7 +12998,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.75,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 334,
@@ -12307,11 +13011,15 @@
    "pdf": 359,
    "printed": 342,
    "headerNumbers": [
-    342
+    342,
+    1,
+    400,
+    106,
+    300
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.89,
+   "pageScore": 0.9,
    "segments": [
     {
      "i": 334,
@@ -12333,7 +13041,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.86,
+   "pageScore": 0.99,
    "segments": [
     {
      "i": 336,
@@ -12352,6 +13060,10 @@
    "printed": 344,
    "headerNumbers": [
     344,
+    1,
+    400,
+    106,
+    3,
     301
    ],
    "matched": true,
@@ -12369,13 +13081,14 @@
    "pdf": 362,
    "printed": 345,
    "headerNumbers": [
-    51,
     6,
-    345
+    345,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.96,
+   "pageScore": 0.99,
    "segments": [
     {
      "i": 338,
@@ -12390,6 +13103,10 @@
    "headerNumbers": [
     346,
     3,
+    1,
+    400,
+    106,
+    300,
     302
    ],
    "matched": true,
@@ -12412,13 +13129,14 @@
    "pdf": 364,
    "printed": 347,
    "headerNumbers": [
-    51,
     6,
-    347
+    347,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 0.84,
-   "pageScore": 0.71,
+   "pageScore": 0.82,
    "segments": [
     {
      "i": 339,
@@ -12438,11 +13156,15 @@
    "headerNumbers": [
     348,
     3,
+    1,
+    400,
+    106,
+    300,
     305
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.88,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 341,
@@ -12459,7 +13181,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.93,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 341,
@@ -12478,11 +13200,15 @@
    "printed": 350,
    "headerNumbers": [
     350,
+    1,
+    400,
+    106,
+    3,
     307
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.92,
+   "pageScore": 0.98,
    "segments": [
     {
      "i": 343,
@@ -12523,6 +13249,10 @@
    "printed": 352,
    "headerNumbers": [
     352,
+    1,
+    400,
+    106,
+    340,
     309
    ],
    "matched": true,
@@ -12568,11 +13298,13 @@
    "printed": 354,
    "headerNumbers": [
     354,
+    1,
+    3,
     312
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.81,
+   "pageScore": 0.87,
    "segments": [
     {
      "i": 347,
@@ -12599,7 +13331,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.94,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 349,
@@ -12614,11 +13346,15 @@
    "headerNumbers": [
     356,
     3,
+    1,
+    400,
+    106,
+    300,
     314
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.94,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 350,
@@ -12659,11 +13395,15 @@
    "printed": 358,
    "headerNumbers": [
     3,
+    358,
+    400,
+    106,
+    300,
     316
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.9,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 352,
@@ -12685,7 +13425,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.87,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 353,
@@ -12704,11 +13444,13 @@
    "printed": 360,
    "headerNumbers": [
     360,
+    1,
+    3,
     318
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.96,
+   "pageScore": 1,
    "segments": [
     {
      "i": 354,
@@ -12725,7 +13467,7 @@
    ],
    "matched": true,
    "anchorScore": 0.81,
-   "pageScore": 0.89,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 354,
@@ -12744,11 +13486,13 @@
    "printed": 362,
    "headerNumbers": [
     362,
+    1,
+    3,
     319
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.9,
+   "pageScore": 0.99,
    "segments": [
     {
      "i": 355,
@@ -12785,11 +13529,15 @@
    "headerNumbers": [
     364,
     3,
+    1,
+    400,
+    106,
+    300,
     321
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.86,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 357,
@@ -12807,9 +13555,10 @@
    "pdf": 382,
    "printed": 365,
    "headerNumbers": [
-    51,
     6,
-    365
+    365,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 1,
@@ -12832,11 +13581,16 @@
    "printed": 366,
    "headerNumbers": [
     366,
-    307
+    1,
+    400,
+    106,
+    3,
+    302,
+    5
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.87,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 361,
@@ -12858,7 +13612,7 @@
    ],
    "matched": true,
    "anchorScore": 0.91,
-   "pageScore": 0.89,
+   "pageScore": 0.9,
    "segments": [
     {
      "i": 362,
@@ -12882,11 +13636,14 @@
    "printed": 368,
    "headerNumbers": [
     368,
-    333
+    1,
+    50,
+    326,
+    7
    ],
    "matched": true,
    "anchorScore": 0.93,
-   "pageScore": 0.92,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 364,
@@ -12908,7 +13665,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.83,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 366,
@@ -12926,6 +13683,11 @@
    "pdf": 387,
    "printed": 370,
    "headerNumbers": [
+    371,
+    370,
+    400,
+    106,
+    3,
     331
    ],
    "matched": true,
@@ -12952,7 +13714,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.8,
+   "pageScore": 0.91,
    "segments": [
     {
      "i": 368,
@@ -12971,11 +13733,15 @@
    "printed": 372,
    "headerNumbers": [
     372,
+    1,
+    400,
+    106,
+    3,
     333
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.86,
+   "pageScore": 0.9,
    "segments": [
     {
      "i": 369,
@@ -12993,9 +13759,10 @@
    "pdf": 390,
    "printed": 373,
    "headerNumbers": [
-    51,
     6,
-    373
+    373,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 1,
@@ -13013,11 +13780,15 @@
    "printed": 374,
    "headerNumbers": [
     374,
+    1,
+    400,
+    106,
+    3,
     334
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.9,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 370,
@@ -13054,6 +13825,10 @@
    "headerNumbers": [
     376,
     3,
+    1,
+    400,
+    106,
+    300,
     336
    ],
    "matched": true,
@@ -13080,7 +13855,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.94,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 373,
@@ -13099,11 +13874,15 @@
    "printed": 378,
    "headerNumbers": [
     378,
+    1,
+    400,
+    106,
+    3,
     339
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.88,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 375,
@@ -13121,13 +13900,14 @@
    "pdf": 396,
    "printed": 379,
    "headerNumbers": [
-    51,
     6,
-    379
+    379,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.95,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 376,
@@ -13146,6 +13926,10 @@
    "printed": 380,
    "headerNumbers": [
     380,
+    1,
+    400,
+    106,
+    303,
     341
    ],
    "matched": true,
@@ -13186,7 +13970,12 @@
    "printed": 382,
    "headerNumbers": [
     382,
-    344
+    1,
+    400,
+    106,
+    3,
+    304,
+    40
    ],
    "matched": true,
    "anchorScore": 1,
@@ -13203,13 +13992,14 @@
    "pdf": 400,
    "printed": 383,
    "headerNumbers": [
-    51,
     6,
-    383
+    383,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.94,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 381,
@@ -13222,11 +14012,15 @@
    "pdf": 401,
    "printed": 384,
    "headerNumbers": [
-    384
+    384,
+    1,
+    400,
+    106,
+    300
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.97,
+   "pageScore": 0.98,
    "segments": [
     {
      "i": 382,
@@ -13262,11 +14056,15 @@
    "printed": 386,
    "headerNumbers": [
     386,
+    1,
+    400,
+    106,
+    50,
     347
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.76,
+   "pageScore": 0.8,
    "segments": [
     {
      "i": 383,
@@ -13288,7 +14086,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.91,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 384,
@@ -13308,11 +14106,15 @@
    "headerNumbers": [
     388,
     3,
+    1,
+    400,
+    106,
+    300,
     349
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.89,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 385,
@@ -13354,6 +14156,10 @@
    "headerNumbers": [
     390,
     3,
+    1,
+    400,
+    106,
+    300,
     351
    ],
    "matched": true,
@@ -13376,13 +14182,14 @@
    "pdf": 408,
    "printed": 391,
    "headerNumbers": [
-    51,
     6,
-    391
+    391,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.86,
+   "pageScore": 0.88,
    "segments": [
     {
      "i": 388,
@@ -13402,12 +14209,15 @@
    "headerNumbers": [
     392,
     100,
-    307,
+    1,
+    400,
+    4,
+    303,
     354
    ],
    "matched": true,
    "anchorScore": 0.93,
-   "pageScore": 0.9,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 390,
@@ -13420,13 +14230,14 @@
    "pdf": 410,
    "printed": 393,
    "headerNumbers": [
-    57,
     4,
-    393
+    393,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.78,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 391,
@@ -13446,11 +14257,15 @@
    "headerNumbers": [
     394,
     3,
+    1,
+    6,
+    106,
+    300,
     356
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.88,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 392,
@@ -13472,7 +14287,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.86,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 394,
@@ -13491,6 +14306,10 @@
    "printed": 396,
    "headerNumbers": [
     396,
+    1,
+    400,
+    106,
+    3,
     359
    ],
    "matched": true,
@@ -13517,7 +14336,7 @@
    ],
    "matched": true,
    "anchorScore": 0.93,
-   "pageScore": 0.86,
+   "pageScore": 0.95,
    "segments": [
     {
      "i": 397,
@@ -13531,11 +14350,13 @@
    "printed": 398,
    "headerNumbers": [
     398,
+    1,
+    3,
     362
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.94,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 398,
@@ -13575,11 +14396,15 @@
    "pdf": 417,
    "printed": 400,
    "headerNumbers": [
+    401,
+    400,
+    106,
+    3,
     364
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.8,
+   "pageScore": 0.86,
    "segments": [
     {
      "i": 400,
@@ -13601,7 +14426,7 @@
    ],
    "matched": true,
    "anchorScore": 0.86,
-   "pageScore": 0.96,
+   "pageScore": 0.97,
    "segments": [
     {
      "i": 401,
@@ -13619,11 +14444,15 @@
    "pdf": 419,
    "printed": 402,
    "headerNumbers": [
+    402,
+    400,
+    106,
+    3,
     366
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.9,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 402,
@@ -13665,11 +14494,15 @@
    "pdf": 421,
    "printed": 404,
    "headerNumbers": [
+    404,
+    400,
+    106,
+    340,
     369
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.89,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 405,
@@ -13687,13 +14520,14 @@
    "pdf": 422,
    "printed": 405,
    "headerNumbers": [
-    51,
     6,
-    405
+    405,
+    1,
+    46
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.89,
+   "pageScore": 0.9,
    "segments": [
     {
      "i": 406,
@@ -13712,11 +14546,15 @@
    "printed": 406,
    "headerNumbers": [
     3,
+    406,
+    400,
+    106,
+    300,
     371
    ],
    "matched": true,
    "anchorScore": 0.95,
-   "pageScore": 0.83,
+   "pageScore": 0.93,
    "segments": [
     {
      "i": 407,
@@ -13752,11 +14590,15 @@
    "printed": 408,
    "headerNumbers": [
     408,
+    1,
+    400,
+    106,
+    340,
     374
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.84,
+   "pageScore": 0.89,
    "segments": [
     {
      "i": 410,
@@ -13773,7 +14615,7 @@
    ],
    "matched": true,
    "anchorScore": 0.9,
-   "pageScore": 0.8,
+   "pageScore": 0.91,
    "segments": [
     {
      "i": 410,
@@ -13791,11 +14633,16 @@
    "pdf": 427,
    "printed": 410,
    "headerNumbers": [
+    411,
+    410,
+    400,
+    106,
+    3,
     376
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.85,
+   "pageScore": 0.88,
    "segments": [
     {
      "i": 412,
@@ -13812,7 +14659,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.93,
+   "pageScore": 0.96,
    "segments": [
     {
      "i": 412,
@@ -13831,6 +14678,8 @@
    "printed": 412,
    "headerNumbers": [
     412,
+    1,
+    3,
     377
    ],
    "matched": true,
@@ -13857,7 +14706,7 @@
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.87,
+   "pageScore": 0.92,
    "segments": [
     {
      "i": 415,
@@ -13870,11 +14719,15 @@
    "pdf": 431,
    "printed": 414,
    "headerNumbers": [
+    414,
+    400,
+    106,
+    340,
     380
    ],
    "matched": true,
    "anchorScore": 1,
-   "pageScore": 0.9,
+   "pageScore": 0.94,
    "segments": [
     {
      "i": 416,
@@ -13915,7 +14768,10 @@
   {
    "pdf": 435,
    "printed": null,
-   "headerNumbers": [],
+   "headerNumbers": [
+    418,
+    408
+   ],
    "matched": false,
    "anchorScore": 0.09,
    "pageScore": null,
@@ -13925,8 +14781,9 @@
    "pdf": 436,
    "printed": null,
    "headerNumbers": [
-    528,
-    419
+    419,
+    40,
+    408
    ],
    "matched": false,
    "anchorScore": 0.09,
@@ -13937,7 +14794,8 @@
    "pdf": 437,
    "printed": null,
    "headerNumbers": [
-    420
+    420,
+    40
    ],
    "matched": false,
    "anchorScore": 0.16,
@@ -13948,7 +14806,8 @@
    "pdf": 438,
    "printed": null,
    "headerNumbers": [
-    421
+    421,
+    40
    ],
    "matched": false,
    "anchorScore": 0.09,
@@ -13958,7 +14817,9 @@
   {
    "pdf": 439,
    "printed": null,
-   "headerNumbers": [],
+   "headerNumbers": [
+    422
+   ],
    "matched": false,
    "anchorScore": 0.12,
    "pageScore": null,
@@ -13968,7 +14829,8 @@
    "pdf": 440,
    "printed": null,
    "headerNumbers": [
-    528,
+    40,
+    408,
     423
    ],
    "matched": false,
@@ -13979,7 +14841,9 @@
   {
    "pdf": 441,
    "printed": null,
-   "headerNumbers": [],
+   "headerNumbers": [
+    424
+   ],
    "matched": false,
    "anchorScore": 0.05,
    "pageScore": null,
@@ -14000,7 +14864,9 @@
   {
    "pdf": 443,
    "printed": null,
-   "headerNumbers": [],
+   "headerNumbers": [
+    426
+   ],
    "matched": false,
    "anchorScore": 0.07,
    "pageScore": null,
@@ -14010,8 +14876,9 @@
    "pdf": 444,
    "printed": null,
    "headerNumbers": [
-    528,
-    427
+    427,
+    40,
+    408
    ],
    "matched": false,
    "anchorScore": 0.07,
@@ -14021,7 +14888,10 @@
   {
    "pdf": 445,
    "printed": null,
-   "headerNumbers": [],
+   "headerNumbers": [
+    428,
+    405
+   ],
    "matched": false,
    "anchorScore": 0.05,
    "pageScore": null,
@@ -14043,7 +14913,8 @@
    "printed": null,
    "headerNumbers": [
     430,
-    528
+    40,
+    408
    ],
    "matched": false,
    "anchorScore": 0.02,
@@ -14066,7 +14937,8 @@
    "printed": null,
    "headerNumbers": [
     432,
-    528
+    40,
+    408
    ],
    "matched": false,
    "anchorScore": 0.05,
@@ -14077,8 +14949,9 @@
    "pdf": 450,
    "printed": null,
    "headerNumbers": [
-    528,
-    433
+    433,
+    40,
+    408
    ],
    "matched": false,
    "anchorScore": 0.05,
@@ -14090,7 +14963,8 @@
    "printed": null,
    "headerNumbers": [
     434,
-    528
+    40,
+    408
    ],
    "matched": false,
    "anchorScore": 0.03,
@@ -14112,7 +14986,9 @@
    "pdf": 453,
    "printed": null,
    "headerNumbers": [
-    436
+    436,
+    40,
+    400
    ],
    "matched": false,
    "anchorScore": 0.05,
