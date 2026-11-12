@@ -18,7 +18,8 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { bodyOf, fetchLetter } from '../src/igrot/chabadlibrary.js';
+import { fetchLetter } from '../src/igrot/chabadlibrary.js';
+import { bodyText, nearestWordStart } from '../src/igrot/pageMap.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -331,6 +332,18 @@ export function buildVolumeMap({ volume, pdfName, letters, bodies, pdfPages }) {
     return rec;
   });
 
+  // A page break inside a letter falls between two words, not in the middle of one.
+  const textPagesList = pages.filter((p) => p.matched && p.segments.length);
+  for (let j = 0; j + 1 < textPagesList.length; j++) {
+    const last = textPagesList[j].segments.at(-1);
+    const first = textPagesList[j + 1].segments[0];
+    if (last.i !== first.i) continue;
+    const at = nearestWordStart(bodies[last.i], first.from);
+    if (at <= last.from) continue;
+    last.to = at;
+    first.from = at;
+  }
+
   const letterRecs = letters.map(([id, heading], k) => {
     let covered = 0;
     const pdfPagesOf = [];
@@ -344,7 +357,7 @@ export function buildVolumeMap({ volume, pdfName, letters, bodies, pdfPages }) {
     const len = stream.letterLen[k];
     const cov = len ? covered / len : 0;
     const status = len === 0 ? 'empty' : cov >= LETTER_OK_FROM ? 'ok' : cov >= LETTER_PARTIAL_FROM ? 'partial' : 'missing';
-    return { i: k, id, heading, pages: [...new Set(pdfPagesOf)], coverage: round(cov), status };
+    return { i: k, id, heading, bodyLength: bodies[k].length, pages: [...new Set(pdfPagesOf)], coverage: round(cov), status };
   });
   for (const rec of pages) delete rec._segFull;
 
@@ -423,7 +436,7 @@ async function loadBodies(letters, { fetchFn = fetch, cacheDir = join(ROOT, '.ca
     } else {
       try {
         const letter = await fetchLetter(id, fetchFn);
-        body = bodyOf(letter.blocks).map((b) => b.text).join('\n');
+        body = bodyText(letter.blocks);
       } catch (err) {
         console.warn(`אגרת ${id}: לא נטענה (${err.message}), תיחשב כריקה.`);
         body = '';

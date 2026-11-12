@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { loadCatalog } from './igrot/catalog.js';
+import { attachPageMaps, loadPageMaps } from './igrot/pageMap.js';
 import { openBook, renderSpec, decodeSpec, encodeSpec, turnPage } from './igrot/openBook.js';
 import { fetchLetter } from './igrot/chabadlibrary.js';
 import { layout, pngsToPdf } from './render/bookPage.js';
@@ -13,7 +14,7 @@ const pageCache = {
   set(k, v) { this.map.set(k, v); if (this.map.size > this.max) this.map.delete(this.map.keys().next().value); },
 };
 let catalog;
-const getCatalog = () => (catalog ??= loadCatalog());
+const getCatalog = () => (catalog ??= attachPageMaps(loadCatalog(), loadPageMaps()));
 
 /** PNG of the page described by `spec`, drawn again if needed. null if the spec is invalid. */
 export async function getPageImage(specStr, deps = {}) {
@@ -23,6 +24,7 @@ export async function getPageImage(specStr, deps = {}) {
   const spec = decodeSpec(specStr, volumes);
   if (!spec) return null;
   const page = await renderSpec(volumes, spec, deps);
+  if (!page) return null;
   pageCache.set(specStr, page.png);
   return page.png;
 }
@@ -142,6 +144,7 @@ async function pageForAi(specStr, deps) {
   const spec = decodeSpec(specStr, volumes);
   if (!spec) throw new Error('PAGE_NOT_FOUND');
   const page = await renderSpec(volumes, spec, deps);
+  if (!page) throw new Error('PAGE_NOT_FOUND');
   const letters = page.letters.filter((l) => l.pageText.trim());
   return { text: pageAsText(letters), title: `אגרות קודש, ${page.volumeHeading}, אגרות ${letters.map((l) => l.number).join(', ')}` };
 }

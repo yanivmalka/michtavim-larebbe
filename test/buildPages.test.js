@@ -4,38 +4,7 @@ import {
   normalizeHebrew, buildStream, alignPages, buildVolumeMap, headerNumbers, linesOf, pageCoverage,
 } from '../scripts/build-pages.mjs';
 
-// Synthetic volume: letters made of Hebrew letters only, scanned pages cut from them with OCR noise.
-const LETTERS = 'אבגדהוזחטיכלמנסעפצקרשת';
-function rng(seed) {
-  let x = seed;
-  return () => {
-    x = (x * 1103515245 + 12345) & 0x7fffffff;
-    return x / 0x7fffffff;
-  };
-}
-function hebrewText(n, rand) {
-  let s = '';
-  for (let i = 0; i < n; i++) s += LETTERS[Math.floor(rand() * LETTERS.length)];
-  return s;
-}
-const noisy = (s) => [...s].map((ch, i) => (i % 17 === 16 ? (ch === 'ו' ? 'י' : 'ו') : ch)).join('');
-const wrap = (s) => s.match(/.{1,60}/g).join('\n');
-const NUMERALS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט', 'י', 'יא', 'יב'];
-
-function syntheticVolume() {
-  const rand = rng(7);
-  const lens = [1300, 1100, 2000, 1600];
-  const bodies = lens.map((n) => hebrewText(n, rand));
-  const stream = bodies.join('');
-  const front = 'שער הכרך\n' + wrap(hebrewText(400, rand));
-  const pages = [front];
-  for (let k = 0; k < 12; k++) {
-    const chunk = stream.slice(500 * k, 500 * k + 500);
-    pages.push(`${NUMERALS[k]} אגרות קודש\n` + wrap(noisy(chunk)));
-  }
-  const letters = bodies.map((_, k) => [`id${k}`, `h${k}`]);
-  return { bodies, letters, pdfPages: pages, lens };
-}
+import { hebrewText, rng, syntheticVolume } from './support/synthetic-volume.js';
 
 test('normalizeHebrew keeps Hebrew letters only and folds final forms', () => {
   const { norm, map } = normalizeHebrew('שָׁלוֹם, ךםןףץ!');

@@ -24,6 +24,15 @@ const STYLE = {
 };
 const LINE = 1.55;
 
+/** A style with its sizes multiplied by `k` (used to fit a page that holds more text). */
+const scaled = (style, k) => (k === 1 ? style : {
+  ...style,
+  size: style.size * k,
+  before: (style.before || 0) * k,
+  after: (style.after || 0) * k,
+  indent: (style.indent || 0) * k,
+});
+
 function wrap(ctx, text, width, indent) {
   const lines = [];
   for (const para of text.split('\n')) {
@@ -71,12 +80,13 @@ function newCanvas(header) {
  * Lays out a flow of blocks onto pages.
  * @param {{ kind: string, text: string, letter: number, continued?: boolean }[]} flow
  *   blocks in reading order; `letter` is an index the caller uses to track what was shown.
- * @param {{ header: {right: string, left: string}, maxPages?: number, footer?: (i: number, n: number) => string }} opts
+ * @param {{ header: {right: string, left: string}, maxPages?: number, footer?: (i: number, n: number) => string, scale?: number }} opts
+ *   `scale` multiplies all text sizes (1 by default).
  * @returns {{ pages: Buffer[], shown: Map<number, { text: string, complete: boolean }> }}
  *   `shown` holds, per letter index, the text that made it onto the pages and whether
  *   all of that letter's blocks in the flow fit.
  */
-export function layout(flow, { header, maxPages = Infinity, footer }) {
+export function layout(flow, { header, maxPages = Infinity, footer, scale = 1 }) {
   const width = PAGE.width - PAGE.side * 2;
   const bottom = PAGE.height - PAGE.bottom;
   const pages = [];
@@ -98,7 +108,7 @@ export function layout(flow, { header, maxPages = Infinity, footer }) {
 
   for (const block of flow) {
     if (full) break;
-    const s = STYLE[block.kind] || STYLE.text;
+    const s = scaled(STYLE[block.kind] || STYLE.text, scale);
     const { ctx } = page;
     ctx.font = `${s.size}px ${s.bold ? 'FrankRuhlBold' : 'FrankRuhl'}`;
     const lh = s.size * LINE;

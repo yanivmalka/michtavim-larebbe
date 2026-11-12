@@ -6,6 +6,7 @@
 // one page-length before it, and the layout engine fills one book-sized page from there.
 import { fetchLetter as defaultFetch, bodyOf } from './chabadlibrary.js';
 import { layout } from '../render/bookPage.js';
+import { bodyText, mappedPage, sliceBlocks, textPages } from './pageMap.js';
 
 /** Roughly how many characters fit on one rendered page – used only to pick a start point. */
 export const PAGE_CHARS = 1500;
@@ -34,11 +35,20 @@ function sliceFrom(blocks, at) {
  * A page is fully described by a small "spec" – volume, first letter, number of letters
  * and the character offset where the page starts – so its image can be drawn again at any
  * time (after a server restart, for sharing, for the full-screen view).
+ * A page from a printed-page map is the spec ['m', volume, printed page] instead.
  */
-export const encodeSpec = ({ v, i, n, s }) => Buffer.from(JSON.stringify([v, i, n, s])).toString('base64url');
+export const encodeSpec = (spec) => Buffer.from(JSON.stringify(
+  spec.p !== undefined ? ['m', spec.v, spec.p] : [spec.v, spec.i, spec.n, spec.s],
+)).toString('base64url');
+
 export function decodeSpec(str, volumes) {
   try {
-    const [v, i, n, s] = JSON.parse(Buffer.from(String(str), 'base64url').toString());
+    const arr = JSON.parse(Buffer.from(String(str), 'base64url').toString());
+    if (arr[0] === 'm') {
+      const [, v, p] = arr;
+      return Number.isInteger(v) && Number.isInteger(p) && volumes[v] && mappedPage(volumes[v], p) ? { v, p } : null;
+    }
+    const [v, i, n, s] = arr;
     const ok = [v, i, n, s].every(Number.isInteger) && volumes[v] && i >= 0 && n >= 1 && n <= 12
       && i + n <= volumes[v].letters.length && s >= 0 && s < 500000;
     return ok ? { v, i, n, s } : null;
@@ -47,8 +57,66 @@ export function decodeSpec(str, volumes) {
   }
 }
 
+const FIT_SCALES = [1, 0.94, 0.88, 0.82, 0.76, 0.7];
+
+/**
+ * One page from a flow of blocks, with the text made smaller (in steps) until every letter on it fits.
+ * `truncated` is true only if the text does not fit even at the smallest size.
+ */
+function fitOnePage(flow, header) {
+  const letters = [...new Set(flow.map((b) => b.letter))];
+  let result;
+  for (const scale of FIT_SCALES) {
+    result = layout(flow, { header, maxPages: 1, scale });
+    if (letters.every((k) => result.shown.get(k)?.complete)) return { ...result, truncated: false };
+  }
+  return { ...result, truncated: true };
+}
+
+/**
+ * Draws a page of a printed-page map: the letters' text exactly as the page holds it.
+ * Returns null when the map no longer matches the letters (their text changed), so the caller can
+ * fall back to the simulated page.
+ */
+export async function renderMapped(volumes, spec, { fetchLetter = defaultFetch } = {}) {
+  const vol = volumes[spec.v];
+  const page = mappedPage(vol, spec.p);
+  if (!page) return null;
+  const flow = [];
+  const parts = [];
+  for (const seg of page.segments) {
+    const [id, heading] = vol.letters[seg.i];
+    const l = await fetchLetter(id);
+    const text = bodyText(l.blocks);
+    if (vol.pageMap.letters[seg.i]?.bodyLength !== text.length || seg.to > text.length) return null;
+    const k = parts.length;
+    const number = l.letterHeading || heading;
+    const startsOnPage = seg.from === 0;
+    if (startsOnPage) flow.push({ kind: 'number', text: number, letter: k });
+    for (const b of sliceBlocks(bodyOf(l.blocks), seg.from, seg.to)) flow.push({ ...b, letter: k });
+    parts.push({ id, number, startsOnPage, endsOnPage: seg.to >= text.trimEnd().length, full: l });
+  }
+  if (!flow.length) return null;
+
+  const { pages, shown, truncated } = fitOnePage(flow, { right: 'אגרות קודש', left: vol.heading });
+  const letters = parts.map((p, k) => {
+    const shownText = shown.get(k)?.text ?? '';
+    return {
+      id: p.id,
+      number: p.number,
+      viewerUrl: p.full.viewerUrl,
+      startsOnPage: p.startsOnPage,
+      endsOnPage: p.endsOnPage,
+      pageText: p.startsOnPage ? shownText.split('\n').slice(1).join('\n') : shownText,
+      full: p.full,
+    };
+  });
+  return { volume: vol.volume, volumeHeading: vol.heading, png: pages[0], letters, spec: encodeSpec(spec), end: null, consumed: 0, truncated };
+}
+
 /** Draws the page described by `spec`. */
 export async function renderSpec(volumes, spec, { fetchLetter = defaultFetch } = {}) {
+  if (spec.p !== undefined) return renderMapped(volumes, spec, { fetchLetter });
   const vol = volumes[spec.v];
   const chain = await Promise.all(Array.from({ length: spec.n }, async (_, k) => {
     const [id, heading] = vol.letters[spec.i + k];
@@ -121,6 +189,13 @@ async function specFrom(volumes, v, i, s, fetchLetter) {
  * by a line or two. Returns null at the start / end of the volume.
  */
 export async function turnPage(volumes, spec, dir, { fetchLetter = defaultFetch } = {}) {
+  if (spec.p !== undefined) {
+    // printed pages of a map: the next or previous page with text, within the volume
+    const pages = textPages(volumes[spec.v].pageMap);
+    const at = pages.findIndex((p) => p.pdf === spec.p);
+    const next = at === -1 ? undefined : pages[at + dir];
+    return next ? { v: spec.v, p: next.pdf } : null;
+  }
   const page = await renderSpec(volumes, spec, { fetchLetter });
   const vol = volumes[spec.v];
   if (dir > 0) {
@@ -173,6 +248,15 @@ export async function openBook(volumes, { random = Math.random, fetchLetter = de
   let v = 0;
   while (pick >= volumes[v].letters.length) pick -= volumes[v++].letters.length;
   const vol = volumes[v];
+
+  // a volume with a printed-page map: a random printed page of it
+  if (vol.pageMap) {
+    const pages = textPages(vol.pageMap);
+    if (pages.length) {
+      const page = await renderMapped(volumes, { v, p: pages[Math.floor(random() * pages.length)].pdf }, { fetchLetter });
+      if (page) return page;
+    }
+  }
 
   const load = async (i) => {
     const l = await fetchLetter(vol.letters[i][0]);
