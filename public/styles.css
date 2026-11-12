@@ -446,3 +446,6 @@ details.ana-part details.ana-part { margin-inline-start: 4px; }
 .q-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
 .q-row button { font: inherit; font-size: .78rem; border: 1px solid rgba(0,0,0,.18); background: transparent; color: var(--muted); border-radius: 12px; padding: 2px 9px; cursor: pointer; }
 @media (prefers-color-scheme: dark) { .q-row button { border-color: rgba(255,255,255,.25); } .bar-run { background: rgba(255,255,255,.15); } }
+/* the words a popover explains (ראשי תיבות / Aramaic), and the blink of a tapped word nothing was found for */
+::highlight(pop) { background-color: #b9e6ff; color: #0b2a44; }
+::highlight(flash) { background-color: #ffb74d; color: #111; }

@@ -802,6 +802,7 @@ let rtTimer = null;
 function hideAcronymPop(fade = false) {
   const pop = $('rt-pop');
   if (pop.hidden) return;
+  clearPopWords();
   clearTimeout(rtTimer);
   if (!fade) { pop.hidden = true; pop.classList.remove('fade'); return; }
   pop.classList.add('fade');
@@ -876,6 +877,24 @@ function acronymRun(text, start, end) {
   return words.slice(a, b + 1);
 }
 
+/** Marks, in a colour of its own, the words the popover explains (CSS Custom Highlight – nothing in the page changes). */
+function markPopWords(p, start, end) {
+  try { CSS.highlights.set('pop', new Highlight(rangeIn(p, start, end))); } catch { /* an older browser: no mark */ }
+}
+const clearPopWords = () => { try { CSS.highlights.delete('pop'); } catch { /* ignore */ } };
+/** A tap that found nothing to explain: the word blinks, so the user sees the tap was noticed. */
+let flashTimers = [];
+function flashWord(p, found) {
+  flashTimers.forEach(clearTimeout);
+  try {
+    const hl = new Highlight(rangeIn(p, found.start, found.end));
+    const on = () => CSS.highlights.set('flash', hl);
+    const off = () => CSS.highlights.delete('flash');
+    on();
+    flashTimers = [setTimeout(off, 180), setTimeout(on, 330), setTimeout(off, 560)];
+  } catch { /* an older browser */ }
+}
+
 /** Puts the popover above the word, inside the screen. */
 function placePop(p, found) {
   const pop = $('rt-pop');
@@ -940,11 +959,22 @@ function showAramaicPop(p, found, phrase = found.word) {
   pop.hidden = false;
   rtScrollTop = chat.scrollTop;
   placePop(p, found);
+  const markPhrase = () => { // the whole phrase that was translated, where it stands around the tapped word
+    const r = aramaicCache.get(key);
+    const ph = r?.isAramaic && r.phrase ? r.phrase.trim() : '';
+    let at = -1;
+    for (let i = found.text.indexOf(ph); ph && i >= 0; i = found.text.indexOf(ph, i + 1)) {
+      if (i <= found.start && i + ph.length >= found.end) { at = i; break; }
+    }
+    if (at >= 0) markPopWords(p, at, at + ph.length); else markPopWords(p, found.start, found.end);
+    if (r && !r.error && !r.isAramaic) flashWord(p, found);
+  };
+  markPhrase();
   if (aramaicCache.has(key) && !aramaicCache.get(key).error) return;
   aramaicCache.delete(key);
   postJson('/api/aramaic', { sentence, word: bareWord(phrase) || phrase, language: lang }, 60000)
     .then((r) => aramaicCache.set(key, r), (e) => aramaicCache.set(key, { error: e.message }))
-    .then(() => { if (!pop.hidden && pop.contains(body)) { paint(); placePop(p, found); } });
+    .then(() => { if (!pop.hidden && pop.contains(body)) { paint(); placePop(p, found); markPhrase(); } });
 }
 
 function showAcronymPop(p, found) {
@@ -1022,7 +1052,8 @@ function showAcronymPop(p, found) {
       foot.append(ai);
     }
     // the user's own reading of this abbreviation: kept on this device, shown first
-    const mineB = el('button', { type: 'button', className: 'rt-btn', textContent: own().length ? '✎ הפירוש שלי' : '＋ פירוש משלי' });
+    const mineB = el('button', { type: 'button', className: 'rt-btn', textContent: '＋', title: own().length ? 'עריכת הפירוש שלי' : 'הוספת פירוש משלי' });
+    mineB.setAttribute('aria-label', mineB.title);
     mineB.addEventListener('click', () => {
       const v = prompt(`הפירוש שלך ל־${rtKey} (ריק = הסרת הפירוש שלך):`, own()[0] || '');
       if (v === null) return;
@@ -1043,6 +1074,8 @@ function showAcronymPop(p, found) {
   pop.hidden = false;
   rtScrollTop = chat.scrollTop;
   placePop(p, found);
+  markPopWords(p, found.start, found.end);
+  if (!options.length) flashWord(p, found);
 }
 chat.addEventListener('click', (e) => {
   if (markerMode || selecting() || !getSelection().isCollapsed) return;
@@ -1051,7 +1084,7 @@ chat.addEventListener('click', (e) => {
   const found = wordAtPoint(p, e.clientX, e.clientY);
   if (found && isAcronym(found.word)) showAcronymPop(p, found);
   else if (found && looksAramaic(found.word)) showAramaicPop(p, found);
-  else hideAcronymPop();
+  else { hideAcronymPop(); if (found) flashWord(p, found); }
 });
 // selected text → "ארמית" in the tools bar: for a phrase the tap did not recognise
 $('tool-aramaic').addEventListener('click', () => {
@@ -1884,7 +1917,9 @@ async function addPhoto(file) {
   }
   if (!state.entries.includes(entry)) return;
   delete entry.preparing;
+  entry.t0 = Date.now();
   save(); render({ scroll: true });
+  setTimeout(scrollDown, 350);
 }
 
 /** A line of progress inside a bubble: a spinner, what is happening now (by the time passed), the time, and a running bar. */
@@ -1962,6 +1997,8 @@ function photoBody(entry) {
   if (entry.preparing) return [progressLine(entry, [[0, 'טוענים את התמונה…']])];
   const img = el('img', { className: 'photo-img', alt: 'צילום עמוד מאגרות קודש', src: entry.thumb || '' });
   mediaUrl(imgKey(entry)).then((u) => { if (u) img.src = u; });
+  // just added: once the picture has its height the chat scrolls to its end, so the box for the letter is in sight
+  if ((entry.draft || entry.pending) && Date.now() - (entry.t0 || 0) < 15000) img.addEventListener('load', () => { if (view.id === entry.conv) scrollDown(); });
   img.addEventListener('click', () => { if (!selecting()) showPhoto(img.src); });
   const parts = [el('div', { className: `photo-wrap${entry.pending ? ' scanning' : ''}` }, img)];
   if (entry.draft) {
