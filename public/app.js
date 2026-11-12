@@ -2284,6 +2284,7 @@ async function openLetter(entry) {
     unlockedQ.add(entry.id);
   }
   entry.qOpen = true;
+  if (entry.a) { entry.collapsed = false; setRead(entry); } // the letter and its answer open together
   save(); render();
 }
 async function toggleLetterLock(entry) {
@@ -2325,20 +2326,29 @@ async function summarizeEntry(entry) {
 
 function questionBubble(entry, conv) {
   const tools = el('div', { className: 'q-tools' });
-  if (entry.a) {
-    const b = el('button', { type: 'button', className: 'chev', textContent: entry.collapsed ? '▾' : '▴', title: entry.collapsed ? 'הרחבת המענה' : 'מזעור המענה' });
-    b.setAttribute('aria-label', b.title);
-    b.addEventListener('click', () => { if (entry.collapsed) expandEntry(entry); else { collapseEntry(entry); save(); render(); } });
-    tools.append(b);
-  }
   const mine = isOwner(conv);
   const who = mine ? 'אני' : nameOf(conv, conv.owner);
   const folding = folds(entry);
   const open = !folding || (entry.qOpen && !qSealed(entry));
+  // one chevron for the letter and its answer together: on the folded line it is the line's own chevron,
+  // otherwise it sits at the corner of the bubble
+  if (folding ? open : !!entry.a) {
+    const down = !folding && entry.collapsed;
+    const b = el('button', { type: 'button', className: 'chev', textContent: down ? '▾' : '▴', title: down ? 'הרחבת המענה' : 'מזעור המכתב והמענה' });
+    b.setAttribute('aria-label', b.title);
+    b.addEventListener('click', () => {
+      if (down) { expandEntry(entry); return; }
+      delete entry.qOpen;
+      if (entry.qLocked) unlockedQ.delete(entry.id);
+      if (entry.a) collapseEntry(entry);
+      save(); render();
+    });
+    tools.append(b);
+  }
   let body;
   if (!open) { // one short line; a tap opens the letter
     const sealed = qSealed(entry);
-    const line = el('button', { type: 'button', className: 'q-sum', title: sealed ? 'פתיחה בטביעת אצבע' : 'הצגת המכתב המלא' },
+    const line = el('button', { type: 'button', className: 'q-sum', title: sealed ? 'פתיחה בטביעת אצבע' : 'הצגת המכתב והמענה' },
       el('span', { className: 'q-sum-icon', textContent: sealed ? '🔒' : entry.kind === 'voice' ? '🎤' : entry.kind === 'photo' ? '📷' : '✉️' }),
       el('span', { className: 'q-sum-text', textContent: sealed ? 'מכתב נעול – לחצו לפתיחה' : sumOf(entry) }),
       el('span', { className: 'chev', textContent: '▾' }));
@@ -2349,7 +2359,6 @@ function questionBubble(entry, conv) {
     if (folding || (!entry.draft && mine && !entry.kind)) {
       const row = el('div', { className: 'q-row' });
       const btn = (text, title, fn) => { const b = el('button', { type: 'button', textContent: text, title }); b.addEventListener('click', () => { if (!selecting()) fn(); }); row.append(b); };
-      if (folding) btn('▴ כיווץ', 'כיווץ המכתב לשורה אחת', () => { delete entry.qOpen; if (entry.qLocked) unlockedQ.delete(entry.id); save(); render(); });
       if (mine && folding) btn('✎ שורת סיכום', 'עריכת השורה שמוצגת כשהמכתב מכווץ', () => editSummary(entry));
       if (mine) btn(entry.qLocked ? '🔓 ביטול נעילה' : '🔒 נעילה', 'נעילת טקסט המכתב במכשיר זה – פתיחה בטביעת אצבע', () => toggleLetterLock(entry));
       body.push(row);
