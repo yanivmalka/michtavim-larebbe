@@ -95,3 +95,68 @@ test('pageBody drops the running header, the book title and a letter number, but
   const plain = 'header row\nברוחניות\nב׳תרכד\nב״ה, אדר״ח';
   assert.equal(pageBody(plain), 'ברוחניות\nב׳תרכד\nב״ה, אדר״ח');
 });
+
+// ---- footnotes, spaced-out headers, offset changes ----
+
+import { dropFootnotes, pageOffsets, writtenNumeralValue } from '../scripts/build-pages.mjs';
+
+test('headerNumbers reads a numeral inside a header that OCR spaced out letter by letter', () => {
+  // 118, then the word "אגרות"
+  assert.ok(headerNumbers('ק י ח א ג ר ו ת י ק ו ד ש  ע א (').includes(118));
+  // 120 and then "אגרות": the א may belong to either, so both readings are offered
+  const both = headerNumbers('ק כ א ג ר ו ת ־ ק ו ד ש)עב');
+  assert.ok(both.includes(120) && both.includes(121));
+  // the numeral at the end of a spaced-out header
+  assert.ok(headerNumbers('א ד מ ו ״ ר ש ל י ט ״ א ק כ א').includes(121));
+  assert.ok(!headerNumbers('א ד מ ו ״ ר ש ל י ט ״ א ק כ א').includes(122));
+});
+
+test('writtenNumeralValue accepts numerals in written order only', () => {
+  assert.equal(writtenNumeralValue('קכא'), 121);
+  assert.equal(writtenNumeralValue('טו'), 15);
+  assert.equal(writtenNumeralValue('תתקצט'), 999);
+  assert.equal(writtenNumeralValue('אק'), null);
+  assert.equal(writtenNumeralValue('יי'), null);
+});
+
+test('pageOffsets follows a change of offset where the scan lacks pages', () => {
+  // 60 pages; printed = pdf - 5 up to pdf 30, and pdf - 3 after it (two printed pages missing)
+  const numbers = [];
+  for (let pdf = 1; pdf <= 60; pdf++) numbers.push(pdf % 7 === 0 ? [] : [pdf - (pdf <= 30 ? 5 : 3)]);
+  const offsets = pageOffsets(numbers, numbers.map(() => true), 5);
+  assert.equal(offsets[0], 5);
+  assert.equal(offsets[29], 5);
+  assert.equal(offsets[30], 3);
+  assert.equal(offsets[59], 3);
+  // a single odd header does not change the offset
+  const steady = numbers.map((_, i) => [i + 1 - 5]);
+  steady[20] = [99];
+  assert.ok(pageOffsets(steady, steady.map(() => true), 5).every((d) => d === 5));
+});
+
+test('dropFootnotes drops small-print lines that are not in the letters, on matched pages only', () => {
+  const rand = rng(11);
+  const stream = hebrewText(4000, rand);
+  const note = hebrewText(120, rand);
+  const page = (k) => ['כותרת', stream.slice(k, k + 60), stream.slice(k + 60, k + 120), note].join('\n');
+  const pages = [page(0), page(120), page(240)];
+  const sizes = pages.map(() => [12, 10, 10, 7]);
+  const out = dropFootnotes(pages, sizes, stream, [true, true, false]);
+  assert.equal(out[0].split('\n').length, 3, 'the footnote line is dropped');
+  assert.ok(!out[0].includes(note));
+  assert.equal(out[2], pages[2], 'an unmatched page is left as it is');
+  // small print that is letter text stays
+  const small = [['כותרת', stream.slice(0, 60), stream.slice(60, 120)].join('\n')];
+  assert.equal(dropFootnotes(small.concat(pages), [[12, 10, 7]].concat(sizes), stream, [true, true, true, true])[0], small[0]);
+});
+
+test('alignPages: a page that is not found does not hide the pages after it', () => {
+  const rand = rng(5);
+  const stream = hebrewText(5000, rand);
+  const pages = [];
+  for (let k = 0; k < 10; k++) pages.push(stream.slice(k * 500, k * 500 + 500));
+  pages[4] = hebrewText(500, rand); // unrelated text
+  const res = alignPages(stream, codesOf(stream), pages);
+  assert.equal(res[4].start, null);
+  [0, 1, 2, 3, 5, 6, 7, 8, 9].forEach((k) => assert.ok(Math.abs(res[k].start - 500 * k) <= 6, `page ${k}`));
+});
