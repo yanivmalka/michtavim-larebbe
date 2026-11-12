@@ -449,3 +449,4 @@ details.ana-part details.ana-part { margin-inline-start: 4px; }
 /* the words a popover explains (ראשי תיבות / Aramaic), and the blink of a tapped word nothing was found for */
 ::highlight(pop) { background-color: #b9e6ff; color: #0b2a44; }
 ::highlight(flash) { background-color: #ffb74d; color: #111; }
+.q-tools:empty { display: none; }
