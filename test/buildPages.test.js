@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  normalizeHebrew, buildStream, alignPages, buildVolumeMap, headerNumbers, linesOf, pageCoverage,
+  normalizeHebrew, buildStream, alignPages, buildVolumeMap, headerNumbers, linesOf, pageCoverage, pageBody,
 } from '../scripts/build-pages.mjs';
 
 import { hebrewText, rng, syntheticVolume } from './support/synthetic-volume.js';
@@ -86,3 +86,12 @@ function codesOf(s) {
   for (let i = 0; i + 2 < s.length; i++) out[i] = (c(s[i]) * 28 + c(s[i + 1])) * 28 + c(s[i + 2]);
   return out;
 }
+
+test('pageBody drops the running header, the book title and a letter number, but keeps text lines', () => {
+  // the first page of a volume: header row, book title lines (OCR may misread them), letter number
+  const first = 'אדמו״ר שליט״א שורה עליונה\nאדמו״ר שליט״א\n— פרך שלשה עשר -\nד׳רעג\nב״ה, אדר״ח אייר\nברוקלין.';
+  assert.equal(pageBody(first), 'ב״ה, אדר״ח אייר\nברוקלין.');
+  // an ordinary page: a short text line (the end of the previous letter) is not a letter number
+  const plain = 'header row\nברוחניות\nב׳תרכד\nב״ה, אדר״ח';
+  assert.equal(pageBody(plain), 'ברוחניות\nב׳תרכד\nב״ה, אדר״ח');
+});

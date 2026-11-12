@@ -100,6 +100,25 @@ export function linesOf(items) {
     .join('\n');
 }
 
+const RUNNING_TITLE = /שליט|אגרות|כרך|פרך|שלשה|עשר|אדמו/;
+const LETTER_NUMBER = /^[א-ת׳'"״ ]+$/;
+
+/**
+ * The letter text on a page: the lines after the running header, without the book's title
+ * lines (at the top of the first page of a volume) and without the letter's own number heading.
+ * Neither is in the letters' text, and leaving them in shifts the match of the page.
+ */
+export function pageBody(pageText) {
+  const lines = pageText.split('\n').slice(1);
+  const isTitle = (l) => l.trim().length <= 25 && RUNNING_TITLE.test(l);
+  // letter numbers always carry a geresh or apostrophe (e.g. ב'תרכד); ordinary short lines do not
+  const isNumber = (l) => l.trim().length <= 8 && /['׳״"]/.test(l) && LETTER_NUMBER.test(l.trim());
+  let i = 0;
+  while (i < 3 && i < lines.length && isTitle(lines[i])) i++;
+  while (i < lines.length && isNumber(lines[i])) i++;
+  return lines.slice(i).join('\n');
+}
+
 /** Text of every page of the PDF, as lines (top to bottom). */
 export async function extractPages(pdfPath) {
   const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
@@ -282,8 +301,7 @@ export function buildVolumeMap({ volume, pdfName, letters, bodies, pdfPages }) {
   const streamCodes = trigramCodes(stream.norm);
 
   const headers = pdfPages.map((text) => text.split('\n')[0] ?? '');
-  const bodyTexts = pdfPages.map((text) => text.split('\n').slice(1).join('\n'));
-  const pagesNorm = bodyTexts.map((t) => normalizeHebrew(t).norm);
+  const pagesNorm = pdfPages.map((text) => normalizeHebrew(pageBody(text)).norm);
   const aligned = alignPages(stream.norm, streamCodes, pagesNorm);
 
   // Printed page numbers: one offset (PDF page minus printed page) holds for the whole volume.
