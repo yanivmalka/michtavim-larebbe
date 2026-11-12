@@ -157,3 +157,48 @@ export async function acronymsClaude({ context, words }) {
   });
   return AcronymSchema.parse(jsonOf(response)).items;
 }
+
+/** Reading a photo of a printed Igrot Kodesh page: only its numbers, not the text (the text comes from the library). */
+export const PHOTO_SYSTEM = `לפניך צילום. בדוק אם הוא צילום של עמוד מהספר "אגרות קודש" של הרבי מליובאוויטש (או מספר אחר שאגרותיו ממוספרות באותו אופן). אל תעתיק את הטקסט – קרא רק את המספרים:
+- volume: מספר הכרך (החלק) אם הוא מופיע בכותרת העמוד, אחרת מחרוזת ריקה.
+- page: מספר העמוד המודפס (בספרות או באותיות), אחרת מחרוזת ריקה.
+- letters: מספרי האגרות שכותרתן מופיעה בעמוד, לפי סדר הופעתן, כפי שהם מודפסים (באותיות עבריות, כולל גרש לאלפים וכוכבית אם יש, למשל "א'תתקסו" או "קמא*").
+- continuesFromPrevious: true אם בראש העמוד ממשיכה אגרת שהתחילה בעמוד קודם (לפני כותרת האגרת הראשונה).
+- isIgrot: false אם זה אינו עמוד מאגרות קודש. readable: false אם הצילום מטושטש או חתוך כך שאי אפשר לקרוא את מספרי האגרות.
+החזר JSON בלבד.`;
+export const photoSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['isIgrot', 'readable', 'volume', 'page', 'letters', 'continuesFromPrevious'],
+  properties: {
+    isIgrot: { type: 'boolean' },
+    readable: { type: 'boolean' },
+    volume: { type: 'string' },
+    page: { type: 'string' },
+    letters: { type: 'array', items: { type: 'string' } },
+    continuesFromPrevious: { type: 'boolean' },
+  },
+};
+export const PhotoSchema = z.object({
+  isIgrot: z.boolean(),
+  readable: z.boolean(),
+  volume: z.string().default(''),
+  page: z.string().default(''),
+  letters: z.array(z.string()).default([]),
+  continuesFromPrevious: z.boolean().default(false),
+});
+
+export const TRANSCRIBE_SYSTEM = `תמלל את ההקלטה מילה במילה, בשפה שבה דוברים (בדרך כלל עברית), עם פיסוק נכון. זהו מכתב שאדם מכתיב לרבי. אל תוסיף, אל תסכם ואל תתרגם. ${SCRIPT_RULE} אם אין בהקלטה דיבור ברור – החזר מחרוזת ריקה. החזר את התמליל בלבד.`;
+
+/** Claude: the numbers on a photographed page. */
+export async function readPhotoClaude({ data, mimeType }) {
+  if (!hasCredentials()) throw new Error('AI_NOT_CONFIGURED');
+  const response = await getClient().beta.messages.create({
+    model: config.claude.model, max_tokens: 2000,
+    betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default',
+    output_config: { effort: 'low', format: { type: 'json_schema', schema: photoSchema } },
+    system: PHOTO_SYSTEM,
+    messages: [{ role: 'user', content: [{ type: 'image', source: { type: 'base64', media_type: mimeType, data } }, { type: 'text', text: 'מה המספרים בעמוד?' }] }],
+  });
+  return PhotoSchema.parse(jsonOf(response));
+}

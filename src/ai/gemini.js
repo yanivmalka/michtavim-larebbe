@@ -2,6 +2,7 @@
 import { GoogleGenAI } from '@google/genai';
 import {
   SYSTEM, FOLLOWUP_SYSTEM, TRANSLATE_SYSTEM, ACRONYM_SYSTEM, jsonSchema, AnswerSchema, translateSchema, TranslateSchema, acronymSchema, AcronymSchema,
+  PHOTO_SYSTEM, photoSchema, PhotoSchema, TRANSCRIBE_SYSTEM,
 } from './explain.js';
 
 export const geminiAvailable = () => Boolean(process.env.GEMINI_API_KEY);
@@ -100,4 +101,28 @@ export async function acronymsWithGemini({ context, words }) {
     text: `הקטע:\n"""\n${context}\n"""\n\nראשי התיבות לפענוח: ${JSON.stringify(words)}`,
   });
   return AcronymSchema.parse(out).items;
+}
+
+/** The numbers on a photographed Igrot Kodesh page (volume, page, letter numbers) – not its text. */
+export async function readPhotoWithGemini({ data, mimeType }) {
+  if (!geminiAvailable()) throw new Error('AI_NOT_CONFIGURED');
+  const response = await withFallback((model) => getClient().models.generateContent({
+    model,
+    contents: [{ role: 'user', parts: [{ inlineData: { data, mimeType } }, { text: 'מה המספרים בעמוד?' }] }],
+    config: { systemInstruction: PHOTO_SYSTEM, responseMimeType: 'application/json', responseJsonSchema: geminiSchema(photoSchema), temperature: 0 },
+  }));
+  if (!response.text) throw new Error(response.promptFeedback?.blockReason ? 'AI_REFUSED' : 'AI_EMPTY');
+  return PhotoSchema.parse(JSON.parse(response.text));
+}
+
+/** Speech to text: a letter dictated by voice. */
+export async function transcribeWithGemini({ data, mimeType }) {
+  if (!geminiAvailable()) throw new Error('AI_NOT_CONFIGURED');
+  const response = await withFallback((model) => getClient().models.generateContent({
+    model,
+    contents: [{ role: 'user', parts: [{ inlineData: { data, mimeType } }, { text: 'תמלל.' }] }],
+    config: { systemInstruction: TRANSCRIBE_SYSTEM, temperature: 0 },
+  }));
+  if (response.promptFeedback?.blockReason) throw new Error('AI_REFUSED');
+  return (response.text || '').trim();
 }

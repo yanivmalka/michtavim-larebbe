@@ -1,6 +1,8 @@
 // Chooses the AI provider: AI_PROVIDER=gemini|claude, or whichever has a key (Gemini first).
-import { explainAnswer, followUpClaude, translateClaude, acronymsClaude, claudeAvailable } from './explain.js';
-import { explainWithGemini, followUpWithGemini, translateWithGemini, acronymsWithGemini, geminiAvailable } from './gemini.js';
+import { explainAnswer, followUpClaude, translateClaude, acronymsClaude, readPhotoClaude, claudeAvailable } from './explain.js';
+import {
+  explainWithGemini, followUpWithGemini, translateWithGemini, acronymsWithGemini, readPhotoWithGemini, transcribeWithGemini, geminiAvailable,
+} from './gemini.js';
 
 export function provider() {
   const wanted = process.env.AI_PROVIDER;
@@ -35,4 +37,17 @@ export async function expandAcronyms(input) {
   const p = provider();
   if (!p) throw new Error('AI_NOT_CONFIGURED');
   return p === 'gemini' ? acronymsWithGemini(input) : acronymsClaude(input);
+}
+
+/** The numbers printed on a photographed page. */
+export async function readPagePhoto(input) {
+  const p = provider();
+  if (!p) throw new Error('AI_NOT_CONFIGURED');
+  return p === 'gemini' ? readPhotoWithGemini(input) : readPhotoClaude(input);
+}
+
+/** Speech to text. Claude takes no audio, so this needs Gemini whatever the provider of the rest. */
+export async function transcribeAudio(input) {
+  if (!geminiAvailable()) throw new Error('VOICE_NOT_CONFIGURED');
+  return transcribeWithGemini(input);
 }

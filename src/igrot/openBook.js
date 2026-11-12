@@ -107,7 +107,7 @@ export async function renderSpec(volumes, spec, { fetchLetter = defaultFetch } =
 }
 
 /** Spec of a page starting at letter `i`, offset `s`, with enough letters after it to fill a page. */
-async function specFrom(volumes, v, i, s, fetchLetter) {
+export async function specFrom(volumes, v, i, s, fetchLetter) {
   const vol = volumes[v];
   if (i >= vol.letters.length) return null;
   const len = async (k) => lengthOf(bodyOf((await fetchLetter(vol.letters[k][0])).blocks));
