@@ -1,10 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import { loadCatalog } from './igrot/catalog.js';
-import { openBook, renderSpec, decodeSpec, encodeSpec, turnPage } from './igrot/openBook.js';
+import { openBook, renderSpec, decodeSpec, encodeSpec, turnPage, specFrom } from './igrot/openBook.js';
+import { findLetter, findVolume } from './igrot/letterNumbers.js';
 import { fetchLetter } from './igrot/chabadlibrary.js';
 import { layout, pngsToPdf, drawHighlights } from './render/bookPage.js';
 import { findQuote, stripForeignScript, parseHighlights } from './highlights.js';
-import { analyzePage, followUp, translateTexts, expandAcronyms } from './ai/index.js';
+import { analyzePage, followUp, translateTexts, expandAcronyms, readPagePhoto, transcribeAudio } from './ai/index.js';
 
 /** Small LRU of rendered page images (they can always be drawn again). */
 const pageCache = {
@@ -139,6 +140,69 @@ export async function answerLetter({ letter, replyLanguage }, deps = {}) {
     letters,
     ...ai,
   };
+}
+
+// ---------- a photo of a printed page, and a letter dictated by voice ----------
+const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']);
+const base64Of = (data, max, code) => {
+  const b = String(data || '').replace(/^data:[^,]*,/, '');
+  if (!b || b.length > max || !/^[A-Za-z0-9+/=\s]+$/.test(b)) throw new Error(code);
+  return b.replace(/\s/g, '');
+};
+
+/**
+ * A photo of a page of Igrot Kodesh: the AI reads only the numbers on it (letter numbers, page, volume),
+ * and the letters themselves are taken from the library – so the text is exact, not read off the photo.
+ */
+export async function answerPhoto({ image, mimeType }, deps = {}) {
+  const volumes = deps.volumes || getCatalog();
+  const type = String(mimeType || 'image/jpeg').toLowerCase();
+  if (!IMAGE_TYPES.has(type)) throw new Error('PHOTO_BAD');
+  const data = base64Of(image, 8_000_000, 'PHOTO_BAD');
+  const read = await (deps.readPhoto || readPagePhoto)({ data, mimeType: type });
+  if (!read.isIgrot) throw new Error('PHOTO_NOT_IGROT');
+  if (!read.readable || !read.letters.length) throw new Error('PHOTO_UNREADABLE');
+
+  const vWanted = findVolume(volumes, read.volume);
+  let found = read.letters.map((n) => ({ n, at: findLetter(volumes, n) })).filter((f) => f.at);
+  // a misread digit could point to another volume: the volume printed on the page decides
+  if (vWanted >= 0 && found.some((f) => f.at.v === vWanted)) found = found.filter((f) => f.at.v === vWanted);
+  if (!found.length) throw new Error('PHOTO_NOT_FOUND');
+  const first = found[0].at;
+  const sameVol = found.filter((f) => f.at.v === first.v && f.at.i >= first.i && f.at.i - first.i < 12);
+  const last = Math.max(...sameVol.map((f) => f.at.i));
+
+  const fill = await specFrom(volumes, first.v, first.i, 0, deps.fetchLetter || fetchLetter);
+  const spec = { ...fill, n: Math.min(12, Math.max(fill.n, last - first.i + 1), volumes[first.v].letters.length - first.i) };
+  const page = await renderSpec(volumes, spec, deps);
+  remember(page);
+  const letters = lettersOut(page);
+  return {
+    id: randomUUID(),
+    volume: page.volume,
+    volumeHeading: page.volumeHeading,
+    title: titleOf(page, letters),
+    imagePath: `/api/page/${page.spec}.png`,
+    pdfPath: `/api/page/${page.spec}.pdf`,
+    letters,
+    explained: false,
+    replyLanguage: null,
+    // what was read off the photo, as printed
+    photo: {
+      volume: read.volume || '', page: read.page || '', letters: sameVol.map((f) => f.n), continuesFromPrevious: !!read.continuesFromPrevious,
+    },
+  };
+}
+
+const AUDIO_TYPE = /^audio\/(webm|ogg|mp4|mpeg|mp3|aac|wav|x-wav|3gpp|amr)(;.*)?$/;
+/** A letter dictated by voice → its text. */
+export async function transcribe({ audio, mimeType }, deps = {}) {
+  const type = String(mimeType || '').toLowerCase();
+  if (!AUDIO_TYPE.test(type)) throw new Error('VOICE_BAD');
+  const data = base64Of(audio, 4_000_000, 'VOICE_BAD');
+  const text = stripForeignScript(await (deps.transcribe || transcribeAudio)({ data, mimeType: type.split(';')[0] }));
+  if (!text.trim()) throw new Error('VOICE_EMPTY');
+  return { text: clip(text.trim(), 8000) };
 }
 
 let positions;

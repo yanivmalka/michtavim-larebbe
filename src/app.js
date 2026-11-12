@@ -1,6 +1,6 @@
 import express from 'express';
 import {
-  answerLetter, getPageImage, getPagePdf, getLetterPdf, getNeighborLetter, getTurnedPage, analyze, askFollowUp, translateAnalysis, acronyms,
+  answerLetter, getPageImage, getPagePdf, getLetterPdf, getNeighborLetter, getTurnedPage, analyze, askFollowUp, translateAnalysis, acronyms, answerPhoto, transcribe,
 } from './letters.js';
 import { userMessage } from './errors.js';
 import { whatsappRouter } from './whatsapp/webhook.js';
@@ -26,10 +26,11 @@ export function createApp(deps = {}) {
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', 1); // behind Render's proxy: req.ip is the user's address
-  app.use(express.json({
-    limit: '100kb',
-    verify: (req, _res, buf) => { req.rawBody = buf; },
-  }));
+  const verify = (req, _res, buf) => { req.rawBody = buf; };
+  const smallJson = express.json({ limit: '100kb', verify });
+  const mediaJson = express.json({ limit: '9mb' }); // a photo or a voice recording, base64
+  const MEDIA = new Set(['/api/photo', '/api/transcribe']);
+  app.use((req, res, next) => (MEDIA.has(req.path) ? mediaJson : smallJson)(req, res, next));
 
   app.use('/api', cors());
 
@@ -76,6 +77,9 @@ export function createApp(deps = {}) {
   app.post('/api/analysis/followup', aiRoute((b, d) => askFollowUp(b, d)));
   app.post('/api/analysis/translate', aiRoute((b, d) => translateAnalysis(b, d)));
   app.post('/api/acronyms', aiRoute((b, d) => acronyms(b, d)));
+  // a photo of a printed page → that page from the library; a voice recording → the text of the letter
+  app.post('/api/photo', aiRoute((b) => answerPhoto(b, { ...deps.pages, ...deps.photo })));
+  app.post('/api/transcribe', aiRoute((b) => transcribe(b, deps.voice)));
 
   const sendPdf = (res, pdf, name) => {
     if (!pdf) return res.sendStatus(404);

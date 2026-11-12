@@ -1342,7 +1342,7 @@ function watchOne(id) {
         if (fresh && !(view.name === 'chat' && view.id === id && !document.hidden)) { e.unread = true; collapseEntry(e); }
         return e;
       });
-      const pending = entriesOf(id).filter((e) => e.pending && !list.some((d) => d.id === e.id));
+      const pending = entriesOf(id).filter((e) => (e.pending || e.draft || (e.kind && e.error && !e.a)) && !list.some((d) => d.id === e.id));
       state.entries = state.entries.filter((e) => e.conv !== id).concat(merged, pending);
       for (const e of merged) if (e.id in state.cloudFavs) applyFav(e.id); // favourites backed up before the letter arrived
       save(); renderSoon();
@@ -1569,6 +1569,7 @@ $('sel-delete').addEventListener('click', async () => {
     if (conv?.cloud && user) await cloud.deleteEntry(conv.id, id).catch(() => failed.push(id));
     if (!failed.includes(id)) {
       if (e.fav) { delete e.fav; favChanged(e); } // the favourite goes from the backup too
+      dropMedia(e);
       state.entries = state.entries.filter((x) => x !== e); pagers.delete(id);
     }
   }
@@ -1628,13 +1629,384 @@ async function moveEntries(ids, from, target) {
     const old = e.conv;
     e.conv = target.id;
     delete e.replyTo;
-    if (user && cloud) {
+    if (user && cloud && e.a) { // drafts and letters still waiting stay on this device until answered
       if (target.cloud) cloud.saveEntry(target.id, e).catch((err) => console.warn('not moved to the account', err));
       if (from.cloud) cloud.deleteEntry(old, e.id).catch((err) => console.warn('not removed from the account', err));
     }
   }
   clearSelection(); save(); render();
   toast(`הועבר אל "${target.title}"`);
+}
+
+// ---------- a photographed page and a letter by voice ----------
+// The photo and the recording stay on this device (IndexedDB); the cloud gets only a small thumbnail of the photo.
+// Both start as a draft in the chat: the user approves (sends) or deletes it.
+const media = (() => {
+  const mem = new Map(); // also a fallback where IndexedDB is blocked
+  let dbp = null;
+  const open = () => (dbp ??= new Promise((resolve, reject) => {
+    const r = indexedDB.open('mlr-media', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('m');
+    r.onsuccess = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+  }));
+  const run = async (mode, fn) => {
+    const db = await open();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('m', mode);
+      const req = fn(tx.objectStore('m'));
+      tx.oncomplete = () => resolve(req.result);
+      tx.onerror = () => reject(tx.error);
+    });
+  };
+  return {
+    async put(k, blob) { mem.set(k, blob); await run('readwrite', (s) => s.put(blob, k)).catch((e) => console.warn('media', e)); },
+    async get(k) { return mem.get(k) || (await run('readonly', (s) => s.get(k)).catch(() => null)) || null; },
+    del(k) { mem.delete(k); return run('readwrite', (s) => s.delete(k)).catch(() => {}); },
+    keys: () => run('readonly', (s) => s.getAllKeys()).catch(() => []),
+  };
+})();
+const imgKey = (e) => `img:${e.id}`;
+const audKey = (e) => `aud:${e.id}`;
+const mediaUrls = new Map(); // key → object URL
+async function mediaUrl(key) {
+  if (mediaUrls.has(key)) return mediaUrls.get(key);
+  const blob = await media.get(key);
+  if (!blob) return null;
+  const url = URL.createObjectURL(blob);
+  mediaUrls.set(key, url);
+  return url;
+}
+function dropMedia(entry) {
+  for (const k of [imgKey(entry), audKey(entry)]) {
+    media.del(k);
+    if (mediaUrls.has(k)) { URL.revokeObjectURL(mediaUrls.get(k)); mediaUrls.delete(k); }
+  }
+  players.get(entry.id)?.pause(); players.delete(entry.id);
+}
+// recordings and photos of letters that are gone (deleted, trimmed, removed on another device) are removed too
+setTimeout(async () => {
+  const ids = new Set(state.entries.map((e) => e.id));
+  for (const k of await media.keys()) if (!ids.has(String(k).slice(4))) media.del(k);
+}, 15000);
+
+function removeEntry(entry) {
+  dropMedia(entry);
+  state.entries = state.entries.filter((x) => x !== entry);
+  pagers.delete(entry.id);
+  save(); render();
+}
+
+const PHOTO_Q = 'צילום עמוד מאגרות קודש';
+const fmtDur = (s) => { const t = Math.max(0, Math.round(s || 0)); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`; };
+const ICONS = {
+  mic: '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M12 14.5a3.5 3.5 0 0 0 3.5-3.5V5.5a3.5 3.5 0 0 0-7 0V11a3.5 3.5 0 0 0 3.5 3.5zm6-3.5a1 1 0 1 0-2 0 4 4 0 0 1-8 0 1 1 0 1 0-2 0 6 6 0 0 0 5 5.9V19H8.5a1 1 0 1 0 0 2h7a1 1 0 1 0 0-2H13v-2.1a6 6 0 0 0 5-5.9z"/></svg>',
+  arrow: '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12 2-12 2z"/></svg>',
+  check: '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  play: '<svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><path fill="currentColor" d="M7 4.5v15l12.5-7.5z"/></svg>',
+  pause: '<svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><path fill="currentColor" d="M6.5 4.5h4v15h-4zm7 0h4v15h-4z"/></svg>',
+};
+
+// ---- choosing a photo: the camera or the gallery ----
+function loadImage(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { resolve(img); URL.revokeObjectURL(url); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('not an image')); };
+    img.src = url;
+  });
+}
+function scaledJpeg(img, max, quality) {
+  const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+  const c = document.createElement('canvas');
+  c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+  const g = c.getContext('2d');
+  g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+  g.drawImage(img, 0, 0, c.width, c.height);
+  return new Promise((resolve) => c.toBlob(resolve, 'image/jpeg', quality));
+}
+const blobToDataUrl = (blob) => new Promise((resolve, reject) => {
+  const r = new FileReader();
+  r.onload = () => resolve(String(r.result)); r.onerror = reject;
+  r.readAsDataURL(blob);
+});
+async function addPhoto(file) {
+  const conv = convById(view.id);
+  if (!conv || !isOwner(conv) || !file) return;
+  let img;
+  try { img = await loadImage(file); } catch { toast('לא ניתן לפתוח את הקובץ. בחרו תמונה (JPG או PNG).'); return; }
+  const full = await scaledJpeg(img, 2000, 0.85); // sharp enough to read the numbers, small enough to send
+  const thumb = await blobToDataUrl(await scaledJpeg(img, 360, 0.6));
+  const entry = { id: newId(), conv: conv.id, ts: Date.now(), kind: 'photo', draft: true, q: PHOTO_Q, thumb };
+  await media.put(imgKey(entry), full);
+  state.entries.push(entry);
+  save(); render({ scroll: true });
+}
+const pickPhoto = (from) => $(from === 'camera' ? 'pick-camera' : 'pick-gallery').click();
+for (const id of ['pick-camera', 'pick-gallery']) {
+  $(id).addEventListener('change', (e) => { const f = e.target.files?.[0]; e.target.value = ''; addPhoto(f); });
+}
+$('camera').addEventListener('click', () => pickPhoto('camera'));
+$('attach').addEventListener('click', () => pickPhoto('gallery'));
+function choosePhotoAgain(anchor) {
+  showMenu(anchor, [
+    { label: '📷 צילום במצלמה', onClick: () => pickPhoto('camera') },
+    { label: '📎 בחירה מהגלריה', onClick: () => pickPhoto('gallery') },
+  ]);
+}
+
+/** Full-screen view of the photo; a tap closes it. */
+function showPhoto(src) {
+  const box = el('div', { className: 'photo-view' }, el('img', { src, alt: 'הצילום' }));
+  box.addEventListener('click', () => box.remove());
+  document.body.append(box);
+}
+
+// ---- approving or deleting a draft ----
+function draftActions(entry, okLabel, onOk) {
+  const ok = el('button', { type: 'button', className: 'ok', textContent: okLabel });
+  ok.addEventListener('click', onOk);
+  const del = el('button', { type: 'button', className: 'del', textContent: '🗑 מחיקה' });
+  del.addEventListener('click', () => removeEntry(entry));
+  return el('div', { className: 'draft-actions' }, ok, del);
+}
+function sendDraft(entry) {
+  if (isNativeApp && !API && !askServer()) return;
+  const conv = convById(entry.conv);
+  if (!conv || !isOwner(conv)) return;
+  if (entry.kind === 'voice') {
+    entry.q = String(entry.q || '').trim();
+    if (entry.q.length < 2) { toast('אין טקסט לשליחה. הקליטו שוב או מחקו.'); return; }
+  }
+  if (conv.title === 'שיחה חדשה' && !entriesOf(conv.id).some((e) => e.a) && entry.kind === 'voice') {
+    conv.title = entry.q.split(/\s+/).slice(0, 5).join(' ').slice(0, 40);
+    if (conv.cloud) cloud.renameConv(conv.id, conv.title).catch(() => {});
+  }
+  delete entry.draft; delete entry.error; delete entry.errorCode;
+  entry.ts = Date.now();
+  entry.pending = true;
+  entry.lang = replyLang || undefined;
+  save(); render({ scroll: true });
+  askNotifyPermission();
+  requestAnswer(entry);
+}
+
+function photoBody(entry) {
+  const img = el('img', { className: 'photo-img', alt: 'צילום עמוד מאגרות קודש', src: entry.thumb || '' });
+  mediaUrl(imgKey(entry)).then((u) => { if (u) img.src = u; });
+  img.addEventListener('click', () => { if (!selecting()) showPhoto(img.src); });
+  const parts = [img];
+  if (entry.draft) {
+    parts.push(el('div', { className: 'draft-tag', textContent: 'הצילום טרם נשלח. בשליחה יזוהו מספר העמוד ומספרי האגרות, והטקסט יובא מהמאגר.' }),
+      draftActions(entry, '✓ שליחה לעיבוד', () => sendDraft(entry)));
+  } else if (entry.q && entry.q !== PHOTO_Q) parts.push(el('div', { className: 'photo-read', textContent: entry.q }));
+  return parts;
+}
+
+// ---- the recording player (like a messaging app) ----
+const players = new Map(); // entry id → Audio, kept across re-renders
+function voicePlayer(entry) {
+  const v = entry.voice || {};
+  const dur = v.dur || 0;
+  const wave = v.wave?.length ? v.wave : Array(36).fill(0.35);
+  const bars = wave.map((h) => el('i', { style: `height:${Math.round(18 + 82 * Math.min(1, h))}%` }));
+  const dot = el('span', { className: 'v-dot' });
+  const waveBox = el('div', { className: 'v-wave' }, ...bars, dot);
+  const length = el('span', { textContent: fmtDur(dur) });
+  const play = el('button', { type: 'button', className: 'v-play', title: 'השמעת ההקלטה' });
+  play.setAttribute('aria-label', 'השמעת ההקלטה');
+  const avatar = user?.photoURL
+    ? el('img', { src: user.photoURL, alt: '', referrerPolicy: 'no-referrer' })
+    : el('span', { className: 'v-initial', textContent: (user?.displayName || 'א').trim()[0] });
+  const mic = el('span', { className: 'v-mic' });
+  mic.innerHTML = ICONS.mic.replace('width="26" height="26"', 'width="22" height="22"');
+  const paint = (t, on) => {
+    const p = dur ? Math.min(1, t / dur) : 0;
+    bars.forEach((b, i) => b.classList.toggle('on', (i + 0.5) / bars.length <= p));
+    dot.style.left = `${p * 100}%`;
+    length.textContent = fmtDur(on || t > 0 ? t : dur);
+    play.innerHTML = on ? ICONS.pause : ICONS.play;
+  };
+  const bind = (audio) => {
+    audio.ontimeupdate = () => paint(audio.currentTime, !audio.paused);
+    audio.onplay = audio.onpause = () => paint(audio.currentTime, !audio.paused);
+    audio.onended = () => { audio.currentTime = 0; paint(0, false); };
+  };
+  const existing = players.get(entry.id);
+  if (existing) { bind(existing); paint(existing.currentTime, !existing.paused); } else paint(0, false);
+  const audioOf = async () => {
+    let audio = players.get(entry.id);
+    if (audio) return audio;
+    const url = await mediaUrl(audKey(entry));
+    if (!url) return null;
+    audio = new Audio(url);
+    players.set(entry.id, audio);
+    bind(audio);
+    return audio;
+  };
+  mediaUrl(audKey(entry)).then((u) => { if (!u) { play.disabled = true; play.title = 'ההקלטה שמורה רק במכשיר שבו הוקלטה'; } });
+  play.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    if (selecting()) return;
+    const audio = await audioOf();
+    if (!audio) { toast('ההקלטה שמורה רק במכשיר שבו הוקלטה.'); return; }
+    if (audio.paused) {
+      for (const [id, other] of players) if (id !== entry.id) other.pause();
+      audio.play().catch(() => toast('לא ניתן להשמיע את ההקלטה.'));
+    } else audio.pause();
+  });
+  waveBox.addEventListener('click', async (e) => {
+    if (selecting() || !dur) return;
+    const r = waveBox.getBoundingClientRect();
+    const p = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+    const audio = await audioOf();
+    if (!audio) return;
+    audio.currentTime = p * dur;
+    paint(audio.currentTime, !audio.paused);
+  });
+  const clock = new Date(entry.ts).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+  return el('div', { className: 'voice' },
+    el('div', { className: 'v-avatar' }, avatar, mic),
+    el('div', { className: 'v-main' }, waveBox, el('div', { className: 'v-meta' }, el('span', { textContent: clock }), length)),
+    play);
+}
+
+function voiceBody(entry) {
+  const parts = [voicePlayer(entry)];
+  if (!entry.draft) { parts.push(el('p', { className: 'voice-text', textContent: entry.q })); return parts; }
+  if (entry.transcribing) {
+    parts.push(el('div', { className: 'wait-line' }, el('span', { className: 'spinner' }), 'ממירים את ההקלטה לטקסט…'));
+  } else if (entry.error) {
+    const again = el('button', { type: 'button', className: 'ok', textContent: '↻ נסו שוב' });
+    again.addEventListener('click', () => transcribeEntry(entry));
+    const del = el('button', { type: 'button', className: 'del', textContent: '🗑 מחיקה' });
+    del.addEventListener('click', () => removeEntry(entry));
+    parts.push(el('div', { className: 'error', textContent: entry.error }), el('div', { className: 'draft-actions' }, again, del));
+  } else {
+    const ta = el('textarea', { className: 'draft-text', value: entry.q || '', dir: 'auto' });
+    ta.setAttribute('aria-label', 'הטקסט שזוהה בהקלטה');
+    ta.addEventListener('input', () => { entry.q = ta.value; save(); });
+    parts.push(el('div', { className: 'draft-tag', textContent: 'זה הטקסט שזוהה בהקלטה. אפשר לתקן אותו, ואז לשלוח לרבי או למחוק.' }), ta,
+      draftActions(entry, '✓ שליחה לרבי', () => sendDraft(entry)));
+  }
+  return parts;
+}
+
+async function transcribeEntry(entry) {
+  entry.transcribing = true; delete entry.error;
+  save(); render();
+  try {
+    const blob = await media.get(audKey(entry));
+    if (!blob) throw new Error('ההקלטה אינה שמורה עוד במכשיר. מחקו והקליטו שוב.');
+    const data = await postJson('/api/transcribe', { audio: await blobToBase64(blob), mimeType: blob.type || 'audio/webm' });
+    entry.q = data.text;
+  } catch (e) {
+    entry.error = String(e?.message || e).replace('הניתוח לוקח', 'ההמרה לוקחת');
+  }
+  delete entry.transcribing;
+  if (!state.entries.includes(entry)) return;
+  save(); render();
+}
+
+// ---- recording ----
+const MAX_REC = 180; // seconds
+const rec = { active: false, mr: null, stream: null, chunks: [], levels: [], start: 0, timer: null, ctx: null, sample: null, conv: null, cancel: false, dur: 0 };
+async function startRecording() {
+  if (isNativeApp && !API && !askServer()) return;
+  const conv = convById(view.id);
+  if (!conv || !isOwner(conv) || rec.active) return;
+  if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) { toast('הקלטה אינה נתמכת במכשיר זה.'); return; }
+  try {
+    rec.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+  } catch {
+    toast('אין גישה למיקרופון. אפשרו את ההרשאה בהגדרות ונסו שוב.');
+    return;
+  }
+  const type = ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/mp4', 'audio/webm'].find((t) => MediaRecorder.isTypeSupported?.(t));
+  rec.mr = new MediaRecorder(rec.stream, type ? { mimeType: type, audioBitsPerSecond: 32000 } : undefined);
+  Object.assign(rec, { active: true, chunks: [], levels: [], cancel: false, conv: conv.id, sample: null });
+  rec.mr.ondataavailable = (e) => { if (e.data?.size) rec.chunks.push(e.data); };
+  rec.mr.onstop = finishRecording;
+  try { // loudness, for the waveform
+    rec.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const an = rec.ctx.createAnalyser();
+    an.fftSize = 1024;
+    rec.ctx.createMediaStreamSource(rec.stream).connect(an);
+    const buf = new Uint8Array(an.fftSize);
+    rec.sample = () => {
+      an.getByteTimeDomainData(buf);
+      let sum = 0;
+      for (const b of buf) { const d = (b - 128) / 128; sum += d * d; }
+      rec.levels.push(Math.sqrt(sum / buf.length));
+    };
+  } catch { rec.ctx = null; }
+  rec.mr.start(1000);
+  rec.start = Date.now();
+  $('rec-time').textContent = '0:00';
+  rec.timer = setInterval(() => {
+    rec.sample?.();
+    const t = (Date.now() - rec.start) / 1000;
+    $('rec-time').textContent = fmtDur(Math.floor(t));
+    if (t >= MAX_REC) { stopRecording(); toast('ההקלטה הגיעה לאורך המרבי (3 דקות).'); }
+  }, 100);
+  paintRecording();
+}
+function stopRecording(cancel = false) {
+  if (!rec.active) return;
+  rec.active = false;
+  rec.cancel = cancel;
+  rec.dur = (Date.now() - rec.start) / 1000;
+  clearInterval(rec.timer);
+  try { if (rec.mr.state !== 'inactive') rec.mr.stop(); } catch { /* already stopped */ }
+  rec.stream?.getTracks().forEach((t) => t.stop());
+  rec.ctx?.close().catch(() => {});
+  paintRecording();
+}
+/** Loudness samples → n bars between 0 and 1. */
+function waveOf(levels, n = 36) {
+  if (!levels.length) return [];
+  const out = Array.from({ length: n }, (_, i) => {
+    const part = levels.slice(Math.floor((i * levels.length) / n), Math.max(Math.floor(((i + 1) * levels.length) / n), Math.floor((i * levels.length) / n) + 1));
+    return Math.max(...part);
+  });
+  const top = Math.max(...out) || 1;
+  return out.map((v) => Math.round(Math.sqrt(v / top) * 100) / 100);
+}
+async function finishRecording() {
+  const mr = rec.mr;
+  rec.mr = null;
+  if (rec.cancel) return;
+  if (rec.dur < 1) { toast('ההקלטה קצרה מדי. לחצו על המיקרופון, דברו, ולחצו ✓ לסיום.'); return; }
+  const conv = convById(rec.conv);
+  if (!conv) return;
+  const blob = new Blob(rec.chunks, { type: (mr?.mimeType || 'audio/webm') });
+  const entry = { id: newId(), conv: conv.id, ts: Date.now(), kind: 'voice', draft: true, q: '', voice: { dur: Math.round(rec.dur), wave: waveOf(rec.levels) } };
+  await media.put(audKey(entry), blob);
+  state.entries.push(entry);
+  render({ scroll: true });
+  transcribeEntry(entry);
+}
+function paintRecording() {
+  $('pill').hidden = rec.active;
+  $('rec-bar').hidden = !rec.active;
+  paintSend();
+}
+$('rec-cancel').addEventListener('click', () => stopRecording(true));
+// a recording that was being converted when the app closed: convert it again
+setTimeout(() => { for (const e of state.entries) if (e.transcribing) transcribeEntry(e); }, 0);
+
+/** The round button: a microphone while the letter box is empty, the send arrow once there is text, ✓ while recording. */
+function paintSend() {
+  const mic = !rec.active && toRebbe && !input.value.trim();
+  const kind = rec.active ? 'check' : mic ? 'mic' : 'arrow';
+  if (send.dataset.kind === kind) return;
+  send.dataset.kind = kind;
+  send.className = `send${kind === 'arrow' ? ' arrow' : ''}`;
+  send.innerHTML = ICONS[kind];
+  const label = { check: 'סיום ההקלטה', mic: 'הקלטת מכתב בקול', arrow: 'שליחה' }[kind];
+  send.setAttribute('aria-label', label);
+  send.title = label;
 }
 
 function questionBubble(entry, conv) {
@@ -1647,9 +2019,10 @@ function questionBubble(entry, conv) {
   }
   const mine = isOwner(conv);
   const who = mine ? 'אני' : nameOf(conv, conv.owner);
-  const node = el('div', { className: `msg ${mine ? 'me' : 'them other'}` }, tools,
+  const body = entry.kind === 'photo' ? photoBody(entry) : entry.kind === 'voice' ? voiceBody(entry) : [el('p', { textContent: entry.q })];
+  const node = el('div', { className: `msg ${mine ? 'me' : 'them other'}${entry.kind ? ` ${entry.kind}-msg` : ''}` }, tools,
     !mine && el('div', { className: 'sender', textContent: `✉️ מכתב של ${who}` }),
-    el('p', { textContent: entry.q }), time(entry.ts));
+    ...body, entry.kind !== 'voice' && time(entry.ts));
   if (isShared(conv)) swipeToReply(node, { kind: 'entry', id: entry.id, name: who, text: entry.q.slice(0, 80) });
   return selectable(node, 'e', entry.id);
 }
@@ -1694,11 +2067,31 @@ function entryNodes(entry, conv = convById(entry.conv)) {
     nodes.push(selectable(bubble, 'e', entry.id));
   } else if (entry.pending) {
     nodes.push(el('div', { className: 'msg them typing' },
-      el('div', { className: 'opening' }, bookAnimation(), el('span', { textContent: 'פותחים את אגרות הקודש…' })),
+      el('div', { className: 'opening' }, bookAnimation(), el('span', { textContent: entry.kind === 'photo' ? 'מזהים את האגרת בצילום ומביאים אותה מהמאגר…' : 'פותחים את אגרות הקודש…' })),
       el('div', { className: 'note', textContent: 'אפשר לצאת מהשיחה ולחזור אחר כך – נודיע כשהמענה יהיה מוכן.' })));
   }
-  else nodes.push(selectable(el('div', { className: 'msg them error', textContent: entry.error || 'לא התקבל מענה למכתב זה.' }), 'e', entry.id));
+  else if (entry.draft) { /* waiting for the user: approve or delete, in the bubble itself */ }
+  else nodes.push(selectable(errorBubble(entry), 'e', entry.id));
   return nodes;
+}
+
+/** No answer: the reason, and – for a photo – deleting it and choosing another (or trying again when it may help). */
+const PHOTO_FINAL = new Set(['PHOTO_BAD', 'PHOTO_NOT_IGROT', 'PHOTO_UNREADABLE', 'PHOTO_NOT_FOUND', 'PHOTO_GONE']);
+function errorBubble(entry) {
+  const box = el('div', { className: 'msg them error' }, el('div', { textContent: entry.error || 'לא התקבל מענה למכתב זה.' }));
+  if (entry.kind === 'photo' && isOwner(convById(entry.conv))) {
+    const actions = el('div', { className: 'draft-actions' });
+    if (!PHOTO_FINAL.has(entry.errorCode)) {
+      const again = el('button', { type: 'button', className: 'ok', textContent: '↻ נסו שוב' });
+      again.addEventListener('click', () => sendDraft(entry));
+      actions.append(again);
+    }
+    const redo = el('button', { type: 'button', className: 'del', textContent: '🗑 מחיקה וטעינה מחדש' });
+    redo.addEventListener('click', () => { removeEntry(entry); choosePhotoAgain($('camera')); });
+    actions.append(redo);
+    box.append(actions);
+  }
+  return box;
 }
 
 // views: list (all chats) | archive | locked | fav | chat (one conversation)
@@ -1962,7 +2355,7 @@ function onLongPress(node, fn) {
     fired = byTouch; // a touch press is followed by a click that must be ignored; a right click is not
     fn();
   };
-  node.addEventListener('contextmenu', (e) => { e.preventDefault(); fire(false); });
+  node.addEventListener('contextmenu', (e) => { if (e.target.closest?.('textarea, input')) return; e.preventDefault(); fire(false); });
   node.addEventListener('touchstart', (e) => {
     fired = false;
     clearTimeout(timer);
@@ -2163,6 +2556,8 @@ function paintComposer(conv) {
   $('mode').textContent = toRebbe ? '✉️' : '💬';
   $('mode').title = toRebbe ? 'מכתב לרבי (לחצו להודעה למשתתפים)' : 'הודעה למשתתפים (לחצו למכתב לרבי)';
   input.placeholder = toRebbe ? 'כתבו את המכתב…' : 'הודעה למשתתפים…';
+  $('camera').hidden = $('attach').hidden = !toRebbe; // a photo or a recording is a letter to the Rebbe
+  paintSend();
 }
 $('mode').addEventListener('click', () => { toRebbe = !toRebbe; paintComposer(convById(view.id)); input.focus(); paintOpeners(); });
 
@@ -2187,6 +2582,7 @@ function render({ scroll = false } = {}) {
   $('search-bar').hidden = !inList;
   $('new-chat').hidden = view.name !== 'list';
   form.hidden = !conv;
+  if (rec.active && rec.conv !== conv?.id) stopRecording(true);
   if (conv) paintComposer(conv);
   paintCollapseAll(conv);
 
@@ -2265,15 +2661,24 @@ async function requestAnswer(entry) {
   if (inFlight.has(entry.id)) return;
   inFlight.add(entry.id);
   let tries = 0;
-  for (;;) {
+  const isPhoto = entry.kind === 'photo';
+  let body = { letter: entry.q, replyLanguage: entry.lang || undefined };
+  if (isPhoto) { // the photo goes to the server; only its numbers are read there
+    const blob = await media.get(imgKey(entry));
+    body = blob && { image: await blobToBase64(blob), mimeType: blob.type || 'image/jpeg' };
+    if (!body) { entry.error = 'הצילום אינו שמור עוד במכשיר. מחקו וטענו אותו שוב.'; entry.errorCode = 'PHOTO_GONE'; }
+  }
+  while (body) {
     try {
-      const res = await fetch(`${API}/api/letters`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ letter: entry.q, replyLanguage: entry.lang || undefined }),
+      const res = await fetch(`${API}${isPhoto ? '/api/photo' : '/api/letters'}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
       });
       const data = await res.json().catch(() => ({}));
-      if (res.ok) entry.a = data;
-      else entry.error = data.message || 'אירעה שגיאה. נסו שוב.';
+      if (res.ok) {
+        entry.a = data;
+        delete entry.error; delete entry.errorCode;
+        if (isPhoto) entry.q = photoCaption(data);
+      } else { entry.error = data.message || 'אירעה שגיאה. נסו שוב.'; entry.errorCode = data.error; }
       break;
     } catch {
       // no connection (or the free server is waking up): try again for a few minutes before giving up
@@ -2285,6 +2690,10 @@ async function requestAnswer(entry) {
   if (!state.entries.includes(entry)) return; // deleted meanwhile
   delete entry.pending;
   const conv = convById(entry.conv);
+  if (isPhoto && entry.a && conv?.title === 'שיחה חדשה') {
+    conv.title = entry.q.replace(`${PHOTO_Q} – `, '📷 ').slice(0, 40);
+    if (conv.cloud) cloud.renameConv(conv.id, conv.title).catch(() => {});
+  }
   const watching = view.name === 'chat' && view.id === entry.conv && !document.hidden;
   if (entry.a) {
     if (watching) entry.collapsed = false; // just arrived in front of the user: shown open, and read
@@ -2293,6 +2702,13 @@ async function requestAnswer(entry) {
   save();
   if (watching) render({ scroll: true }); else render();
   if (conv?.cloud && user) cloud.saveEntry(conv.id, entry).catch((e) => console.warn('entry not synced', e));
+}
+
+/** What was read off the photo: "צילום עמוד מאגרות קודש – כרך יג, עמוד קמב, אגרת ד'תצא". */
+function photoCaption(a) {
+  const p = a.photo || {};
+  const where = [a.volumeHeading, p.page && `עמוד ${p.page}`, p.letters?.length && `${p.letters.length > 1 ? 'אגרות' : 'אגרת'} ${p.letters.join(', ')}`].filter(Boolean);
+  return `${PHOTO_Q} – ${where.join(', ')}`;
 }
 
 /** Asks once for permission to notify when an answer is ready. */
@@ -2327,13 +2743,15 @@ navigator.serviceWorker?.addEventListener?.('message', (e) => { if (e.data?.open
 
 form.addEventListener('submit', (e) => {
   e.preventDefault();
+  if (rec.active) { stopRecording(); return; } // ✓ ends the recording; it then waits in the chat for approval
   const text = input.value.trim();
-  if (!text) return;
+  if (!text) { if (toRebbe) startRecording(); return; }
   input.value = ''; input.style.height = '';
+  paintSend();
   submit(text);
 });
 const growInput = () => { input.style.height = 'auto'; input.style.height = `${input.scrollHeight}px`; };
-input.addEventListener('input', () => { growInput(); paintOpeners(); });
+input.addEventListener('input', () => { growInput(); paintOpeners(); paintSend(); });
 input.addEventListener('focus', () => { paintOpeners(); setTimeout(() => { growInput(); scrollDown(); }, 300); }); // after the keyboard opens
 input.addEventListener('blur', () => { $('openers').hidden = true; });
 
@@ -2384,7 +2802,7 @@ if (window.visualViewport) {
   });
 }
 input.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey && !matchMedia('(pointer: coarse)').matches) { e.preventDefault(); form.requestSubmit(); }
+  if (e.key === 'Enter' && !e.shiftKey && !matchMedia('(pointer: coarse)').matches) { e.preventDefault(); if (input.value.trim()) form.requestSubmit(); }
 });
 
 // a join link opened in the browser
