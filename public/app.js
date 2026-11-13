@@ -1172,27 +1172,32 @@ async function translateEntry(entry, language) {
 }
 
 /**
- * "תרגם": a drop-down in the answer's row that reads as a button. Choosing a language translates an
+ * "תרגם": a button in the answer's row that opens the list of languages. Choosing one translates an
  * existing analysis (or sets the language of the analysis to come); the current language is ticked.
+ * The list is the app's own menu: a native <select> inside a <summary> opened on Android, but its
+ * choice did not always come back.
  */
 function langSelect(entry) {
   const a = entry.a;
-  const sel = el('select', { className: 'lang-select', title: 'תרגום המענה לשפה אחרת' });
-  sel.setAttribute('aria-label', 'תרגום המענה לשפה אחרת');
-  const current = a.explanation ? (a.analysisLanguage || '') : (a.replyLanguage || replyLang || '');
-  sel.append(el('option', { value: '__', textContent: '🌐 תרגם' }));
-  for (const [v, label] of LANGS) sel.append(el('option', { value: v, textContent: `${v === current ? '✓ ' : ''}${label}` }));
-  sel.value = '__';
-  sel.addEventListener('change', () => {
-    const v = sel.value;
-    sel.value = '__'; // stays "תרגם"
-    if (v === '__') return;
+  const btn = el('button', { type: 'button', className: 'lang-select', textContent: '🌐 תרגם', title: 'תרגום המענה לשפה אחרת' });
+  btn.setAttribute('aria-label', 'תרגום המענה לשפה אחרת');
+  btn.setAttribute('aria-haspopup', 'menu');
+  const choose = (v) => {
     a.replyLanguage = v || null;
     setReplyLang(v);
-    if (a.explanation && v && v !== (a.analysisLanguage || '')) translateEntry(entry, v);
-    else { syncEntry(entry); render(); }
+    if (a.explanation && v && v !== (a.analysisLanguage || '')) { translateEntry(entry, v); return; }
+    syncEntry(entry); render();
+    if (!a.explanation) toast(`הניתוח ייכתב ב${v ? langName(v) : 'שפת המכתב'}. לחצו על "✨ הסבר, תרגום וניתוח העמוד".`);
+    else toast(v ? `הניתוח כבר כתוב ב${langName(v)}.` : 'ניתוחים חדשים ייכתבו בשפת המכתב.');
+  };
+  btn.addEventListener('click', (e) => {
+    e.preventDefault(); e.stopPropagation(); // inside a <summary>: do not open / close
+    if (selecting()) return;
+    if (entry.translating) { toast(`מתרגם כעת ל${langName(entry.translating)}…`); return; }
+    const current = a.explanation ? (a.analysisLanguage || '') : (a.replyLanguage || replyLang || '');
+    showMenu(btn, LANGS.map(([v, label]) => ({ label: `${v === current ? '✓ ' : ''}${label}`, onClick: () => choose(v) })));
   });
-  return el('span', { className: 'lang-wrap' }, sel);
+  return el('span', { className: 'lang-wrap' }, btn);
 }
 
 function analysisSection(entry) {
@@ -1345,7 +1350,6 @@ function answerBubble(entry) {
   const summary = el('summary', {}, el('span', { className: 'more-label sum-label', textContent: `${a.explanation ? 'הסבר והטקסט' : 'ניתוח והטקסט'} ${a.sides ? 'שבכפולה' : 'שבעמוד'}` }), langSelect(entry));
   const paintStar = () => { summary.querySelector('.star')?.remove(); summary.append(favStar(entry, () => { paintStar(); wrap.replaceChildren(favPanel(entry)); })); };
   paintStar();
-  summary.querySelector('.lang-select').addEventListener('click', (e) => e.stopPropagation()); // inside a <summary>: do not open / close
   const more = el('details', { className: 'more fold' },
     summary,
     analysisSection(entry),
@@ -2241,6 +2245,9 @@ async function finishRecording() {
   if (!conv) return;
   const blob = new Blob(rec.chunks, { type: (mr?.mimeType || 'audio/webm') });
   const entry = { id: newId(), conv: conv.id, ts: Date.now(), kind: 'voice', draft: true, transcribing: true, t0: Date.now(), q: '', voice: { dur: Math.round(rec.dur), wave: waveOf(rec.levels) } };
+  // what was already typed in the letter box goes with the recording: it opens the text that can be edited before sending
+  const typed = view.id === conv.id && toRebbe ? input.value.trim() : '';
+  if (typed) { entry.note = typed; input.value = ''; input.style.height = ''; paintSend(); }
   state.entries.push(entry); // the bubble appears at once
   render({ scroll: true });
   await media.put(audKey(entry), blob);
@@ -2255,6 +2262,8 @@ function paintRecording() {
   paintSend();
 }
 $('rec-cancel').addEventListener('click', () => stopRecording(true));
+$('dictate').addEventListener('click', () => startRecording(true)); // locked: ✓ ends it
+$('dictate').addEventListener('pointerdown', (e) => e.preventDefault()); // the keyboard and the caret stay
 function lockRecording() {
   if (!rec.active || rec.locked) return;
   rec.locked = true;
@@ -2288,11 +2297,14 @@ for (const ev of ['pointerup', 'pointercancel']) {
 send.addEventListener('contextmenu', (e) => e.preventDefault());
 // a recording that was being converted when the app closed: convert it again
 setTimeout(() => { for (const e of state.entries) if (e.transcribing) transcribeEntry(e); }, 0);
+// a translation that was cut off when the app closed is not running any more: the language can be chosen again
+for (const e of state.entries) delete e.translating;
 
-/** The round button: a microphone while the letter box is empty, the send arrow once there is text, ✓ while recording. */
+/** The round button: a microphone while the letter box is empty, the send arrow once there is text (a small microphone then sits in the pill), ✓ while recording. */
 function paintSend() {
   const mic = !rec.active && toRebbe && !input.value.trim();
   const kind = rec.active ? (rec.locked ? 'check' : 'holding') : mic ? 'mic' : 'arrow';
+  $('dictate').hidden = !(kind === 'arrow' && toRebbe); // there is text: the round button sends, and a small microphone adds a recording to it
   if (send.dataset.kind === kind) return;
   send.dataset.kind = kind;
   send.className = `send${kind === 'arrow' ? ' arrow' : kind === 'holding' ? ' holding' : ''}`;
