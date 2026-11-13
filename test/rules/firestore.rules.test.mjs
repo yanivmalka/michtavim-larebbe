@@ -85,3 +85,15 @@ test('the owner deletes the conversation; others delete only their own messages'
   await assertSucceeds(deleteDoc(doc(as(FRIEND), 'convs/c1/messages/m1')));
   await assertSucceeds(deleteDoc(doc(as(OWNER), 'convs/c1')));
 });
+
+test('favourites and highlights: each user reads and writes only their own backup', async () => {
+  const favs = { items: { e1: { v: ['מחזק'], ts: 5 } } };
+  await assertSucceeds(setDoc(doc(as(FRIEND), 'users/friend/private/favs'), favs));
+  await assertSucceeds(setDoc(doc(as(FRIEND), 'users/friend/private/marks'), { items: { 'E:e1': { v: [0, 4], ts: 6 } } }, { merge: true }));
+  await assertSucceeds(getDoc(doc(as(FRIEND), 'users/friend/private/favs')));
+  await assertFails(getDoc(doc(as(OWNER), 'users/friend/private/favs')));
+  await assertFails(setDoc(doc(as(OWNER), 'users/friend/private/favs'), favs));
+  await assertFails(setDoc(doc(as(FRIEND), 'users/friend/private/other'), favs));
+  await assertFails(setDoc(doc(as(FRIEND), 'users/friend/private/favs'), { items: {}, extra: 1 }));
+  await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(), 'users/friend/private/favs')));
+});

@@ -8,7 +8,7 @@
   <title>מכתבים לרבי</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -20,12 +20,41 @@
         <h1 id="title-text">מכתבים לרבי</h1>
         <span class="sub" id="status">מענה מתוך אגרות הקודש</span>
       </div>
-      <button id="account-btn" class="icon-btn list-only" title="חשבון" aria-label="חשבון">👤</button>
+      <button id="home-menu" class="icon-btn list-only" title="תפריט" aria-label="תפריט">⋮</button>
+      <button id="collapse-all" class="icon-btn chat-only" title="מזעור כל ההתכתבויות" aria-label="מזעור כל ההתכתבויות" hidden>⊟</button>
       <button id="chat-menu" class="icon-btn chat-only" title="אפשרויות השיחה" aria-label="אפשרויות השיחה">⋮</button>
     </header>
 
+    <!-- selection mode (long press on a letter, an answer, a message or a chat) -->
+    <header id="sel-bar" class="bar sel-bar" hidden>
+      <button type="button" id="sel-close" class="icon-btn" title="ביטול הבחירה" aria-label="ביטול הבחירה">✕</button>
+      <div class="title"><h1 id="sel-count">1</h1></div>
+      <button type="button" id="sel-archive" class="icon-btn" title="העברה לארכיון" aria-label="העברה לארכיון">🗄</button>
+      <button type="button" id="sel-lock" class="icon-btn" title="נעילה" aria-label="נעילה">🔒</button>
+      <button type="button" id="sel-read" class="icon-btn" title="סימון כנקרא" aria-label="סימון כנקרא">✓</button>
+      <button type="button" id="sel-copy" class="icon-btn" title="העתקה" aria-label="העתקה">📋</button>
+      <button type="button" id="sel-move" class="icon-btn" title="העברה לשיחה אחרת" aria-label="העברה לשיחה אחרת">➦</button>
+      <button type="button" id="sel-delete" class="icon-btn" title="גניזה" aria-label="גניזה">🗑</button>
+      <button type="button" id="sel-more" class="icon-btn" title="עוד" aria-label="עוד">⋮</button>
+    </header>
+
+    <!-- the standard drop-down menu (⋮) -->
+    <div id="menu-backdrop" class="menu-backdrop" hidden></div>
+    <div id="menu" class="menu" role="menu" hidden></div>
+
     <div id="search-bar" class="search-bar">
-      <input id="search" type="search" placeholder="🔍 חיפוש שיחות" aria-label="חיפוש שיחות">
+      <div class="search-pill">
+        <button type="button" id="search-close" class="search-icon" title="סגירת החיפוש" aria-label="סגירת החיפוש" hidden>→</button>
+        <span id="search-glass" class="search-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        </span>
+        <input id="search" type="search" placeholder="חיפוש…" aria-label="חיפוש">
+        <button type="button" id="search-date" class="search-icon" title="חיפוש לפי תאריך" aria-label="חיפוש לפי תאריך">
+          <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M20 11V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h5M4 9.5h16M8 3v4M16 3v4"/><circle cx="16.5" cy="16.5" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M19 19l2.2 2.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+        <input type="date" id="search-date-input" class="date-hidden" tabindex="-1" aria-hidden="true">
+      </div>
+      <button type="button" id="search-date-chip" class="date-chip" title="ביטול הסינון לפי תאריך" hidden></button>
     </div>
 
     <div id="update-banner" class="update-banner" hidden>
@@ -46,21 +75,43 @@
           <button type="button" id="server-save">שמירה</button>
           <hr>
         </div>
-        <div class="version-row">
-          <span>גרסת האפליקציה: <b id="app-version" dir="ltr">–</b></span>
+        <!-- size of the app's own text (buttons, menus, titles); the letter and the analysis have their own size (pinch / Aa) -->
+        <fieldset class="ui-size">
+          <legend>גודל הטקסט של הפקדים</legend>
+          <div class="seg" role="radiogroup" aria-label="גודל הטקסט של הפקדים">
+            <button type="button" class="seg-btn" data-ui="" role="radio" aria-checked="true">רגיל</button>
+            <button type="button" class="seg-btn" data-ui="large" role="radio" aria-checked="false">גדול</button>
+            <button type="button" class="seg-btn" data-ui="xlarge" role="radio" aria-checked="false">גדול מאוד</button>
+          </div>
+          <p class="note">גודל הטקסט של המכתב וההסבר נקבע בנפרד – בצביטה על הטקסט.</p>
+        </fieldset>
+        <div id="update-section">
+          <hr>
+          <div class="version-row">
+            <span>גרסת האפליקציה: <b id="app-version" dir="ltr">–</b></span>
+          </div>
+          <label class="check"><input type="checkbox" id="auto-check" checked> בדיקת עדכונים אוטומטית בפתיחה</label>
+          <button type="button" id="check-update">בדיקת עדכונים</button>
+          <p id="update-status" class="status" aria-live="polite"></p>
+          <button type="button" id="install-update" hidden>הורדה והתקנה</button>
+          <progress id="update-progress" max="100" value="0" hidden></progress>
+          <p id="update-detail" class="note" dir="auto"></p>
+          <a id="manual-update" class="link-btn" target="_blank" rel="noopener" hidden>⬇ הורדה ידנית מהדפדפן</a>
         </div>
-        <label class="check"><input type="checkbox" id="auto-check" checked> בדיקת עדכונים אוטומטית בפתיחה</label>
-        <button type="button" id="check-update">בדיקת עדכונים</button>
-        <p id="update-status" class="status" aria-live="polite"></p>
-        <button type="button" id="install-update" hidden>הורדה והתקנה</button>
-        <progress id="update-progress" max="100" value="0" hidden></progress>
         <div class="dialog-actions"><button value="close">סגירה</button></div>
       </form>
     </dialog>
 
+    <!-- tools, shown while text of an answer is selected: highlight, text size, PDF, share, marker mode -->
     <div id="hl-bar" class="hl-bar" hidden>
-      <button type="button" id="hl-add" hidden>🖍 הדגשת הטקסט המסומן</button>
-      <button type="button" id="hl-mode">🖍 מצב מרקר</button>
+      <div class="hl-tools">
+        <button type="button" id="hl-add" hidden>🖍 הדגשה</button>
+        <button type="button" id="tool-aramaic" hidden title="תרגום הקטע המסומן מארמית">תרגום מארמית</button>
+        <button type="button" id="tool-size" hidden title="גודל הטקסט (או צביטה על הטקסט)">Aa</button>
+        <a id="tool-pdf" target="_blank" rel="noopener" hidden>📄 PDF</a>
+        <button type="button" id="tool-share" hidden>↗ שיתוף</button>
+        <button type="button" id="hl-mode">🖍 מצב מרקר</button>
+      </div>
     </div>
 
     <div id="lightbox" class="lightbox" hidden>
@@ -76,31 +127,24 @@
 
     <button type="button" id="new-chat" class="fab" title="מכתב חדש" aria-label="מכתב חדש">✎</button>
 
-    <dialog id="conv-menu" class="settings conv-menu">
+    <dialog id="move-dialog" class="settings conv-menu">
       <form method="dialog">
-        <h2 id="menu-title"></h2>
-<label class="lang-row">
-        <span>שפת המענה</span>
-        <select id="lang" aria-label="שפת המענה">
-          <option value="">שפת המכתב</option>
-          <option value="he">עברית</option>
-          <option value="en">English</option>
-          <option value="ru">Русский</option>
-          <option value="fr">Français</option>
-          <option value="es">Español</option>
-        </select>
-      </label>
-        <div id="menu-members" class="members" hidden></div>
-        <button type="button" id="menu-rename">✎ שינוי שם</button>
-        <button type="button" id="menu-share">👥 שיתוף עם אנשי קשר</button>
-        <button type="button" id="menu-copy-link">🔗 העתקת קישור לשיחה</button>
-        <button type="button" id="menu-stop-share" hidden>✋ הפסקת השיתוף</button>
-        <button type="button" id="menu-archive">🗄 העברה לארכיון</button>
-        <button type="button" id="menu-lock">🔒 נעילת השיחה</button>
-        <button type="button" id="menu-delete" class="danger">🗑 מחיקת השיחה</button>
+        <h2>העברה לשיחה</h2>
+        <div id="move-list" class="move-list"></div>
         <div class="dialog-actions"><button value="close">ביטול</button></div>
       </form>
     </dialog>
+
+    <!-- text size (pinch on the letter / analysis, or the Aa button) -->
+    <div id="zoom-bar" class="zoom-bar" hidden>
+      <button type="button" id="zoom-minus" aria-label="הקטנת הטקסט">−</button>
+      <input type="range" id="zoom-range" min="70" max="200" step="5" value="100" aria-label="גודל הטקסט">
+      <button type="button" id="zoom-plus" aria-label="הגדלת הטקסט">+</button>
+      <span id="zoom-pct" dir="ltr">100%</span>
+    </div>
+
+    <!-- expansion of abbreviations (ראשי תיבות), on tap -->
+    <div id="rt-pop" class="rt-pop" role="dialog" hidden></div>
 
     <dialog id="account" class="settings">
       <form method="dialog">
@@ -111,7 +155,7 @@
         </div>
         <div id="account-in" hidden>
           <p>מחובר: <b id="account-name"></b></p>
-          <p class="note">השיחות נשמרות בחשבון. מועדפים, הדגשות, ארכיון ונעילה נשמרים בכל מכשיר בנפרד.</p>
+          <p class="note">השיחות, המועדפים, התגיות וההדגשות נשמרים בחשבון ועוברים בין המכשירים. ארכיון, נעילה וסימון "נקרא" נשמרים בכל מכשיר בנפרד.</p>
           <button type="button" id="sign-out">התנתקות</button>
         </div>
         <p id="account-status" class="status" aria-live="polite"></p>
@@ -126,10 +170,31 @@
       <button type="button" id="reply-cancel" aria-label="ביטול התגובה">✕</button>
     </div>
 
+    <div id="openers" class="openers" hidden aria-label="פתיחה מהירה למכתב"></div>
+
     <form id="composer" class="composer">
       <button type="button" id="mode" class="mode-btn" hidden>✉️</button>
-      <textarea id="input" rows="1" placeholder="כתבו את המכתב…" maxlength="8000" required></textarea>
-      <button type="submit" id="send" class="send" aria-label="שליחה">➤</button>
+      <!-- like a messaging app: the text, and inside the same pill a paperclip (gallery) and a camera -->
+      <div id="pill" class="pill">
+        <textarea id="input" rows="1" placeholder="כתבו את המכתב…" maxlength="8000"></textarea>
+        <button type="button" id="attach" class="pill-btn" title="צילום אגרת מהגלריה" aria-label="צילום אגרת מהגלריה">
+          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M16.5 6.5v9a4.5 4.5 0 0 1-9 0V5.8a3 3 0 0 1 6 0v9.4a1.5 1.5 0 0 1-3 0V7"/></svg>
+        </button>
+        <button type="button" id="camera" class="pill-btn" title="צילום אגרת במצלמה" aria-label="צילום אגרת במצלמה">
+          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        </button>
+      </div>
+      <!-- while recording: cancel, a red dot and the time -->
+      <div id="rec-bar" class="rec-bar" hidden>
+        <button type="button" id="rec-cancel" class="pill-btn" title="ביטול ההקלטה" aria-label="ביטול ההקלטה">🗑</button>
+        <span class="rec-dot"></span><span id="rec-time" class="rec-time">0:00</span>
+        <span id="rec-label" class="rec-label"></span>
+      </div>
+      <!-- while the microphone is held: pull up to lock -->
+      <div id="rec-lock" class="rec-lock" hidden aria-hidden="true"><span>🔒</span><span class="rec-lock-arrow">⌃</span></div>
+      <button type="submit" id="send" class="send" aria-label="הקלטת מכתב בקול"></button>
+      <input type="file" id="pick-camera" accept="image/*" capture="environment" hidden>
+      <input type="file" id="pick-gallery" accept="image/*" hidden>
     </form>
   </div>
   <script src="config.js"></script>

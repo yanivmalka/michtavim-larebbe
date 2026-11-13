@@ -7,7 +7,7 @@
 // to a simulated page: a random point inside a random letter, the page starting up to about one
 // page-length before it, and the layout engine filling one book-sized page from there.
 import { fetchLetter as defaultFetch, bodyOf } from './chabadlibrary.js';
-import { blankPage, layout, spreadImage } from '../render/bookPage.js';
+import { PAGE, blankPage, layout, spreadImage } from '../render/bookPage.js';
 import {
   bodyText, hebrewNumeral, insideLetters, mappedPage, notesOf, sliceBlocks, spreadPages, spreadsOf, textPages,
 } from './pageMap.js';
@@ -137,9 +137,14 @@ export async function renderMapped(volumes, spec, { fetchLetter = defaultFetch }
     footnotes.push({ kind: 'foot', text: notes[j] });
   }
 
-  const { pages, shown, truncated } = fitOnePage(flow, pageHeader(vol, page.printed), footnotes);
+  const { pages, shown, truncated, boxes: drawn } = fitOnePage(flow, pageHeader(vol, page.printed), footnotes);
+  const boxes = []; // every word on the page, with its offsets in its letter's pageText – for the marker on the image
   const letters = parts.map((p, k) => {
     const shownText = shown.get(k)?.text ?? '';
+    const shift = p.startsOnPage ? shownText.split('\n')[0].length + 1 : 0; // the number line is not in pageText
+    for (const b of drawn) {
+      if (b.letter === k && b.page === 0 && b.s >= shift) boxes.push({ id: p.id, s: b.s - shift, e: b.e - shift, x: b.x, y: b.y, w: b.w, h: b.h });
+    }
     return {
       id: p.id,
       number: p.number,
@@ -150,7 +155,7 @@ export async function renderMapped(volumes, spec, { fetchLetter = defaultFetch }
       full: p.full,
     };
   });
-  return { volume: vol.volume, volumeHeading: vol.heading, png: pages[0], letters, spec: encodeSpec(spec), end: null, consumed: 0, truncated };
+  return { volume: vol.volume, volumeHeading: vol.heading, png: pages[0], letters, boxes, spec: encodeSpec(spec), end: null, consumed: 0, truncated };
 }
 
 /**
@@ -169,23 +174,31 @@ export async function renderSpread(volumes, spec, { fetchLetter = defaultFetch }
     if (page) {
       const drawn = await renderMapped(volumes, { v: spec.v, p: page.pdf }, { fetchLetter });
       if (!drawn) return null;
-      sides.push({ side, printed, spec: drawn.spec, png: drawn.png, letters: drawn.letters, truncated: drawn.truncated });
+      sides.push({ side, printed, spec: drawn.spec, png: drawn.png, letters: drawn.letters, boxes: drawn.boxes, truncated: drawn.truncated });
     } else {
       const note = insideLetters(vol, printed) ? 'הטקסט של עמוד זה אינו זמין' : '';
-      sides.push({ side, printed, spec: null, png: blankPage(pageHeader(vol, printed), note), letters: [], truncated: false });
+      sides.push({ side, printed, spec: null, png: blankPage(pageHeader(vol, printed), note), letters: [], boxes: [], truncated: false });
     }
   }
 
   const letters = [];
+  const boxes = []; // in the spread image: the right-hand page is its right half
   for (const side of sides) {
+    const dx = side.side === 'right' ? PAGE.width : 0;
+    let carried = null; // the letter that began on the right-hand page and carries on here
     for (const l of side.letters) {
       const last = letters.at(-1);
       if (last && last.id === l.id) {
+        carried = { id: l.id, shift: last.pageText.length + 1 };
         last.pageText = `${last.pageText}\n${l.pageText}`;
         last.endsOnPage = l.endsOnPage;
       } else {
         letters.push({ ...l });
       }
+    }
+    for (const b of side.boxes) {
+      const shift = carried?.id === b.id ? carried.shift : 0;
+      boxes.push({ ...b, s: b.s + shift, e: b.e + shift, x: b.x + dx });
     }
   }
   return {
@@ -193,6 +206,7 @@ export async function renderSpread(volumes, spec, { fetchLetter = defaultFetch }
     volumeHeading: vol.heading,
     png: await spreadImage(sides[0].png, sides[1].png),
     letters,
+    boxes,
     spec: encodeSpec(spec),
     sides: sides.map(({ side, printed, spec: s, png }) => ({ side, printed, spec: s, png })),
     end: null,
@@ -222,13 +236,18 @@ export async function renderSpec(volumes, spec, { fetchLetter = defaultFetch } =
     for (const b of blocks) flow.push({ ...b, letter: k, continued: b.continued || (!fromTop && b === blocks[0]) });
   });
 
-  const { pages, shown } = layout(flow, { header: { right: 'אגרות קודש', left: vol.heading }, maxPages: 1 });
+  const { pages, shown, boxes: drawn } = layout(flow, { header: { right: 'אגרות קודש', left: vol.heading }, maxPages: 1 });
 
   const letters = [];
+  const boxes = []; // every word on the page, with its offsets in its letter's pageText – for the marker on the image
   chain.forEach((c, k) => {
     const s = shown.get(k);
     if (!s) return;
     const fromTop = k > 0 || start === 0;
+    const shift = fromTop ? s.text.split('\n')[0].length + 1 : 0; // the number line is not in pageText
+    for (const b of drawn) {
+      if (b.letter === k && b.page === 0 && b.s >= shift) boxes.push({ id: c.id, s: b.s - shift, e: b.e - shift, x: b.x, y: b.y, w: b.w, h: b.h });
+    }
     letters.push({
       id: c.id,
       number: c.heading,
@@ -254,11 +273,11 @@ export async function renderSpec(volumes, spec, { fetchLetter = defaultFetch } =
       : { i: spec.i + k, s: (k === 0 ? start : 0) + body.length + 1 };
   });
 
-  return { volume: vol.volume, volumeHeading: vol.heading, png: pages[0], letters, spec: encodeSpec(spec), end, consumed };
+  return { volume: vol.volume, volumeHeading: vol.heading, png: pages[0], letters, boxes, spec: encodeSpec(spec), end, consumed };
 }
 
 /** Spec of a page starting at letter `i`, offset `s`, with enough letters after it to fill a page. */
-async function specFrom(volumes, v, i, s, fetchLetter) {
+export async function specFrom(volumes, v, i, s, fetchLetter) {
   const vol = volumes[v];
   if (i >= vol.letters.length) return null;
   const len = async (k) => lengthOf(bodyOf((await fetchLetter(vol.letters[k][0])).blocks));

@@ -109,13 +109,18 @@ export async function deleteConv(id) {
 // ---------- letters to the Rebbe (owner only) ----------
 const preview = (e) => (e.a ? `✉️ ${e.a.title}` : e.q).slice(0, 120);
 const cleanEntry = (e) => {
-  const { pending, fav, collapsed, showMore, conv, ...rest } = e; // personal flags stay on the device
+  // personal flags stay on the device
+  const {
+    pending, fav, collapsed, showMore, textOpen, analysisOpen, translationOpen, followupsOpen, analysisClosed, followupsClosed, translating, unread, tagsOpen, lang, conv, draft, transcribing, preparing, t0, qOpen, qLocked, ...rest
+  } = e;
   return JSON.parse(JSON.stringify(rest));
 };
 export async function saveEntry(convId, entry) {
   await setDoc(doc(db, 'convs', convId, 'entries', entry.id), cleanEntry(entry));
   await updateDoc(convRef(convId), { lastTs: entry.ts, lastPreview: preview(entry) });
 }
+/** Owner: removes a letter and its answer (also used when moving it to another conversation). */
+export const deleteEntry = (convId, id) => deleteDoc(doc(db, 'convs', convId, 'entries', id));
 
 // ---------- chat between the participants ----------
 export async function sendMessage(convId, { id, text, ts, replyTo }) {
@@ -145,3 +150,16 @@ export async function joinConv(id, token) {
 export async function leaveConv(id) {
   await updateDoc(convRef(id), { members: arrayRemove(me().uid) });
 }
+
+// ---------- the user's own backup: favourites + tags, and highlights ----------
+// Two documents, users/{uid}/private/favs and …/marks, each { items: { key: { v, ts } } }.
+// v = the value (tags / flat ranges), or null once removed; ts = when it was changed, so
+// devices merge item by item and the newer change wins.
+const privRef = (name) => doc(db, 'users', me().uid, 'private', name);
+export function watchPrefs(onItems, onError) {
+  const offs = ['favs', 'marks'].map((name) => onSnapshot(privRef(name),
+    (s) => onItems(name, s.data()?.items || {}, s.metadata.hasPendingWrites), onError));
+  return () => offs.forEach((off) => off());
+}
+/** Merges `items` (key → { v, ts }) into the backup. */
+export const savePrefs = (name, items) => setDoc(privRef(name), { items, updated: serverTimestamp() }, { merge: true });

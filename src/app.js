@@ -1,5 +1,7 @@
 import express from 'express';
-import { answerLetter, getPageImage, getPagePdf, getLetterPdf, getNeighborLetter, getTurnedPage, analyze, askFollowUp } from './letters.js';
+import {
+  answerLetter, getPageImage, getPagePdf, getLetterPdf, getNeighborLetter, getTurnedPage, analyze, askFollowUp, translateAnalysis, acronyms, answerPhoto, transcribe, summarize, aramaic,
+} from './letters.js';
 import { userMessage } from './errors.js';
 import { whatsappRouter } from './whatsapp/webhook.js';
 import { cors } from './cors.js';
@@ -24,10 +26,11 @@ export function createApp(deps = {}) {
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', 1); // behind Render's proxy: req.ip is the user's address
-  app.use(express.json({
-    limit: '100kb',
-    verify: (req, _res, buf) => { req.rawBody = buf; },
-  }));
+  const verify = (req, _res, buf) => { req.rawBody = buf; };
+  const smallJson = express.json({ limit: '100kb', verify });
+  const mediaJson = express.json({ limit: '9mb' }); // a photo or a voice recording, base64
+  const MEDIA = new Set(['/api/photo', '/api/transcribe']);
+  app.use((req, res, next) => (MEDIA.has(req.path) ? mediaJson : smallJson)(req, res, next));
 
   app.use('/api', cors());
 
@@ -72,15 +75,34 @@ export function createApp(deps = {}) {
   };
   app.post('/api/analysis', aiRoute((b, d) => analyze(b, d)));
   app.post('/api/analysis/followup', aiRoute((b, d) => askFollowUp(b, d)));
+  app.post('/api/analysis/translate', aiRoute((b, d) => translateAnalysis(b, d)));
+  app.post('/api/acronyms', aiRoute((b, d) => acronyms(b, d)));
+  // a photo of a printed page → that page from the library; a voice recording → the text of the letter
+  app.post('/api/photo', aiRoute((b) => answerPhoto(b, { ...deps.pages, ...deps.photo })));
+  app.post('/api/transcribe', aiRoute((b) => transcribe(b, deps.voice)));
+  app.post('/api/aramaic', aiRoute((b, d) => aramaic(b, d)));
+  // a name for the chat + a line for the minimized letter: light, and limited apart from the analysis quota
+  const sumLimit = rateLimit({ max: Number(process.env.SUMMARY_RATE_PER_HOUR || 60), windowMs: 3600e3 });
+  app.post('/api/summary', async (req, res) => {
+    try {
+      if (!sumLimit(req.ip)) throw new Error('AI_RATE_LIMIT');
+      res.json(await summarize(req.body || {}, deps.ai));
+    } catch (err) {
+      const e = userMessage(err);
+      res.status(e.status).json({ error: e.code, message: e.message });
+    }
+  });
 
   const sendPdf = (res, pdf, name) => {
     if (!pdf) return res.sendStatus(404);
     res.type('application/pdf').set('Content-Disposition', `inline; filename="${name}"`).send(pdf);
   };
   // Pages are addressed by their spec, so these links keep working after restarts.
+  // ?hl=<letter id>:<start>-<end>,… marks those words of the page text, as with a highlighter.
+  // ?side=right|left gives one page of a spread.
   app.get('/api/page/:spec.png', async (req, res, next) => {
     try {
-      const png = await getPageImage(req.params.spec, deps.pages);
+      const png = await getPageImage(req.params.spec, deps.pages, typeof req.query.hl === 'string' ? req.query.hl : '', typeof req.query.side === 'string' ? req.query.side : '');
       if (!png) return res.sendStatus(404);
       res.type('image/png').set('Cache-Control', 'public, max-age=604800').send(png);
     } catch (e) { next(e); }

@@ -11,12 +11,21 @@ const MESSAGES = {
   PAGE_NOT_FOUND: 'העמוד לא נמצא.',
   QUESTION_EMPTY: 'נא לכתוב שאלה.',
   AI_TRUNCATED: 'ההסבר נקטע. נסו שוב.',
+  LANGUAGE_BAD: 'שפה לא מוכרת.',
+  NOTHING_TO_TRANSLATE: 'אין עדיין ניתוח לתרגום.',
+  PHOTO_BAD: 'הקובץ אינו תמונה שאפשר לקרוא. מחקו וטענו תמונה אחרת.',
+  PHOTO_NOT_IGROT: 'נראה שזה אינו צילום של עמוד מאגרות קודש. מחקו את התמונה וטענו צילום של עמוד מהספר.',
+  PHOTO_UNREADABLE: 'לא הצלחנו לקרוא את מספרי האגרות בצילום. מחקו וצלמו שוב – עמוד שלם, ישר ומואר, כך שמספר האגרת ייראה בבירור.',
+  PHOTO_NOT_FOUND: 'מספרי האגרות שנקראו בצילום לא נמצאו במאגר. מחקו וצלמו שוב, כך שמספר האגרת ייראה בבירור.',
+  VOICE_BAD: 'ההקלטה אינה בפורמט מוכר. נסו להקליט שוב.',
+  VOICE_EMPTY: 'לא נשמע דיבור ברור בהקלטה. מחקו ונסו להקליט שוב.',
+  VOICE_NOT_CONFIGURED: 'המרת הקלטה לטקסט אינה מוגדרת בשרת (חסר מפתח Gemini).',
 };
 
 export function userMessage(err) {
   const code = err?.message || '';
   if (MESSAGES[code]) {
-    const status = /^(LETTER|QUESTION|PAGE)/.test(code) ? 400 : code === 'AI_RATE_LIMIT' ? 429 : 503;
+    const status = /^(LETTER|QUESTION|PAGE|LANGUAGE|NOTHING|PHOTO|VOICE_(BAD|EMPTY))/.test(code) ? 400 : code === 'AI_RATE_LIMIT' ? 429 : 503;
     return { status, code, message: MESSAGES[code] };
   }
   if (err?.status === 429) return { status: 429, code: 'AI_RATE_LIMIT', message: MESSAGES.AI_RATE_LIMIT };

@@ -1,6 +1,9 @@
 // Gemini (Google AI Studio) – translation, explanation and follow-up questions.
 import { GoogleGenAI } from '@google/genai';
-import { SYSTEM, FOLLOWUP_SYSTEM, jsonSchema, AnswerSchema } from './explain.js';
+import {
+  SYSTEM, FOLLOWUP_SYSTEM, TRANSLATE_SYSTEM, ACRONYM_SYSTEM, jsonSchema, AnswerSchema, translateSchema, TranslateSchema, acronymSchema, AcronymSchema,
+  PHOTO_SYSTEM, photoSchema, PhotoSchema, TRANSCRIBE_SYSTEM,
+} from './explain.js';
 
 export const geminiAvailable = () => Boolean(process.env.GEMINI_API_KEY);
 
@@ -42,7 +45,8 @@ export async function withFallback(call, models = modelChain()) {
 }
 
 // Gemini's schema dialect has no additionalProperties
-const { additionalProperties, ...schema } = jsonSchema;
+const geminiSchema = (s) => JSON.parse(JSON.stringify(s, (k, v) => (k === 'additionalProperties' ? undefined : v)));
+const schema = geminiSchema(jsonSchema);
 
 export async function explainWithGemini({ letter, igeret, replyLanguage, title }) {
   if (!geminiAvailable()) throw new Error('AI_NOT_CONFIGURED');
@@ -70,4 +74,55 @@ export async function followUpWithGemini({ context, history, question }) {
   }));
   if (!response.text) throw new Error(response.promptFeedback?.blockReason ? 'AI_REFUSED' : 'AI_EMPTY');
   return response.text.trim();
+}
+
+/** A JSON answer from the first model that is available. */
+export async function generateJson({ system, text, schema: responseSchema, temperature = 0.2 }) {
+  if (!geminiAvailable()) throw new Error('AI_NOT_CONFIGURED');
+  const response = await withFallback((model) => getClient().models.generateContent({
+    model,
+    contents: [{ role: 'user', parts: [{ text }] }],
+    config: { systemInstruction: system, responseMimeType: 'application/json', responseJsonSchema: geminiSchema(responseSchema), temperature },
+  }));
+  if (!response.text) throw new Error(response.promptFeedback?.blockReason ? 'AI_REFUSED' : 'AI_EMPTY');
+  return JSON.parse(response.text);
+}
+
+/** Translates `items` (strings) to `language` (ISO 639-1), keeping their order. */
+export async function translateWithGemini({ language, items }) {
+  const out = await generateJson({ system: TRANSLATE_SYSTEM, text: `שפת היעד: ${language}\n\n${JSON.stringify({ items })}`, schema: translateSchema });
+  return TranslateSchema.parse(out).items;
+}
+
+/** Expands abbreviations as used on the page. */
+export async function acronymsWithGemini({ context, words }) {
+  const out = await generateJson({
+    system: ACRONYM_SYSTEM, schema: acronymSchema,
+    text: `הקטע:\n"""\n${context}\n"""\n\nראשי התיבות לפענוח: ${JSON.stringify(words)}`,
+  });
+  return AcronymSchema.parse(out).items;
+}
+
+/** The numbers on a photographed Igrot Kodesh page (volume, page, letter numbers) – not its text. */
+export async function readPhotoWithGemini({ data, mimeType }) {
+  if (!geminiAvailable()) throw new Error('AI_NOT_CONFIGURED');
+  const response = await withFallback((model) => getClient().models.generateContent({
+    model,
+    contents: [{ role: 'user', parts: [{ inlineData: { data, mimeType } }, { text: 'מה המספרים בעמוד?' }] }],
+    config: { systemInstruction: PHOTO_SYSTEM, responseMimeType: 'application/json', responseJsonSchema: geminiSchema(photoSchema), temperature: 0 },
+  }));
+  if (!response.text) throw new Error(response.promptFeedback?.blockReason ? 'AI_REFUSED' : 'AI_EMPTY');
+  return PhotoSchema.parse(JSON.parse(response.text));
+}
+
+/** Speech to text: a letter dictated by voice. */
+export async function transcribeWithGemini({ data, mimeType }) {
+  if (!geminiAvailable()) throw new Error('AI_NOT_CONFIGURED');
+  const response = await withFallback((model) => getClient().models.generateContent({
+    model,
+    contents: [{ role: 'user', parts: [{ inlineData: { data, mimeType } }, { text: 'תמלל.' }] }],
+    config: { systemInstruction: TRANSCRIBE_SYSTEM, temperature: 0 },
+  }));
+  if (response.promptFeedback?.blockReason) throw new Error('AI_REFUSED');
+  return (response.text || '').trim();
 }

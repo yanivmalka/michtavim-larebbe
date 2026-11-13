@@ -182,6 +182,40 @@ test('analysis and follow-up questions run only on request, about the page itsel
   }
 });
 
+test('an analysis is translated to another language, and abbreviations are expanded about the page', async () => {
+  const { encodeSpec } = await import('../src/igrot/openBook.js');
+  const spec = encodeSpec({ v: 0, i: 0, n: 2, s: 0 });
+  const seen = {};
+  const app = createApp({
+    ai: {
+      volumes: bookVolumes, fetchLetter: fakeFetch,
+      translate: async (input) => { seen.translate = input; return input.items.map((t) => (t ? `${input.language}:${t}` : '')); },
+      acronyms: async (input) => { seen.acronyms = input; return [{ word: 'כ"ק', options: ['כבוד קדושת'] }]; },
+    },
+  });
+  const server = app.listen(0);
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const post = (path, body) => fetch(base + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  try {
+    const t = await post('/api/analysis/translate', { language: 'en', explanation: 'ex', translation: '', keyQuote: 'q', followups: [{ q: 'ש', a: 'ת' }] });
+    assert.equal(t.status, 200);
+    assert.deepEqual(await t.json(), { replyLanguage: 'en', explanation: 'en:ex', translation: '', keyQuote: 'en:q', followups: ['en:ת'] });
+    assert.deepEqual(seen.translate.items, ['ex', '', 'q', 'ת']);
+    assert.equal((await post('/api/analysis/translate', { language: 'english', explanation: 'ex' })).status, 400);
+    assert.equal((await post('/api/analysis/translate', { language: 'en' })).status, 400);
+
+    const a = await post('/api/acronyms', { spec, words: ['כ"ק', 'כ"ק', 'זזז'] });
+    assert.equal(a.status, 200);
+    assert.deepEqual(await a.json(), { items: [{ word: 'כ"ק', options: ['כבוד קדושת'] }, { word: 'זזז', options: [] }] });
+    assert.match(seen.acronyms.context, /=== אגרת א/);
+    assert.deepEqual(seen.acronyms.words, ['כ"ק', 'זזז']);
+    assert.equal((await post('/api/acronyms', { spec, words: [] })).status, 400);
+    assert.equal((await post('/api/acronyms', { spec: 'bad', words: ['א"ב'] })).status, 400);
+  } finally {
+    server.close();
+  }
+});
+
 test('GET /api/igrot/:id/:dir pages to the neighbouring letter', async () => {
   const app = createApp({ neighbors: { volumes: bookVolumes, fetch: async (id) => ({ ...fakeLetters[id], text: `טקסט ${id}`, volumeHeading: 'כרך א' }) } });
   const server = app.listen(0);
@@ -217,6 +251,8 @@ test('turning pages forward then back stays in the same volume and returns to th
   const spec = decodeSpec(next.spec, bookVolumes);
   assert.ok(spec.i > 0 || spec.s > 0, 'the next page starts further on');
   assert.match(next.imagePath, /^\/api\/page\/[\w-]+\.png$/);
+  assert.ok(next.letters.length >= 1 && next.letters.every((l) => l.pageText && l.fullText), 'the turned page carries its text, like the opened one');
+  assert.match(next.title, /^אגרות קודש, כרך א, אגרות /);
   const back = decodeSpec((await getTurnedPage(next.spec, -1, deps)).spec, bookVolumes);
   assert.deepEqual([back.i, back.s], [0, 0]);
   assert.equal(await getTurnedPage('bad', 1, deps), undefined);

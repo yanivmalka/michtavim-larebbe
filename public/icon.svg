@@ -1,1 +1,61 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#1f3a5f"/><path d="M12 20h40v26H12z" fill="#fff"/><path d="M12 20l20 15 20-15" fill="none" stroke="#1f3a5f" stroke-width="3" stroke-linejoin="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108">
+  <defs>
+    <radialGradient id="sky" cx="50%" cy="30%" r="70%">
+      <stop offset="0" stop-color="#2f5a8e"/>
+      <stop offset="1" stop-color="#162b47"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f9df8a"/>
+      <stop offset="1" stop-color="#c8922a"/>
+    </linearGradient>
+    <linearGradient id="pageL" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f8f1e1"/>
+      <stop offset="1" stop-color="#e6dbc1"/>
+    </linearGradient>
+    <linearGradient id="pageR" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#e6dbc1"/>
+      <stop offset="1" stop-color="#f8f1e1"/>
+    </linearGradient>
+  </defs>
+  <g id="bg">
+    <rect width="108" height="108" fill="url(#sky)"/>
+  </g>
+  <g id="art" transform="translate(0 2)">
+    <!-- soft light behind the crown -->
+    <circle cx="54" cy="36" r="19" fill="#f9df8a" opacity="0.14"/>
+    <!-- crown -->
+    <g stroke="#8a6218" stroke-linejoin="round">
+      <path d="M39.5 42.5 L36.5 28.5 L45.5 35 L54 24 L62.5 35 L71.5 28.5 L68.5 42.5 Z" fill="url(#gold)" stroke-width="1.1"/>
+      <rect x="38.5" y="41.5" width="31" height="5.5" rx="1.6" fill="#dca93c" stroke-width="1"/>
+      <g fill="#fbeab0" stroke-width="0.8">
+        <circle cx="36.5" cy="27.5" r="2"/>
+        <circle cx="54" cy="23" r="2.1"/>
+        <circle cx="71.5" cy="27.5" r="2"/>
+      </g>
+      <g fill="#b9323c" stroke-width="0.6">
+        <circle cx="46" cy="44.25" r="1.2"/>
+        <circle cx="54" cy="44.25" r="1.5"/>
+        <circle cx="62" cy="44.25" r="1.2"/>
+      </g>
+    </g>
+    <!-- open book: Igrot Kodesh -->
+    <path d="M54 52.5 Q38 48 22 52.5 L22 81.5 Q38 77 54 81.5 Q70 77 86 81.5 L86 52.5 Q70 48 54 52.5 Z" fill="#5b3b25" stroke="#3a2415" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M24.5 78.9 Q39 75.4 53.5 78.9 M24.5 80.2 Q39 76.7 53.5 80.2 M54.5 78.9 Q69 75.4 83.5 78.9 M54.5 80.2 Q69 76.7 83.5 80.2" fill="none" stroke="#e8dcc2" stroke-width="0.7"/>
+    <path d="M53.6 54.2 Q39 50 24.5 53.5 L24.5 77.6 Q39 74.1 53.6 77.6 Z" fill="url(#pageL)"/>
+    <path d="M54.4 54.2 Q69 50 83.5 53.5 L83.5 77.6 Q69 74.1 54.4 77.6 Z" fill="url(#pageR)"/>
+    <path d="M54 54.2 L54 77.6" stroke="#9a8a6a" stroke-width="1" opacity="0.7"/>
+    <!-- lines of the letters (right-aligned, RTL) -->
+    <g stroke="#1f3a5f" stroke-width="1.15" stroke-linecap="round" opacity="0.62">
+      <path d="M50 58 H31 M50 61.6 H29.5 M50 65.2 H30.5 M50 68.8 H29.5 M50 72.4 H36"/>
+      <path d="M79.5 58 H59 M79.5 61.6 H58 M79.5 65.2 H59.5 M79.5 68.8 H58 M79.5 72.4 H66"/>
+    </g>
+    <!-- the user's letter, placed into the book -->
+    <g transform="translate(54 70) rotate(-7)">
+      <rect x="-13" y="-7.5" width="28" height="18" rx="1.5" fill="#000" opacity="0.22"/>
+      <rect x="-14" y="-9" width="28" height="18" rx="1.5" fill="#fffaf0" stroke="#8a7a60" stroke-width="0.9"/>
+      <path d="M-14 -9 L0 2.5 L14 -9 Z" fill="#f2e8d2" stroke="#8a7a60" stroke-width="0.9" stroke-linejoin="round"/>
+      <path d="M-13.5 8.5 L-3.5 0.5 M13.5 8.5 L3.5 0.5" fill="none" stroke="#d9cdb3" stroke-width="0.8"/>
+      <circle cx="0" cy="2" r="2.7" fill="url(#gold)" stroke="#8a6218" stroke-width="0.7"/>
+    </g>
+  </g>
+</svg>

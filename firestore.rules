@@ -54,5 +54,14 @@ service cloud.firestore {
         allow delete: if signedIn() && (resource.data.uid == uid() || conv(cid).owner == uid());
       }
     }
+
+    // each user's own backup of favourites + tags ("favs") and highlights ("marks"); nobody else sees it
+    match /users/{u}/private/{name} {
+      allow read, delete: if signedIn() && uid() == u;
+      allow create, update: if signedIn() && uid() == u
+        && name in ['favs', 'marks']
+        && request.resource.data.keys().hasOnly(['items', 'updated'])
+        && request.resource.data.items is map;
+    }
   }
 }

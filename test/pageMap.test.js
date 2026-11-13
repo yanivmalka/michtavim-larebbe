@@ -10,7 +10,7 @@ import { openBook, renderSpec, decodeSpec, encodeSpec, turnPage } from '../src/i
 import {
   attachPageMaps, loadPageMaps, nearestWordStart, sliceBlocks, bodyText, hebrewNumeral, spreadsOf, spreadPages,
 } from '../src/igrot/pageMap.js';
-import { answerLetter, getPagePdf, getTurnedPage } from '../src/letters.js';
+import { answerLetter, getPageImage, getPagePdf, getTurnedPage, highlightsFor } from '../src/letters.js';
 import { syntheticVolume } from './support/synthetic-volume.js';
 
 // One volume with a map built from its synthetic scan, plus a fake source for the letters' text.
@@ -103,7 +103,8 @@ test('the answer to a letter carries the spread, its pages one by one, and a two
   const answer = await answerLetter({ letter: 'שלום וברכה' }, { ...deps, open: (vols, o) => openBook(vols, { ...o, fetchLetter }) });
   assert.deepEqual(answer.sides.map((s) => s.side), ['right', 'left']);
   assert.match(answer.title, /עמ' ד–ה/);
-  assert.ok(answer.sides.every((s) => /^\/api\/page\/[\w-]+\.png$/.test(s.imagePath)));
+  assert.deepEqual(answer.sides.map((s) => s.printed), [4, 5]);
+  assert.equal(answer.footnotes, false);
   const spec = /page\/([\w-]+)\.png/.exec(answer.imagePath)[1];
   const pdf = await getPagePdf(spec, deps);
   assert.equal((await PDFDocument.load(pdf)).getPageCount(), 2);
@@ -262,4 +263,52 @@ test('an empty range is not a part of the page, and a page with nothing else is 
   assert.equal(decodeSpec(encodeSpec({ v: 0, p: 3 }), volumes), null);
   assert.deepEqual(spreadsOf(volumes[0]), [0, 2]);
   assert.equal(spreadPages(volumes[0], 2).left, null);
+});
+
+test('one page of a spread is its half of the image, and marks on the image follow the words across the fold', async () => {
+  // letter a runs over the fold: its first 60 words on page 2 (right), the rest on page 3 (left), then letter b
+  const words = (n, w) => Array.from({ length: n }, (_, i) => `${w}${i}`).join(' ');
+  const a = words(120, 'מילה');
+  const b = words(40, 'תיבה');
+  const cut = a.indexOf(' מילה60 ') + 1;
+  const map = {
+    volume: 1,
+    letters: [{ bodyLength: a.length }, { bodyLength: b.length }],
+    pages: [
+      { pdf: 1, printed: 2, matched: true, segments: [{ i: 0, from: 0, to: cut }] },
+      { pdf: 2, printed: 3, matched: true, segments: [{ i: 0, from: cut, to: a.length }, { i: 1, from: 0, to: b.length }] },
+    ],
+  };
+  const volumes = attachPageMaps([{ volume: 1, heading: 'כרך א', letters: [[11, 'א'], [12, 'ב']] }], new Map([[1, map]]));
+  const texts = { 11: a, 12: b };
+  const fetchLetter = async (id) => ({ blocks: [{ kind: 'text', text: texts[id] }], text: texts[id], letterHeading: `אגרת ${id}`, viewerUrl: 'u' });
+  const deps = { volumes, fetchLetter };
+  const spread = await renderSpec(volumes, { v: 0, e: 2 }, { fetchLetter });
+  assert.deepEqual(spread.letters.map((l) => l.id), [11, 12]);
+
+  const width = (png) => png.readUInt32BE(16);
+  const whole = await getPageImage(spread.spec, deps);
+  const right = await getPageImage(spread.spec, deps, '', 'right');
+  const left = await getPageImage(spread.spec, deps, '', 'left');
+  assert.equal(width(right) * 2, width(whole));
+  assert.equal(width(left) * 2, width(whole));
+  assert.ok(!right.equals(left));
+
+  // every word box points at its word in the letter's text on the spread, on either page
+  const byId = new Map(spread.letters.map((l) => [l.id, l.pageText]));
+  const half = width(whole) / 2;
+  assert.equal(spread.boxes.filter((x) => x.id === 11).length, 120);
+  for (const box of spread.boxes) assert.match(byId.get(box.id).slice(box.s, box.e), /^(מילה|תיבה)\d+$/);
+  const wordAt = (n) => spread.boxes.find((x) => x.id === 11 && byId.get(11).slice(x.s, x.e) === `מילה${n}`);
+  assert.ok(wordAt(59).x >= half, 'word 59 is on the right-hand page');
+  assert.ok(wordAt(60).x + wordAt(60).w <= half, 'word 60 is on the left-hand page');
+
+  // a quote from the part on the left-hand page is found in the letter and marked on that page only
+  const { highlights } = highlightsFor(spread, ['מילה100 מילה101 מילה102']);
+  assert.equal(highlights.length, 1);
+  assert.equal(highlights[0].spec, spread.spec);
+  const [s0, e0] = highlights[0].r;
+  const hl = `11:${s0}-${e0}`;
+  assert.ok(!(await getPageImage(spread.spec, deps, hl, 'left')).equals(left), 'the marker is drawn on the left-hand page');
+  assert.ok((await getPageImage(spread.spec, deps, hl, 'right')).equals(right), 'and not on the right-hand page');
 });
