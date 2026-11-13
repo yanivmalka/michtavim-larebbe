@@ -41,6 +41,7 @@
     "@capacitor/android": "^7.6.10",
     "@capacitor/cli": "^7.6.10",
     "@firebase/rules-unit-testing": "^4.0.1",
-    "esbuild": "^0.28.2"
+    "esbuild": "^0.28.2",
+    "pdfjs-dist": "6.4.299"
   }
 }

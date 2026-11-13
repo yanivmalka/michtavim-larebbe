@@ -15,8 +15,9 @@ boundaries – no content on intimate matters or matters of femininity.
 | Server | `src/` (Node 22, Express 5, ESM) | Deployed on Render free tier: https://michtavim-larebbe.onrender.com (`render.yaml`, region Frankfurt, **no disk**) |
 | Letter source | `src/igrot/chabadlibrary.js` | Text API of chabadlibrary.org: `GET /books/api/main?path=<id>`; Rebbe's Igrot = section `1200000000`, 28 volumes, 11,062 letters. In-memory cache |
 | Catalog | `data/catalog.json` | All letter ids; rebuild with `npm run catalog` |
-| Opening the book | `src/igrot/openBook.js` | **Simulated** page: random point in a random letter (uniform per letter), page starts up to ~1 page before it; layout decides what fits. Page = spec `[v,i,n,s]` base64url → `/api/page/<spec>.png` is redrawn on demand (survives restarts). `turnPage` gives next/prev page (prev is refined iteratively) |
-| Page rendering | `src/render/bookPage.js` | `@napi-rs/canvas` (Skia handles RTL), font Frank Ruhl Libre (`assets/fonts`, OFL). PDFs = PNG pages via pdf-lib. `layout` also returns `boxes` (every drawn word with its offsets in the letter's page text); `GET /api/page/<spec>.png?hl=<letter id>:<start>-<end>,…` draws a marker (multiply blend) over those words – the app uses it to show the passages the explanation rests on |
+| Opening the book | `src/igrot/openBook.js` | As done by hand: a volume is picked (uniform over volumes), then a gap between two leaves (uniform), and the answer is the **spread** – the even printed page on the right, the odd one on the left – with the text cut where the printed pages cut it, drawn in our own layout with the printed page numbers. Specs (base64url, opaque to the client): spread `['s',v,evenPrinted]`, single mapped page `['m',v,pdfPage]`, simulated page `[v,i,n,s]` (fallback when a volume has no map or a letter's text no longer matches it; also old answers). `/api/page/<spec>.png` is redrawn on demand; `/next`, `/prev` turn spreads/pages; the PDF of a spread has two pages. The answer carries `sides` (the pages of the spread that have text) so narrow screens show one page at a time: `?side=right|left` on the spread's image gives that half |
+| Printed-page maps | `data/pages/vol-NN.json` (+ `.report.txt`), `src/igrot/pageMap.js`, `scripts/build-pages.mjs` | Built offline from the scanned volumes (PDF text layer, kept **out of git** on the owner's machine) by aligning each page's OCR text to the chabadlibrary text. Per PDF page: `printed` number and `segments` `{i, from, to}` (letter index in the volume, range in the letter's body text). A page may also list `notes` `[letterIndex, noteIndex]`: the editors' footnotes printed at its foot (maps with `footnotes: true`; each note is located by its own text among the letter's pages). Ids and offsets only, no letter text. All 28 volumes are mapped; some scans miss a few pages (see the reports) |
+| Page rendering | `src/render/bookPage.js` | `@napi-rs/canvas` (Skia handles RTL), font Frank Ruhl Libre (`assets/fonts`, OFL). PDFs = PNG pages via pdf-lib. A mapped page shrinks its text in steps until it fits, with the footnotes at its foot. `layout` also returns `boxes` (every drawn word with its offsets in the letter's page text); `GET /api/page/<spec>.png?hl=<letter id>:<start>-<end>,…` draws a marker (multiply blend) over those words – the app uses it to show the passages the explanation rests on |
 | AI | `src/ai/` | `index.js` picks provider: Gemini (`gemini.js`, `@google/genai`, model fallback chain, 40 s single attempt) or Claude (`explain.js`). Endpoints `POST /api/analysis`, `/api/analysis/followup`; server rebuilds the page text from the spec. Per-IP limit `AI_RATE_PER_HOUR`. The analysis also returns `sources` (verbatim quotes the explanation rests on); `src/highlights.js` finds them in the page text (`findQuote`, punctuation-insensitive, falls back to the longest run of words) → `highlights: [{ spec, id, r: [s,e,…] }]` (flat, Firestore-safe), stored on the answer. `stripForeignScript` removes Arabic-script characters from every AI text (light Gemini models mix them in); the prompts carry the same rule (`SCRIPT_RULE`). `/api/acronyms` gets the **sentence** the word stands in (`sentence`), not the page |
 | Letter-length learning | `src/igrot/lengths.js` | Records lengths of fetched letters to `LENGTHS_FILE` (lost on Render free – no disk). Meant for future length-weighted draw (not enabled) |
 | App updates | `src/appUpdate.js` | Latest GitHub Release `app-v<code>`; falls back to the releases-page redirect when the API is rate-limited |
@@ -42,7 +43,7 @@ boundaries – no content on intimate matters or matters of femininity.
 - Per-device only (localStorage `mlr-state-v4`): archived, locked, collapsed, read/unread. Not synced by design
 
 ## Key decisions (and why)
-- **hebrewbooks.org dropped**: it serves a Cloudflare bot challenge; we do not bypass it. chabadlibrary text instead → the page layout is simulated, not the printed one (UI says so).
+- **hebrewbooks.org is not accessed by the server**: it serves a Cloudflare bot challenge; we do not bypass it. The text comes from chabadlibrary; the printed page breaks come from maps built offline from scans the owner downloaded by hand. Scan images are never shown – pages are redrawn in our layout (UI says so).
 - **No explanation by default**: the user asked for analysis only on a one-time button press (saves free AI quota).
 - **Gemini first** (user's request, free tier for development). Free-tier data may be used by Google – flagged to the user as a privacy concern for real users.
 - Shared chats: contacts see letters/answers and chat/reply, but **cannot write to the Rebbe**; only the owner asks the AI.
@@ -54,6 +55,7 @@ npm test                 # unit/integration tests (node --test)
 npm run test:rules       # Firestore rules in the emulator (needs firebase-tools + Java)
 npm run build:web        # rebuild public/vendor/cloud.js after editing web/cloud.js
 npm run catalog          # rebuild data/catalog.json from chabadlibrary
+node scripts/build-pages.mjs --volume 9 --pdf <scan.pdf>   # rebuild one page map (needs the scanned PDF, local only)
 API_BASE_URL=https://michtavim-larebbe.onrender.com npm run apk   # local debug APK (Android SDK)
 ```
 - UI testing against emulators: set `localStorage['mlr-emulator']='1'`, then `window.__mlrSignInForTests(uid, name)`.
@@ -81,13 +83,15 @@ The keystore itself is **not** in git – the owner keeps it; losing it forces e
 `AI_RATE_PER_HOUR`, WhatsApp vars (empty). Free instance sleeps after ~15 min (first request ~1 min).
 
 ## Open items
-- Verify with the owner: authorized domain added, authorized domain added, Android fingerprints added
+- Verify with the owner: authorized domain added, Android fingerprints added
   (the downloaded `google-services.json` had no Android OAuth client yet), native sign-in tested on a phone.
 - Not yet verified on a real phone: keyboard insets, biometric prompt, share sheet, swipe, App Links.
 - Hold-to-record / pull-up lock, letter lock, in-chat search, date search, Aramaic popover, sounds: tested in headless Chromium (mouse, fake AI), not yet on a real phone. The Aramaic tap detection is a heuristic (false hits possible; the tools-bar button is the fallback).
 - Photo letters and voice letters: tested in headless Chromium with a fake AI and fake microphone, not yet on a real phone (camera chooser, mic permission, real Gemini reading of a printed page).
 - Light Gemini models sometimes mix in wrong-script characters; consider a stronger model or Claude for production.
-- Length-weighted draw (data being collected), persistent disk on Render, WhatsApp setup, Play Store release build.
+- Page maps: pages missing from some scans are shown as blank facing pages; maps built before footnote placement (no `footnotes: true`) show pages without footnotes until regenerated; the author's own notes at the end of a letter stay with its last page; volumes beyond 28 have no text source in the catalog.
+- Before a public release: written permission from Kehot for the letters' text (the printed volumes reserve all rights).
+- Persistent disk on Render, WhatsApp setup, Play Store release build. (`lengths.js` is no longer needed for the draw.)
 - Answers saved before the spec change (`/api/answers/...`) cannot be redrawn or paged.
 - Pinch zoom, swipe-to-reply, long-press selection, the tools bar on text selection and the lightbox side taps were tested in headless Chromium (scratch server with fake letters + fake AI), not yet on a real phone.
 - The AI highlights depend on the model quoting the page verbatim; `sourcesFound`/`sourcesTotal` show how many quotes were located.

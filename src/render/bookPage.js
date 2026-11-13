@@ -21,8 +21,21 @@ const STYLE = {
   text: { size: 30, align: 'right', after: 10, indent: 30 },
   signature: { size: 30, bold: true, align: 'left', before: 6, after: 14 },
   note: { size: 22, align: 'right', after: 6, color: MUTED },
+  // footnotes at the foot of a page: the number of the letter they belong to, then the notes
+  footHead: { size: 20, bold: true, align: 'center', before: 6, after: 2, color: MUTED },
+  foot: { size: 21, align: 'right', after: 3, indent: 24, color: MUTED },
 };
+const FOOT_GAP = 26; // between the text and the rule above the footnotes
 const LINE = 1.55;
+
+/** A style with its sizes multiplied by `k` (used to fit a page that holds more text). */
+const scaled = (style, k) => (k === 1 ? style : {
+  ...style,
+  size: style.size * k,
+  before: (style.before || 0) * k,
+  after: (style.after || 0) * k,
+  indent: (style.indent || 0) * k,
+});
 
 /** Breaks a block into lines; each line also lists its words (joined by single spaces in `text`). */
 function wrap(ctx, text, width, indent) {
@@ -75,9 +88,13 @@ function newCanvas(header) {
   ctx.fillStyle = MUTED;
   ctx.font = '24px FrankRuhl';
   ctx.textAlign = 'right';
-  ctx.fillText(header.right, PAGE.width - PAGE.side, 84);
+  if (header.right) ctx.fillText(header.right, PAGE.width - PAGE.side, 84);
   ctx.textAlign = 'left';
-  ctx.fillText(header.left, PAGE.side, 84);
+  if (header.left) ctx.fillText(header.left, PAGE.side, 84);
+  if (header.center) {
+    ctx.textAlign = 'center';
+    ctx.fillText(header.center, PAGE.width / 2, 84);
+  }
   ctx.strokeStyle = RULE;
   ctx.lineWidth = 1.5;
   ctx.beginPath();
@@ -91,16 +108,57 @@ function newCanvas(header) {
  * Lays out a flow of blocks onto pages.
  * @param {{ kind: string, text: string, letter: number, continued?: boolean }[]} flow
  *   blocks in reading order; `letter` is an index the caller uses to track what was shown.
- * @param {{ header: {right: string, left: string}, maxPages?: number, footer?: (i: number, n: number) => string }} opts
+ * @param {{ header: {right?: string, left?: string, center?: string}, maxPages?: number, footer?: (i: number, n: number) => string, scale?: number, footnotes?: object[] }} opts
+ *   `scale` multiplies all text sizes (1 by default). `footnotes` (blocks of kind footHead / foot)
+ *   are drawn at the foot of the first page, under a short rule; use them with maxPages 1.
+ *   The result's `notesFit` is false when they take more than the page can give.
  * @returns {{ pages: Buffer[], shown: Map<number, { text: string, complete: boolean }>,
  *   boxes: { letter: number, page: number, s: number, e: number, x: number, y: number, w: number, h: number }[] }}
  *   `shown` holds, per letter index, the text that made it onto the pages and whether
  *   all of that letter's blocks in the flow fit. `boxes` places every drawn word on its page,
  *   with its offsets (s, e) inside that letter's shown text – for highlighting on the image.
  */
-export function layout(flow, { header, maxPages = Infinity, footer }) {
+/** Wraps the footnotes and measures them, so the text above can stop short of them. */
+function measureFootnotes(ctx, footnotes, scale, width) {
+  const rows = [];
+  let height = 0;
+  footnotes.forEach((block, k) => {
+    const s = scaled(STYLE[block.kind] || STYLE.foot, scale);
+    ctx.font = `${s.size}px ${s.bold ? 'FrankRuhlBold' : 'FrankRuhl'}`;
+    const lh = s.size * 1.4;
+    if (k > 0) height += s.before || 0;
+    for (const line of wrap(ctx, block.text, width, s.indent || 0)) {
+      rows.push({ text: line.text, s, y: height, indent: line.first ? (s.indent || 0) : 0 });
+      height += lh;
+    }
+    height += s.after || 0;
+  });
+  return { rows, height };
+}
+
+function drawFootnotes(ctx, notes, top) {
+  ctx.strokeStyle = RULE;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(PAGE.width - PAGE.side, top - FOOT_GAP / 2);
+  ctx.lineTo(PAGE.width - PAGE.side - 150, top - FOOT_GAP / 2);
+  ctx.stroke();
+  for (const row of notes.rows) {
+    ctx.font = `${row.s.size}px ${row.s.bold ? 'FrankRuhlBold' : 'FrankRuhl'}`;
+    ctx.fillStyle = row.s.color || INK;
+    if (row.s.align === 'center') {
+      ctx.textAlign = 'center';
+      ctx.fillText(row.text, PAGE.width / 2, top + row.y + row.s.size);
+    } else {
+      ctx.textAlign = 'right';
+      ctx.fillText(row.text, PAGE.width - PAGE.side - row.indent, top + row.y + row.s.size);
+    }
+  }
+}
+
+export function layout(flow, { header, maxPages = Infinity, footer, scale = 1, footnotes }) {
   const width = PAGE.width - PAGE.side * 2;
-  const bottom = PAGE.height - PAGE.bottom;
+  let bottom = PAGE.height - PAGE.bottom;
   const pages = [];
   const shown = new Map();
   const boxes = [];
@@ -110,6 +168,13 @@ export function layout(flow, { header, maxPages = Infinity, footer }) {
   let page = newCanvas(header);
   let y = PAGE.top;
   let full = false;
+  // footnotes stand at the foot of the (single) page; the text gets the room above them
+  let notes = null;
+  if (footnotes?.length) {
+    notes = measureFootnotes(page.ctx, footnotes, scale, width);
+    bottom -= notes.height + FOOT_GAP;
+    drawFootnotes(page.ctx, notes, bottom + FOOT_GAP);
+  }
 
   const nextPage = () => {
     pages.push(page.canvas);
@@ -121,7 +186,7 @@ export function layout(flow, { header, maxPages = Infinity, footer }) {
 
   for (const block of flow) {
     if (full) break;
-    const s = STYLE[block.kind] || STYLE.text;
+    const s = scaled(STYLE[block.kind] || STYLE.text, scale);
     const { ctx } = page;
     ctx.font = `${s.size}px ${s.bold ? 'FrankRuhlBold' : 'FrankRuhl'}`;
     const lh = s.size * LINE;
@@ -185,7 +250,7 @@ export function layout(flow, { header, maxPages = Infinity, footer }) {
     c.fillText(text, PAGE.width / 2, PAGE.height - 50);
   });
 
-  return { pages: pages.map((c) => c.toBuffer('image/png')), shown, boxes };
+  return { pages: pages.map((c) => c.toBuffer('image/png')), shown, boxes, notesFit: !notes || bottom > PAGE.top + 200 };
 }
 
 const MARKER = '#ffe66b';
@@ -216,6 +281,47 @@ export function mergeBoxes(boxes) {
     } else out.push({ ...b });
   }
   return out;
+}
+
+/** A page with no text: just the paper and its header, with an optional short note in the middle. */
+export function blankPage(header, note = '') {
+  const { canvas, ctx } = newCanvas(header);
+  if (note) {
+    ctx.font = '26px FrankRuhl';
+    ctx.fillStyle = MUTED;
+    ctx.textAlign = 'center';
+    ctx.fillText(note, PAGE.width / 2, PAGE.height / 2);
+  }
+  return canvas.toBuffer('image/png');
+}
+
+/**
+ * The open book: two page images side by side, the right-hand page on the right (Hebrew book),
+ * with the shadow of the fold between them.
+ */
+export async function spreadImage(rightPng, leftPng) {
+  const canvas = createCanvas(PAGE.width * 2, PAGE.height);
+  const ctx = canvas.getContext('2d');
+  const [right, left] = await Promise.all([loadImage(rightPng), loadImage(leftPng)]);
+  ctx.drawImage(left, 0, 0);
+  ctx.drawImage(right, PAGE.width, 0);
+  const fold = 70;
+  for (const [x0, x1] of [[PAGE.width - fold, PAGE.width], [PAGE.width + fold, PAGE.width]]) {
+    const shade = ctx.createLinearGradient(x0, 0, x1, 0);
+    shade.addColorStop(0, 'rgba(60, 45, 20, 0)');
+    shade.addColorStop(1, 'rgba(60, 45, 20, 0.22)');
+    ctx.fillStyle = shade;
+    ctx.fillRect(Math.min(x0, x1), 0, fold, PAGE.height);
+  }
+  return canvas.toBuffer('image/png');
+}
+
+/** One page of a spread image: its right-hand or left-hand half. */
+export async function spreadSide(spreadPng, side) {
+  const img = await loadImage(spreadPng);
+  const canvas = createCanvas(PAGE.width, PAGE.height);
+  canvas.getContext('2d').drawImage(img, side === 'right' ? -PAGE.width : 0, 0);
+  return canvas.toBuffer('image/png');
 }
 
 /** Wraps PNG pages into a PDF (A4 width, page proportions kept). */

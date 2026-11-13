@@ -99,9 +99,10 @@ export function createApp(deps = {}) {
   };
   // Pages are addressed by their spec, so these links keep working after restarts.
   // ?hl=<letter id>:<start>-<end>,… marks those words of the page text, as with a highlighter.
+  // ?side=right|left gives one page of a spread.
   app.get('/api/page/:spec.png', async (req, res, next) => {
     try {
-      const png = await getPageImage(req.params.spec, deps.pages, typeof req.query.hl === 'string' ? req.query.hl : '');
+      const png = await getPageImage(req.params.spec, deps.pages, typeof req.query.hl === 'string' ? req.query.hl : '', typeof req.query.side === 'string' ? req.query.side : '');
       if (!png) return res.sendStatus(404);
       res.type('image/png').set('Cache-Control', 'public, max-age=604800').send(png);
     } catch (e) { next(e); }

@@ -1,9 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import { loadCatalog } from './igrot/catalog.js';
+import { attachPageMaps, hebrewNumeral, loadPageMaps, spreadPages } from './igrot/pageMap.js';
 import { openBook, renderSpec, decodeSpec, encodeSpec, turnPage, specFrom } from './igrot/openBook.js';
 import { findLetter, findVolume } from './igrot/letterNumbers.js';
 import { fetchLetter } from './igrot/chabadlibrary.js';
-import { layout, pngsToPdf, drawHighlights } from './render/bookPage.js';
+import { layout, pngsToPdf, drawHighlights, spreadSide } from './render/bookPage.js';
 import { findQuote, stripForeignScript, parseHighlights } from './highlights.js';
 import { analyzePage, followUp, translateTexts, expandAcronyms, readPagePhoto, transcribeAudio, summarizeLetter, translateAramaic } from './ai/index.js';
 
@@ -15,7 +16,7 @@ const pageCache = {
   set(k, v) { this.map.set(k, v); if (this.map.size > this.max) this.map.delete(this.map.keys().next().value); },
 };
 let catalog;
-const getCatalog = () => (catalog ??= loadCatalog());
+const getCatalog = () => (catalog ??= attachPageMaps(loadCatalog(), loadPageMaps()));
 
 /** The drawn page (PNG + where every word sits), drawn again if needed. null if the spec is invalid. */
 async function pageData(specStr, deps = {}) {
@@ -25,15 +26,29 @@ async function pageData(specStr, deps = {}) {
   const spec = decodeSpec(specStr, volumes);
   if (!spec) return null;
   const page = await renderSpec(volumes, spec, deps);
-  return remember(page);
+  return page ? remember(page) : null; // a mapped page that no longer matches its letters cannot be drawn
 }
 const remember = (page) => { const data = { png: page.png, boxes: page.boxes || [] }; pageCache.set(page.spec, data); return data; };
 
 /**
  * PNG of the page described by `spec`. With `hl` ("<letter id>:<start>-<end>,…;…", offsets in the
  * letters' page text) the quoted words are marked on the image, as with a highlighter.
+ * With `side` ('right' or 'left') and a spread, only that page of the spread is returned.
  */
-export async function getPageImage(specStr, deps = {}, hl = '') {
+export async function getPageImage(specStr, deps = {}, hl = '', side = '') {
+  const whole = await wholeImage(specStr, deps, hl);
+  if (!whole || (side !== 'right' && side !== 'left')) return whole;
+  const volumes = deps.volumes || getCatalog();
+  if (decodeSpec(specStr, volumes)?.e === undefined) return whole;
+  const key = `${specStr}?${hl}#${side}`;
+  const cached = pageCache.get(key);
+  if (cached) return cached.png;
+  const png = await spreadSide(whole, side);
+  pageCache.set(key, { png, boxes: [] });
+  return png;
+}
+
+async function wholeImage(specStr, deps, hl) {
   const data = await pageData(specStr, deps);
   if (!data) return null;
   const wanted = hl ? parseHighlights(hl) : null;
@@ -48,6 +63,24 @@ export async function getPageImage(specStr, deps = {}, hl = '') {
   return png;
 }
 
+/**
+ * The pages of a spread that have text, right-hand page first – for showing one page at a time on a
+ * narrow screen (the client asks for the spread's image with `side=`). Undefined when not a spread.
+ */
+function sidesOf(volumes, spec) {
+  if (spec?.e === undefined) return undefined;
+  const pair = spreadPages(volumes[spec.v], spec.e);
+  return [['right', pair.right], ['left', pair.left]].filter(([, page]) => page).map(([side, page]) => ({ side, printed: page.printed }));
+}
+/** What a spread adds to the links of a page: its pages one by one, and whether footnotes are shown. */
+function spreadInfo(volumes, specStr) {
+  const spec = decodeSpec(specStr, volumes);
+  const sides = sidesOf(volumes, spec);
+  return sides ? { sides, footnotes: !!volumes[spec.v].pageMap?.footnotes } : {};
+}
+/** "עמ' רלו–רלז" for a spread, from the printed numbers of its pages. */
+const pagesLabel = (sides) => (sides?.length ? `עמ' ${sides.map((s) => hebrewNumeral(s.printed)).join('–')}` : '');
+
 /** The letters of a drawn page, as the clients see them: the text on the page (same as the image) and the whole letter. */
 const lettersOut = (page) => page.letters.filter((l) => l.pageText.trim()).map((l) => ({
   id: l.id,
@@ -59,7 +92,8 @@ const lettersOut = (page) => page.letters.filter((l) => l.pageText.trim()).map((
   viewerUrl: l.viewerUrl,
   pdfPath: `/api/igrot/${l.id}.pdf`,
 }));
-const titleOf = (page, letters) => `אגרות קודש, ${page.volumeHeading}, אגרות ${letters.map((l) => l.number).join(', ')}`;
+const titleOf = (page, letters) => ['אגרות קודש', page.volumeHeading, pagesLabel(page.sides?.filter((side) => side.spec)), `אגרות ${letters.map((l) => l.number).join(', ')}`]
+  .filter(Boolean).join(', ');
 
 /**
  * The neighbouring page (dir 1 = next, -1 = previous) with its links and the text on it,
@@ -72,19 +106,28 @@ export async function getTurnedPage(specStr, dir, deps = {}) {
   const next = await turnPage(volumes, spec, dir, deps);
   if (!next) return null;
   const page = await renderSpec(volumes, next, deps);
+  if (!page) return undefined;
   remember(page);
   const letters = lettersOut(page);
   return {
     spec: page.spec, imagePath: `/api/page/${page.spec}.png`, pdfPath: `/api/page/${page.spec}.pdf`,
-    volumeHeading: page.volumeHeading, title: titleOf(page, letters), letters,
+    volumeHeading: page.volumeHeading, title: titleOf(page, letters), letters, ...spreadInfo(volumes, page.spec),
   };
 }
 
 export async function getPagePdf(specStr, deps = {}) {
-  const png = await getPageImage(specStr, deps);
-  if (!png) return null;
   const volumes = deps.volumes || getCatalog();
-  return pngsToPdf([png], `אגרות קודש, ${volumes[decodeSpec(specStr, volumes).v].heading}`);
+  const spec = decodeSpec(specStr, volumes);
+  if (!spec) return null;
+  // a spread becomes two PDF pages (right-hand page first), each at full size
+  const sides = sidesOf(volumes, spec);
+  const pngs = [];
+  for (const side of sides ? sides.map((s) => s.side) : ['']) {
+    const png = await getPageImage(specStr, deps, '', side);
+    if (!png) return null;
+    pngs.push(png);
+  }
+  return pngsToPdf(pngs, ['אגרות קודש', volumes[spec.v].heading, pagesLabel(sides)].filter(Boolean).join(', '));
 }
 
 /** The full text of one letter, rendered on as many pages as it needs. */
@@ -137,6 +180,8 @@ export async function answerLetter({ letter, replyLanguage }, deps = {}) {
     // stable links: the page can always be drawn again from its spec
     imagePath: `/api/page/${page.spec}.png`,
     pdfPath: `/api/page/${page.spec}.pdf`,
+    // a spread: its pages one by one (right-hand page first), for narrow screens
+    ...spreadInfo(volumes, page.spec),
     letters,
     ...ai,
   };
@@ -238,9 +283,11 @@ async function pageForAi(specStr, deps) {
   const spec = decodeSpec(specStr, volumes);
   if (!spec) throw new Error('PAGE_NOT_FOUND');
   const page = await renderSpec(volumes, spec, deps);
+  if (!page) throw new Error('PAGE_NOT_FOUND');
   remember(page);
   const letters = page.letters.filter((l) => l.pageText.trim());
-  return { spec: page.spec, letters, text: pageAsText(letters), title: `אגרות קודש, ${page.volumeHeading}, אגרות ${letters.map((l) => l.number).join(', ')}` };
+  const intro = page.sides ? 'המכתב הונח בין שני עמודים פונים של הספר. להלן הטקסט של שניהם ברצף: העמוד הימני ואחריו השמאלי.\n\n' : '';
+  return { spec: page.spec, letters, text: intro + pageAsText(letters), title: titleOf(page, letters) };
 }
 
 /**

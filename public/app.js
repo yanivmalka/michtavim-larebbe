@@ -289,7 +289,8 @@ function pagerOf(entry) {
   if (p) return p;
   const a = entry.a;
   const spec = specOf(a.imagePath);
-  const page = { spec, imagePath: a.imagePath, pdfPath: a.pdfPath || (spec ? `/api/page/${spec}.pdf` : null), letters: a.letters || [], title: a.title, volumeHeading: a.volumeHeading };
+  // `sides`: the answer is a spread (two facing pages); its pages that have text, right-hand page first
+  const page = { spec, imagePath: a.imagePath, pdfPath: a.pdfPath || (spec ? `/api/page/${spec}.pdf` : null), letters: a.letters || [], title: a.title, volumeHeading: a.volumeHeading, sides: a.sides };
   p = { pages: [page], at: 0, opened: 0, busy: false, onChange: null };
   pagers.set(entry.id, p);
   return p;
@@ -304,9 +305,10 @@ function hlParam(entry, spec) {
   return hs.map((h) => `${h.id}:${pairsOf(h.r).map(([s, e]) => `${s}-${e}`).join(',')}`).join(';');
 }
 /** The image of a page; when it is the page the explanation was made on, its passages are marked. */
-function pageImageUrl(entry, page) {
+function pageImageUrl(entry, page, side = '') {
   const hl = entry ? hlParam(entry, page.spec) : '';
-  return `${API}${page.imagePath}${hl ? `?hl=${encodeURIComponent(hl)}` : ''}`;
+  const query = [hl && `hl=${encodeURIComponent(hl)}`, side && `side=${side}`].filter(Boolean).join('&'); // side: one page of a spread
+  return `${API}${page.imagePath}${query ? `?${query}` : ''}`;
 }
 /** When another page is shown than the one with the explanation's marks: says where they are. */
 function hlNote(entry, pager) {
@@ -319,6 +321,11 @@ function hlNote(entry, pager) {
 function whereLabel(p) {
   const offset = p.at - p.opened;
   if (p.busy) return 'טוען…';
+  if (currentPage(p).sides) { // a spread: two facing pages
+    if (offset === 0) return 'הכפולה שנפתחה';
+    if (Math.abs(offset) === 1) return offset > 0 ? 'הכפולה הבאה' : 'הכפולה הקודמת';
+    return offset > 0 ? `${offset} כפולות קדימה` : `${-offset} כפולות אחורה`;
+  }
   if (offset === 0) return 'העמוד שנפתח';
   if (Math.abs(offset) === 1) return offset > 0 ? 'העמוד הבא' : 'העמוד הקודם';
   return offset > 0 ? `${offset} עמודים קדימה` : `${-offset} עמודים אחורה`;
@@ -391,20 +398,33 @@ async function turnPager(p, dir) {
 }
 
 // ---------- full-screen image, with pinch zoom ----------
-const lb = { pager: null, entry: null, scale: 1, fitWidth: 0 };
+// A spread is shown whole on a wide screen. On a narrow one its pages are shown one at a time,
+// the right-hand page first, as they are read: `side` is the page shown, `spec` the spread it
+// belongs to, and `enter` the direction the spread was reached from.
+const lb = { pager: null, entry: null, scale: 1, fitWidth: 0, side: 0, spec: null, enter: 0 };
 const lbScroll = () => $('lightbox').querySelector('.lightbox-scroll');
+const narrowScreen = () => window.innerWidth < window.innerHeight * 1.15;
+/** The pages of the spread to step through one by one, or null when the page is shown whole. */
+const lbSides = (page) => (page?.sides?.length && narrowScreen() ? page.sides : null);
 
 function paintLightbox() {
   const p = lb.pager;
   if (!p) return;
   const img = $('lightbox-img');
   const page = currentPage(p);
-  const src = pageImageUrl(lb.entry, page);
+  const sides = lbSides(page);
+  if (page.spec !== lb.spec) { // another spread: from its first page going forward, from its last going back
+    lb.side = lb.enter < 0 ? Number.MAX_SAFE_INTEGER : 0;
+    lb.spec = page.spec; lb.enter = 0;
+  }
+  if (sides) lb.side = Math.max(0, Math.min(lb.side, sides.length - 1));
+  const src = pageImageUrl(lb.entry, page, sides ? sides[lb.side].side : '');
   if (img.getAttribute('src') !== src) { setLightboxScale(1); img.src = src; lbScroll().scrollTo(0, 0); }
   const note = hlNote(lb.entry, p);
-  $('lb-where').textContent = note ? `${whereLabel(p)} · ${note}` : whereLabel(p);
-  $('lb-prev').disabled = p.busy || atFirst(p);
-  $('lb-next').disabled = p.busy || atLast(p);
+  const where = sides && !p.busy ? `${whereLabel(p)} · ${sides[lb.side].side === 'right' ? 'עמוד ימין' : 'עמוד שמאל'}` : whereLabel(p);
+  $('lb-where').textContent = note ? `${where} · ${note}` : where;
+  $('lb-prev').disabled = p.busy || (atFirst(p) && (!sides || lb.side === 0));
+  $('lb-next').disabled = p.busy || (atLast(p) && (!sides || lb.side === sides.length - 1));
 }
 
 /**
@@ -434,6 +454,7 @@ function openLightbox(pager, alt, entry = null) {
   if (entry && isUnread(entry)) { setRead(entry); save(); }
   prefetchAround(pager);
   lb.pager = pager; lb.entry = entry; lb.scale = 1; lb.fitWidth = 0;
+  lb.side = 0; lb.spec = currentPage(pager).spec; lb.enter = 0;
   hideZoomBar(); hideAcronymPop();
   $('lightbox-img').alt = alt;
   $('lightbox-img').removeAttribute('src');
@@ -442,7 +463,15 @@ function openLightbox(pager, alt, entry = null) {
   paintLightbox();
   if (!isNativeApp) history.pushState({ lightbox: true }, ''); // browser "back" closes it
 }
-const turnLightbox = (dir) => lb.pager && turnPager(lb.pager, dir);
+function turnLightbox(dir) {
+  const p = lb.pager;
+  if (!p || p.busy) return;
+  const sides = lbSides(currentPage(p));
+  if (sides && lb.side + dir >= 0 && lb.side + dir < sides.length) { lb.side += dir; paintLightbox(); return; } // the other page of this spread
+  lb.enter = dir;
+  turnPager(p, dir);
+}
+window.addEventListener('resize', () => { if (!$('lightbox').hidden && lb.pager) paintLightbox(); }); // e.g. the phone was turned
 $('lb-prev').addEventListener('click', () => turnLightbox(-1));
 $('lb-next').addEventListener('click', () => turnLightbox(1));
 { // one finger on the page: to the right = next page (Hebrew book), to the left = previous; two fingers: zoom
@@ -700,7 +729,7 @@ function pageTextSection(entry, pager) {
   const where = el('span', { className: 'where' });
   const body = el('div', { className: 'letter-body page-text reading' });
   const box = el('details', { className: 'letters fold', open: !!entry.textOpen },
-    el('summary', {}, el('span', { className: 'sum-label', textContent: '📜 הטקסט שבעמוד' })),
+    el('summary', {}, el('span', { className: 'sum-label', textContent: entry.a.sides ? '📜 הטקסט שבכפולה' : '📜 הטקסט שבעמוד' })),
     el('div', { className: 'pager' }, prev, where, next), // RTL: first = right
     body);
   box.addEventListener('toggle', () => { entry.textOpen = box.open; save(); });
@@ -1282,7 +1311,7 @@ const shownUrls = new Set(); // marked page images that were already loaded once
 function answerBubble(entry) {
   const a = entry.a;
   const pager = pagerOf(entry);
-  const img = el('img', { className: 'page-img', alt: `עמוד מאגרות קודש, ${a.volumeHeading}`, loading: 'lazy' });
+  const img = el('img', { className: 'page-img', alt: `${a.sides ? 'שני עמודים פונים' : 'עמוד'} מאגרות קודש, ${a.volumeHeading}`, loading: 'lazy' });
   img.addEventListener('click', () => openLightbox(pager, img.alt, entry));
   img.addEventListener('error', () => pageWrap.replaceWith(el('div', { className: 'note', textContent: 'תמונת העמוד אינה זמינה עוד (נשמרת בשרת לזמן מוגבל). האגרות עצמן שמורות כאן למטה.' })));
   const pageWhere = el('div', { className: 'page-where' });
@@ -1313,7 +1342,7 @@ function answerBubble(entry) {
 
   const wrap = el('div', { className: 'fav-wrap' }, favPanel(entry));
   // the row: its label, "תרגם", the star – and the chevron at the left end (like every other row)
-  const summary = el('summary', {}, el('span', { className: 'more-label sum-label', textContent: a.explanation ? 'הסבר והטקסט שבעמוד' : 'ניתוח והטקסט שבעמוד' }), langSelect(entry));
+  const summary = el('summary', {}, el('span', { className: 'more-label sum-label', textContent: `${a.explanation ? 'הסבר והטקסט' : 'ניתוח והטקסט'} ${a.sides ? 'שבכפולה' : 'שבעמוד'}` }), langSelect(entry));
   const paintStar = () => { summary.querySelector('.star')?.remove(); summary.append(favStar(entry, () => { paintStar(); wrap.replaceChildren(favPanel(entry)); })); };
   paintStar();
   summary.querySelector('.lang-select').addEventListener('click', (e) => e.stopPropagation()); // inside a <summary>: do not open / close
@@ -1321,7 +1350,9 @@ function answerBubble(entry) {
     summary,
     analysisSection(entry),
     text.box,
-    el('div', { className: 'note', textContent: 'העמוד מורכב מהטקסט המקוון של אגרות הקודש, ועימודו אינו זהה לעימוד הספר המודפס. ההסבר הוא הצעה להבנה בלבד ואינו פסק הלכה; לשאלות מעשיות – יש להתייעץ עם רב. סימון טקסט פותח כלים: הדגשה, גודל טקסט, PDF ושיתוף.' }));
+    el('div', { className: 'note', textContent: `${a.sides
+      ? `המכתב הונח בין שני עמודים פונים של הספר. הטקסט המקוון של אגרות הקודש מחולק כאן לפי עמודי הספר המודפס, אך העיצוב אינו זהה לו${a.footnotes ? '' : ' והערות השוליים אינן מוצגות'}.`
+      : 'העמוד מורכב מהטקסט המקוון של אגרות הקודש, ועימודו אינו זהה לעימוד הספר המודפס.'} ההסבר הוא הצעה להבנה בלבד ואינו פסק הלכה; לשאלות מעשיות – יש להתייעץ עם רב. סימון טקסט פותח כלים: הדגשה, גודל טקסט, PDF ושיתוף.` }));
   more.open = !!entry.showMore;
   // the tags sit right under the row with the star, whether the row is open or closed
   const placeTags = () => { if (more.open) summary.after(wrap); else more.after(wrap); };

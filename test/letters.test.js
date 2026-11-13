@@ -69,8 +69,8 @@ const bookVolumes = [{ volume: 1, heading: 'כרך א', letters: [[11, 'א'], [1
 const fakeFetch = async (id) => ({ id, text: 'x', ...fakeLetters[id] });
 
 test('openBook lays out a page that can span the end of one letter and the start of the next', async () => {
-  // random(): pick letter ב, point at its start, go back far enough to start inside א
-  const seq = [0.4, 0, 0.5];
+  // random(): the only volume, then letter ב, point at its start, go back far enough to start inside א
+  const seq = [0, 0.4, 0, 0.5];
   const page = await openBook(bookVolumes, { random: () => seq.shift() ?? 0, fetchLetter: fakeFetch });
   assert.equal(page.png.subarray(1, 4).toString(), 'PNG');
   const nums = page.letters.map((l) => l.number);
@@ -96,7 +96,7 @@ test('POST /api/letters returns the page, its letters and serves image and PDFs'
   const app = createApp({
     volumes: bookVolumes,
     pages: { volumes: bookVolumes, fetchLetter: fakeFetch },
-    open: (vols, opts) => openBook(vols, { ...opts, random: (() => { const q = [0.4, 0, 0.5]; return () => q.shift() ?? 0; })(), fetchLetter: fakeFetch }),
+    open: (vols, opts) => openBook(vols, { ...opts, random: (() => { const q = [0, 0.4, 0, 0.5]; return () => q.shift() ?? 0; })(), fetchLetter: fakeFetch }),
   });
   const server = app.listen(0);
   const base = `http://127.0.0.1:${server.address().port}`;
