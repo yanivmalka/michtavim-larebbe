@@ -19,7 +19,7 @@ import { existsSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { fetchLetter } from '../src/igrot/chabadlibrary.js';
-import { bodyText, nearestWordStart } from '../src/igrot/pageMap.js';
+import { bodyText, nearestWordStart, notesOf } from '../src/igrot/pageMap.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -540,7 +540,67 @@ const round = (x, d = 2) => (x == null ? null : Math.round(x * 10 ** d) / 10 ** 
  * @param {string[]} p.pdfPages text of each PDF page, as lines
  * @param {number[][]} [p.pdfLineSizes] font size of each line of each page; with it, footnotes are dropped
  */
-export function buildVolumeMap({ volume, pdfName, letters, bodies, pdfPages, pdfLineSizes }) {
+export const NOTE_FOUND_FROM = 0.3; // share of a note's 5-grams that must be on a page to place it there
+
+/**
+ * Places the editors' footnotes on the pages. In print each note stands at the foot of the page
+ * that holds the words it refers to; in the online text all the notes of a letter come after it.
+ * A note is looked for, by its own text, among the pages its letter is on, and never before the
+ * note that precedes it. A note that is not found (the scan lacks its page, or OCR lost it) goes
+ * with the note before it, or on the letter's first page.
+ * @param {string[]} pageTexts full text of every PDF page (with the footnotes)
+ * @param {number[][]} letterPages for every letter, the PDF pages (1-based, in order) it is on
+ * @param {string[][]} notes for every letter, the text of its notes
+ * @returns {{ byPage: Map<number, [number, number][]>, found: number, total: number }}
+ *   byPage: PDF page number → [letter index, note index] pairs in order
+ */
+export function placeNotes(pageTexts, letterPages, notes) {
+  const gramsOf = (text) => {
+    const n = normalizeHebrew(text).norm;
+    const g = new Set();
+    for (let i = 0; i + 5 <= n.length; i++) g.add(n.slice(i, i + 5));
+    return g;
+  };
+  const pageGrams = new Map();
+  const gramsOfPage = (pdf) => {
+    if (!pageGrams.has(pdf)) pageGrams.set(pdf, gramsOf(pageTexts[pdf - 1] ?? ''));
+    return pageGrams.get(pdf);
+  };
+  const byPage = new Map();
+  let found = 0;
+  let total = 0;
+  notes.forEach((list, k) => {
+    const pages = letterPages[k] ?? [];
+    if (!list?.length || !pages.length) return;
+    let at = 0; // index in `pages` of the page the previous note is on
+    list.forEach((text, j) => {
+      total += 1;
+      const grams = [...gramsOf(text)];
+      let best = -1;
+      let bestScore = 0;
+      if (grams.length >= 3) {
+        for (let c = at; c < pages.length; c++) {
+          const onPage = gramsOfPage(pages[c]);
+          const score = grams.filter((g) => onPage.has(g)).length / grams.length;
+          if (score > bestScore) {
+            bestScore = score;
+            best = c;
+          }
+        }
+      }
+      if (best >= 0 && bestScore >= NOTE_FOUND_FROM) {
+        at = best;
+        found += 1;
+      }
+      const pdf = pages[at];
+      if (!byPage.has(pdf)) byPage.set(pdf, []);
+      byPage.get(pdf).push([k, j]);
+    });
+  });
+  return { byPage, found, total };
+}
+
+export function buildVolumeMap({ volume, pdfName, letters, bodies, pdfPages, pdfLineSizes, notes }) {
   const stream = buildStream(bodies);
   const streamCodes = trigramCodes(stream.norm);
 
@@ -677,8 +737,27 @@ export function buildVolumeMap({ volume, pdfName, letters, bodies, pdfPages, pdf
     const len = stream.letterLen[k];
     const cov = len ? covered / len : 0;
     const status = len === 0 ? 'empty' : cov >= LETTER_OK_FROM ? 'ok' : cov >= LETTER_PARTIAL_FROM ? 'partial' : 'missing';
-    return { i: k, id, heading, bodyLength: bodies[k].length, pages: [...new Set(pdfPagesOf)], coverage: round(cov), status };
+    return {
+      i: k, id, heading, bodyLength: bodies[k].length, ...(notes && { notes: notes[k]?.length ?? 0 }),
+      pages: [...new Set(pdfPagesOf)], coverage: round(cov), status,
+    };
   });
+  // The editors' footnotes, each on the page that prints it.
+  let notesPlaced = null;
+  if (notes) {
+    const letterPages = letters.map(() => []);
+    for (const rec of pages) {
+      for (const seg of rec.segments) {
+        if (seg.to > seg.from && letterPages[seg.i].at(-1) !== rec.pdf) letterPages[seg.i].push(rec.pdf);
+      }
+    }
+    notesPlaced = placeNotes(pdfPages, letterPages, notes);
+    for (const rec of pages) {
+      const list = notesPlaced.byPage.get(rec.pdf);
+      if (list) rec.notes = list;
+    }
+  }
+
   const longRange = pages.filter((p) => p._long === 'unknown').map((p) => p.pdf);
   const longNotes = pages.filter((p) => p._long === 'notes').map((p) => p.pdf);
   for (const rec of pages) {
@@ -689,12 +768,15 @@ export function buildVolumeMap({ volume, pdfName, letters, bodies, pdfPages, pdf
   const unconfirmed = pages.filter(
     (p) => p.matched && !(p.printed != null && p.headerNumbers.includes(p.printed)),
   ).length;
-  const report = makeReport({ volume, pdfName, pages, letterRecs, offset, unconfirmed, offsetChanges, longRange, longNotes });
+  const report = makeReport({
+    volume, pdfName, pages, letterRecs, offset, unconfirmed, offsetChanges, longRange, longNotes, notesPlaced,
+  });
   const map = {
     volume,
     pdf: pdfName,
     pdfPages: pdfPages.length,
     printedOffset: offset,
+    footnotes: !!notes,
     offsetChanges,
     letters: letterRecs,
     pages,
@@ -712,7 +794,9 @@ function ranges(nums) {
   return out.map(([a, b]) => (a === b ? `${a}` : `${a}–${b}`)).join(', ') || '—';
 }
 
-function makeReport({ volume, pdfName, pages, letterRecs, offset, unconfirmed, offsetChanges = [], longRange = [], longNotes = [] }) {
+function makeReport({
+  volume, pdfName, pages, letterRecs, offset, unconfirmed, offsetChanges = [], longRange = [], longNotes = [], notesPlaced = null,
+}) {
   const withNumber = pages.filter((p) => p.matched && p.headerNumbers.length > 0).length;
   const agree = withNumber - unconfirmed;
   const matched = pages.filter((p) => p.matched);
@@ -744,6 +828,7 @@ function makeReport({ volume, pdfName, pages, letterRecs, offset, unconfirmed, o
       : `  אחרי עמוד PDF ${c.afterPdf} (מודפס ${c.afterPrinted}) ההיסט עולה מ-${c.from} ל-${c.to}: בסריקה יש עמודים בלי מספר, או דילוג במספור.`)),
     `עמודים שהטווח שלהם ארוך בהרבה מהטקסט שבעמוד (ייתכן שחסר עמוד אחריהם), לבדיקה: ${longRange.length} (${ranges(longRange)})`,
     `עמודים שהטווח שלהם ארוך, כנראה כי האגרת מסתיימת בהערות (בדפוס הן הערות שוליים בעמודי האגרת): ${longNotes.length} (${ranges(longNotes)})`,
+    ...(notesPlaced ? [`הערות שוליים של העורכים: ${notesPlaced.total}. אותרו בעמוד שלהן: ${notesPlaced.found}. שויכו לפי סדר (לא אותרו): ${notesPlaced.total - notesPlaced.found}.`] : []),
     '',
   ];
   if (partial.length || missing.length) {
@@ -757,27 +842,44 @@ function makeReport({ volume, pdfName, pages, letterRecs, offset, unconfirmed, o
 
 // ---------- CLI ----------
 
-async function loadBodies(letters, { fetchFn = fetch, cacheDir = join(ROOT, '.cache', 'letters') } = {}) {
-  await mkdir(cacheDir, { recursive: true });
-  const bodies = [];
-  for (const [id] of letters) {
-    const file = join(cacheDir, `${id}.json`);
-    let body;
-    if (existsSync(file)) {
-      body = JSON.parse(await readFile(file, 'utf8'));
-    } else {
-      try {
-        const letter = await fetchLetter(id, fetchFn);
-        body = bodyText(letter.blocks);
-      } catch (err) {
-        console.warn(`אגרת ${id}: לא נטענה (${err.message}), תיחשב כריקה.`);
-        body = '';
-      }
-      await writeFile(file, JSON.stringify(body));
+/**
+ * The body text and the editors' notes of every letter, in volume order. Both are cached under
+ * .cache (git-ignored), so a re-run does not fetch again. A letter that cannot be fetched counts
+ * as empty.
+ */
+async function loadLetters(letters, { fetchFn = fetch, cacheRoot = join(ROOT, '.cache') } = {}) {
+  const bodyDir = join(cacheRoot, 'letters');
+  const notesDir = join(cacheRoot, 'notes');
+  await mkdir(bodyDir, { recursive: true });
+  await mkdir(notesDir, { recursive: true });
+  const bodies = new Array(letters.length);
+  const notes = new Array(letters.length);
+  const loadOne = async (k) => {
+    const [id] = letters[k];
+    const bodyFile = join(bodyDir, `${id}.json`);
+    const notesFile = join(notesDir, `${id}.json`);
+    if (existsSync(bodyFile) && existsSync(notesFile)) {
+      bodies[k] = JSON.parse(await readFile(bodyFile, 'utf8'));
+      notes[k] = JSON.parse(await readFile(notesFile, 'utf8'));
+      return;
     }
-    bodies.push(body);
-  }
-  return bodies;
+    try {
+      const letter = await fetchLetter(id, fetchFn);
+      bodies[k] = bodyText(letter.blocks);
+      notes[k] = notesOf(letter.blocks);
+    } catch (err) {
+      console.warn(`אגרת ${id}: לא נטענה (${err.message}), תיחשב כריקה.`);
+      bodies[k] = '';
+      notes[k] = [];
+    }
+    await writeFile(bodyFile, JSON.stringify(bodies[k]));
+    await writeFile(notesFile, JSON.stringify(notes[k]));
+  };
+  const queue = letters.map((_, k) => k);
+  await Promise.all(Array.from({ length: 4 }, async () => {
+    while (queue.length) await loadOne(queue.shift());
+  }));
+  return { bodies, notes };
 }
 
 function parseArgs(argv) {
@@ -802,7 +904,7 @@ async function main() {
   if (!vol) throw new Error(`כרך ${volume} לא נמצא בקטלוג`);
 
   console.log(`טוען ${vol.letters.length} אגרות מהקטלוג...`);
-  const bodies = await loadBodies(vol.letters);
+  const { bodies, notes } = await loadLetters(vol.letters);
   console.log(`קורא את ${basename(pdfPath)}...`);
   const { pages: pdfPages, lineSizes: pdfLineSizes } = await extractPageRows(pdfPath);
 
@@ -811,6 +913,7 @@ async function main() {
     pdfName: basename(pdfPath),
     letters: vol.letters,
     bodies,
+    notes,
     pdfPages,
     pdfLineSizes,
   });

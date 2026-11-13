@@ -21,7 +21,11 @@ const STYLE = {
   text: { size: 30, align: 'right', after: 10, indent: 30 },
   signature: { size: 30, bold: true, align: 'left', before: 6, after: 14 },
   note: { size: 22, align: 'right', after: 6, color: MUTED },
+  // footnotes at the foot of a page: the number of the letter they belong to, then the notes
+  footHead: { size: 20, bold: true, align: 'center', before: 6, after: 2, color: MUTED },
+  foot: { size: 21, align: 'right', after: 3, indent: 24, color: MUTED },
 };
+const FOOT_GAP = 26; // between the text and the rule above the footnotes
 const LINE = 1.55;
 
 /** A style with its sizes multiplied by `k` (used to fit a page that holds more text). */
@@ -85,14 +89,54 @@ function newCanvas(header) {
  * @param {{ kind: string, text: string, letter: number, continued?: boolean }[]} flow
  *   blocks in reading order; `letter` is an index the caller uses to track what was shown.
  * @param {{ header: {right?: string, left?: string, center?: string}, maxPages?: number, footer?: (i: number, n: number) => string, scale?: number }} opts
- *   `scale` multiplies all text sizes (1 by default).
+ *   `scale` multiplies all text sizes (1 by default). `footnotes` (blocks of kind footHead / foot)
+ *   are drawn at the foot of the first page, under a short rule; use them with maxPages 1.
+ *   The result's `notesFit` is false when they take more than the page can give.
  * @returns {{ pages: Buffer[], shown: Map<number, { text: string, complete: boolean }> }}
  *   `shown` holds, per letter index, the text that made it onto the pages and whether
  *   all of that letter's blocks in the flow fit.
  */
-export function layout(flow, { header, maxPages = Infinity, footer, scale = 1 }) {
+/** Wraps the footnotes and measures them, so the text above can stop short of them. */
+function measureFootnotes(ctx, footnotes, scale, width) {
+  const rows = [];
+  let height = 0;
+  footnotes.forEach((block, k) => {
+    const s = scaled(STYLE[block.kind] || STYLE.foot, scale);
+    ctx.font = `${s.size}px ${s.bold ? 'FrankRuhlBold' : 'FrankRuhl'}`;
+    const lh = s.size * 1.4;
+    if (k > 0) height += s.before || 0;
+    for (const line of wrap(ctx, block.text, width, s.indent || 0)) {
+      rows.push({ text: line.text, s, y: height, indent: line.first ? (s.indent || 0) : 0 });
+      height += lh;
+    }
+    height += s.after || 0;
+  });
+  return { rows, height };
+}
+
+function drawFootnotes(ctx, notes, top) {
+  ctx.strokeStyle = RULE;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(PAGE.width - PAGE.side, top - FOOT_GAP / 2);
+  ctx.lineTo(PAGE.width - PAGE.side - 150, top - FOOT_GAP / 2);
+  ctx.stroke();
+  for (const row of notes.rows) {
+    ctx.font = `${row.s.size}px ${row.s.bold ? 'FrankRuhlBold' : 'FrankRuhl'}`;
+    ctx.fillStyle = row.s.color || INK;
+    if (row.s.align === 'center') {
+      ctx.textAlign = 'center';
+      ctx.fillText(row.text, PAGE.width / 2, top + row.y + row.s.size);
+    } else {
+      ctx.textAlign = 'right';
+      ctx.fillText(row.text, PAGE.width - PAGE.side - row.indent, top + row.y + row.s.size);
+    }
+  }
+}
+
+export function layout(flow, { header, maxPages = Infinity, footer, scale = 1, footnotes }) {
   const width = PAGE.width - PAGE.side * 2;
-  const bottom = PAGE.height - PAGE.bottom;
+  let bottom = PAGE.height - PAGE.bottom;
   const pages = [];
   const shown = new Map();
   const remaining = new Map();
@@ -101,6 +145,13 @@ export function layout(flow, { header, maxPages = Infinity, footer, scale = 1 })
   let page = newCanvas(header);
   let y = PAGE.top;
   let full = false;
+  // footnotes stand at the foot of the (single) page; the text gets the room above them
+  let notes = null;
+  if (footnotes?.length) {
+    notes = measureFootnotes(page.ctx, footnotes, scale, width);
+    bottom -= notes.height + FOOT_GAP;
+    drawFootnotes(page.ctx, notes, bottom + FOOT_GAP);
+  }
 
   const nextPage = () => {
     pages.push(page.canvas);
@@ -168,7 +219,7 @@ export function layout(flow, { header, maxPages = Infinity, footer, scale = 1 })
     c.fillText(text, PAGE.width / 2, PAGE.height - 50);
   });
 
-  return { pages: pages.map((c) => c.toBuffer('image/png')), shown };
+  return { pages: pages.map((c) => c.toBuffer('image/png')), shown, notesFit: !notes || bottom > PAGE.top + 200 };
 }
 
 /** A page with no text: just the paper and its header, with an optional short note in the middle. */

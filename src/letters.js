@@ -129,7 +129,7 @@ export async function answerLetter({ letter, replyLanguage }, deps = {}) {
     imagePath: `/api/page/${page.spec}.png`,
     pdfPath: `/api/page/${page.spec}.pdf`,
     // a spread: its pages one by one (right-hand page first), for narrow screens
-    ...(sides && { sides }),
+    ...(sides && { sides, footnotes: !!volumes[spec.v].pageMap?.footnotes }),
     letters: letters.map((l) => ({
       id: l.id,
       number: l.number,

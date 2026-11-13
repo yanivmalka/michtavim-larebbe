@@ -9,7 +9,7 @@
 import { fetchLetter as defaultFetch, bodyOf } from './chabadlibrary.js';
 import { blankPage, layout, spreadImage } from '../render/bookPage.js';
 import {
-  bodyText, hebrewNumeral, insideLetters, mappedPage, sliceBlocks, spreadPages, spreadsOf, textPages,
+  bodyText, hebrewNumeral, insideLetters, mappedPage, notesOf, sliceBlocks, spreadPages, spreadsOf, textPages,
 } from './pageMap.js';
 
 /** Roughly how many characters fit on one rendered page – used only to pick a start point. */
@@ -74,12 +74,12 @@ const HEBREW_LETTER = /[\u05D0-\u05EA]/;
  * One page from a flow of blocks, with the text made smaller (in steps) until every letter on it fits.
  * `truncated` is true only if the text does not fit even at the smallest size.
  */
-function fitOnePage(flow, header) {
+function fitOnePage(flow, header, footnotes) {
   const letters = [...new Set(flow.map((b) => b.letter))];
   let result;
   for (const scale of FIT_SCALES) {
-    result = layout(flow, { header, maxPages: 1, scale });
-    if (letters.every((k) => result.shown.get(k)?.complete)) return { ...result, truncated: false };
+    result = layout(flow, { header, maxPages: 1, scale, footnotes });
+    if (result.notesFit && letters.every((k) => result.shown.get(k)?.complete)) return { ...result, truncated: false };
   }
   return { ...result, truncated: true };
 }
@@ -123,7 +123,20 @@ export async function renderMapped(volumes, spec, { fetchLetter = defaultFetch }
   }
   if (!flow.length) return null;
 
-  const { pages, shown, truncated } = fitOnePage(flow, pageHeader(vol, page.printed));
+  // the editors' footnotes the map places on this page, under the number of their letter
+  const footnotes = [];
+  let noteLetter = -1;
+  for (const [i, j] of page.notes ?? []) {
+    const [id, heading] = vol.letters[i];
+    const l = await fetchLetter(id);
+    const notes = notesOf(l.blocks);
+    if (vol.pageMap.letters[i]?.notes !== notes.length || !notes[j]) continue; // the notes changed since the map was built
+    if (i !== noteLetter) footnotes.push({ kind: 'footHead', text: l.letterHeading || heading });
+    noteLetter = i;
+    footnotes.push({ kind: 'foot', text: notes[j] });
+  }
+
+  const { pages, shown, truncated } = fitOnePage(flow, pageHeader(vol, page.printed), footnotes);
   const letters = parts.map((p, k) => {
     const shownText = shown.get(k)?.text ?? '';
     return {

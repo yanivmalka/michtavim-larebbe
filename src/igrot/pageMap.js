@@ -11,6 +11,9 @@ export const PAGES_DIR = fileURLToPath(new URL('../../data/pages/', import.meta.
 /** The text of a letter as the maps count it: the body blocks (no editorial notes), one per line. */
 export const bodyText = (blocks) => bodyOf(blocks).map((b) => b.text).join('\n');
 
+/** The editors' notes of a letter (its footnotes in print), one text per note, as the maps count them. */
+export const notesOf = (blocks) => blocks.filter((b) => b.kind === 'note').map((b) => b.text);
+
 /** The printed pages of a map that have letter text on them, in book order. */
 export const textPages = (map) => (map?.pages || []).filter((p) => p.matched && p.segments.length);
 

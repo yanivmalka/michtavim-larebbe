@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  normalizeHebrew, buildStream, alignPages, buildVolumeMap, headerNumbers, linesOf, pageCoverage, pageBody,
+  normalizeHebrew, buildStream, alignPages, buildVolumeMap, headerNumbers, linesOf, pageCoverage, pageBody, placeNotes,
 } from '../scripts/build-pages.mjs';
 
 import { hebrewText, rng, syntheticVolume } from './support/synthetic-volume.js';
@@ -176,4 +176,39 @@ test('a page before pages missing from the scan keeps its own text only, also in
   // page 20 holds stream 9500-10000, which is 6500-7000 of letter 1; page 23 starts at 8000 of it
   assert.ok(Math.abs(before.segments.at(-1).to - 7000) <= 12, `page 20 ends at ${before.segments.at(-1).to}`);
   assert.ok(Math.abs(after.segments[0].from - 8000) <= 12, `page 23 starts at ${after.segments[0].from}`);
+});
+
+test('placeNotes puts each footnote on the page that prints it, in order, and keeps a lost note with the one before it', () => {
+  const pageTexts = [
+    'שער',
+    'טקסט האגרת הראשונה בעמוד שני\nמוהר יצחק הוברמן אגרת נוספת אליו לעיל חלק ששי',
+    'המשך האגרת בעמוד שלישי\nנדפסה בלקוטי שיחות חלק עשרים והוגהה על פי העתק המזכירות',
+  ];
+  const letterPages = [[2, 3], []];
+  const notes = [[
+    'מוה"ר יצחק: הוברמן, אגרת נוספת אליו - לעיל חלק ששי.',
+    'הערה שאינה מופיעה באף עמוד סרוק כלל וכלל',
+    'נדפסה בלקוטי שיחות חלק עשרים, והוגהה על פי העתק המזכירות.',
+    'מוה"ר יצחק: הוברמן, אגרת נוספת אליו - לעיל חלק ששי.', // its text is on page 2, but it comes after a note of page 3
+  ], ['הערה של אגרת שאין לה עמודים']];
+  const { byPage, found, total } = placeNotes(pageTexts, letterPages, notes);
+  assert.deepEqual(byPage.get(2), [[0, 0], [0, 1]]);
+  assert.deepEqual(byPage.get(3), [[0, 2], [0, 3]]);
+  assert.equal(total, 4);
+  assert.equal(found, 2);
+});
+
+test('buildVolumeMap records the footnotes of each page and how many notes each letter has', () => {
+  const v = syntheticVolume();
+  const notes = v.bodies.map(() => []);
+  notes[1] = ['הערה ראשונה לאגרת השניה', 'הערה שניה לאגרת השניה'];
+  // letter 1 is on PDF pages 4 to 6; its second note is printed at the foot of page 5
+  const pdfPages = v.pdfPages.map((t, k) => (k === 4 ? `${t}\nהערה שניה לאגרת השניה` : k === 3 ? `${t}\nהערה ראשונה לאגרת השניה` : t));
+  const { map, report } = buildVolumeMap({ volume: 99, pdfName: 'n.pdf', letters: v.letters, bodies: v.bodies, notes, pdfPages });
+  assert.equal(map.footnotes, true);
+  assert.deepEqual(map.letters.map((l) => l.notes), [0, 2, 0, 0]);
+  assert.deepEqual(map.pages[3].notes, [[1, 0]]);
+  assert.deepEqual(map.pages[4].notes, [[1, 1]]);
+  assert.equal(map.pages[5].notes, undefined);
+  assert.match(report, /הערות שוליים של העורכים: 2\. אותרו בעמוד שלהן: 2\./);
 });

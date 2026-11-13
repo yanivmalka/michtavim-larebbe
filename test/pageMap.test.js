@@ -4,6 +4,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { PDFDocument } from 'pdf-lib';
+import { layout } from '../src/render/bookPage.js';
 import { buildVolumeMap, normalizeHebrew } from '../scripts/build-pages.mjs';
 import { openBook, renderSpec, decodeSpec, encodeSpec, turnPage } from '../src/igrot/openBook.js';
 import {
@@ -206,4 +207,37 @@ test('punctuation at the very start or end of a letter stays with the page that 
   assert.equal(page.letters[0].startsOnPage, true);
   assert.equal(page.letters[0].endsOnPage, true);
   assert.equal(page.letters[0].pageText, text);
+});
+
+test('footnotes stand at the foot of the page and the text stops above them', () => {
+  const words = (n) => Array.from({ length: n }, (_, i) => `מילה${i}`).join(' ');
+  const flow = [{ kind: 'text', text: words(200), letter: 0 }];
+  const header = { center: 'כ' };
+  const plain = layout(flow, { header, maxPages: 1 });
+  assert.equal(plain.shown.get(0).complete, true, 'the text alone fits the page');
+  const footnotes = [{ kind: 'footHead', text: 'א' }, ...Array.from({ length: 12 }, () => ({ kind: 'foot', text: words(25) }))];
+  const withNotes = layout(flow, { header, maxPages: 1, footnotes });
+  assert.equal(withNotes.notesFit, true);
+  assert.equal(withNotes.shown.get(0).complete, false, 'with the footnotes below, less text fits');
+  assert.equal(layout(flow, { header, maxPages: 1, footnotes, scale: 0.7 }).shown.get(0).complete, true);
+});
+
+test('a page draws the footnotes the map gives it, and leaves them out when the letter\'s notes changed', async () => {
+  const text = 'שלום וברכה לכל המשתתפים בהתועדות';
+  const blocks = [{ kind: 'text', text }, { kind: 'note', text: 'הערה ראשונה' }, { kind: 'note', text: 'הערה שניה' }];
+  const fetchLetter = async () => ({ blocks, text, letterHeading: 'א', viewerUrl: 'u' });
+  const make = (noteCount) => attachPageMaps([{ volume: 1, heading: 'כרך א', letters: [['x', 'א']] }], new Map([[1, {
+    volume: 1,
+    footnotes: true,
+    letters: [{ bodyLength: text.length, notes: noteCount }],
+    pages: [{ pdf: 1, printed: 1, matched: true, segments: [{ i: 0, from: 0, to: text.length }], notes: [[0, 0], [0, 1]] }],
+  }]]));
+  const bare = await renderSpec(attachPageMaps([{ volume: 1, heading: 'כרך א', letters: [['x', 'א']] }], new Map([[1, {
+    volume: 1, letters: [{ bodyLength: text.length }], pages: [{ pdf: 1, printed: 1, matched: true, segments: [{ i: 0, from: 0, to: text.length }] }],
+  }]])), { v: 0, p: 1 }, { fetchLetter });
+  const withNotes = await renderSpec(make(2), { v: 0, p: 1 }, { fetchLetter });
+  const stale = await renderSpec(make(3), { v: 0, p: 1 }, { fetchLetter });
+  assert.ok(!withNotes.png.equals(bare.png), 'the footnotes are drawn');
+  assert.ok(stale.png.equals(bare.png), 'notes that no longer match the map are not drawn');
+  assert.equal(withNotes.letters[0].pageText, text, 'footnotes are not part of the page text');
 });
