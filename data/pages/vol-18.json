@@ -3,6 +3,7 @@
  "pdf": "vol-18.pdf",
  "pdfPages": 605,
  "printedOffset": 20,
+ "footnotes": true,
  "offsetChanges": [],
  "letters": [
   {
@@ -10,6 +11,7 @@
    "id": 1200920002,
    "heading": "ו'תקה",
    "bodyLength": 4179,
+   "notes": 3,
    "pages": [
     21,
     22,
@@ -24,6 +26,7 @@
    "id": 1200920003,
    "heading": "ו'תקו",
    "bodyLength": 3174,
+   "notes": 1,
    "pages": [
     24,
     25,
@@ -37,6 +40,7 @@
    "id": 1200920004,
    "heading": "ו'תקז",
    "bodyLength": 1015,
+   "notes": 1,
    "pages": [
     26,
     27
@@ -49,6 +53,7 @@
    "id": 1200920005,
    "heading": "ו'תקח",
    "bodyLength": 625,
+   "notes": 1,
    "pages": [
     27
    ],
@@ -60,6 +65,7 @@
    "id": 1200920006,
    "heading": "ו'תקט",
    "bodyLength": 744,
+   "notes": 0,
    "pages": [
     28
    ],
@@ -71,6 +77,7 @@
    "id": 1200920007,
    "heading": "ו'תקי",
    "bodyLength": 877,
+   "notes": 0,
    "pages": [
     28,
     29
@@ -83,6 +90,7 @@
    "id": 1200920008,
    "heading": "ו'תקיא",
    "bodyLength": 1564,
+   "notes": 2,
    "pages": [
     29,
     30
@@ -95,6 +103,7 @@
    "id": 1200920009,
    "heading": "ו'תקיב",
    "bodyLength": 547,
+   "notes": 0,
    "pages": [
     30,
     31
@@ -107,6 +116,7 @@
    "id": 1200920010,
    "heading": "ו'תקיג",
    "bodyLength": 880,
+   "notes": 0,
    "pages": [
     31,
     32
@@ -119,6 +129,7 @@
    "id": 1200920011,
    "heading": "ו'תקיד",
    "bodyLength": 1004,
+   "notes": 0,
    "pages": [
     32,
     33
@@ -131,6 +142,7 @@
    "id": 1200920012,
    "heading": "ו'תקטו",
    "bodyLength": 472,
+   "notes": 1,
    "pages": [
     33
    ],
@@ -142,6 +154,7 @@
    "id": 1200920013,
    "heading": "ו'תקטז",
    "bodyLength": 684,
+   "notes": 1,
    "pages": [
     33,
     34
@@ -154,6 +167,7 @@
    "id": 1200920014,
    "heading": "ו'תקיז",
    "bodyLength": 1370,
+   "notes": 1,
    "pages": [
     34,
     35
@@ -166,6 +180,7 @@
    "id": 1200920015,
    "heading": "ו'תקיח",
    "bodyLength": 582,
+   "notes": 1,
    "pages": [
     35,
     36
@@ -178,6 +193,7 @@
    "id": 1200920016,
    "heading": "ו'תקיט",
    "bodyLength": 692,
+   "notes": 0,
    "pages": [
     36
    ],
@@ -189,6 +205,7 @@
    "id": 1200920017,
    "heading": "ו'תקיט*",
    "bodyLength": 628,
+   "notes": 0,
    "pages": [
     37
    ],
@@ -200,6 +217,7 @@
    "id": 1200920018,
    "heading": "ו'תקכ",
    "bodyLength": 551,
+   "notes": 1,
    "pages": [
     37,
     38
@@ -212,6 +230,7 @@
    "id": 1200920019,
    "heading": "ו'תקכא",
    "bodyLength": 1003,
+   "notes": 0,
    "pages": [
     38,
     39
@@ -224,6 +243,7 @@
    "id": 1200920020,
    "heading": "ו'תקכב",
    "bodyLength": 555,
+   "notes": 2,
    "pages": [
     39
    ],
@@ -235,6 +255,7 @@
    "id": 1200920021,
    "heading": "ו'תקכג",
    "bodyLength": 1045,
+   "notes": 2,
    "pages": [
     40
    ],
@@ -246,6 +267,7 @@
    "id": 1200920022,
    "heading": "ו'תקכד",
    "bodyLength": 1449,
+   "notes": 0,
    "pages": [
     41,
     42
@@ -258,6 +280,7 @@
    "id": 1200920023,
    "heading": "ו'תקכה",
    "bodyLength": 544,
+   "notes": 0,
    "pages": [
     42
    ],
@@ -269,6 +292,7 @@
    "id": 1200920024,
    "heading": "ו'תקכו",
    "bodyLength": 1660,
+   "notes": 3,
    "pages": [
     42,
     43
@@ -281,6 +305,7 @@
    "id": 1200920025,
    "heading": "ו'תקכז",
    "bodyLength": 757,
+   "notes": 2,
    "pages": [
     44
    ],
@@ -292,6 +317,7 @@
    "id": 1200920026,
    "heading": "ו'תקכח",
    "bodyLength": 891,
+   "notes": 0,
    "pages": [
     44,
     45
@@ -304,6 +330,7 @@
    "id": 1200920027,
    "heading": "ו'תקכט",
    "bodyLength": 3116,
+   "notes": 1,
    "pages": [
     45,
     46,
@@ -318,6 +345,7 @@
    "id": 1200920028,
    "heading": "ו'תקל",
    "bodyLength": 1429,
+   "notes": 2,
    "pages": [
     48,
     49
@@ -330,6 +358,7 @@
    "id": 1200920029,
    "heading": "ו'תקלא",
    "bodyLength": 969,
+   "notes": 0,
    "pages": [
     49,
     50
@@ -342,6 +371,7 @@
    "id": 1200920030,
    "heading": "ו'תקלב",
    "bodyLength": 683,
+   "notes": 0,
    "pages": [
     50
    ],
@@ -353,6 +383,7 @@
    "id": 1200920031,
    "heading": "ו'תקלג",
    "bodyLength": 1199,
+   "notes": 0,
    "pages": [
     50,
     51
@@ -365,6 +396,7 @@
    "id": 1200920032,
    "heading": "ו'תקלד",
    "bodyLength": 697,
+   "notes": 1,
    "pages": [
     51,
     52
@@ -377,6 +409,7 @@
    "id": 1200920033,
    "heading": "ו'תקלה",
    "bodyLength": 1117,
+   "notes": 0,
    "pages": [
     52,
     53
@@ -389,6 +422,7 @@
    "id": 1200920034,
    "heading": "ו'תקלו",
    "bodyLength": 900,
+   "notes": 0,
    "pages": [
     53
    ],
@@ -400,6 +434,7 @@
    "id": 1200920035,
    "heading": "ו'תקלז",
    "bodyLength": 748,
+   "notes": 2,
    "pages": [
     54,
     55
@@ -412,6 +447,7 @@
    "id": 1200920036,
    "heading": "ו'תקלח",
    "bodyLength": 880,
+   "notes": 1,
    "pages": [
     55,
     56
@@ -424,6 +460,7 @@
    "id": 1200920037,
    "heading": "ו'תקלט",
    "bodyLength": 3604,
+   "notes": 4,
    "pages": [
     56,
     57,
@@ -437,6 +474,7 @@
    "id": 1200920038,
    "heading": "ו'תקמ",
    "bodyLength": 1410,
+   "notes": 1,
    "pages": [
     58,
     59
@@ -449,6 +487,7 @@
    "id": 1200920039,
    "heading": "ו'תקמא",
    "bodyLength": 697,
+   "notes": 2,
    "pages": [
     59,
     60
@@ -461,6 +500,7 @@
    "id": 1200920040,
    "heading": "ו'תקמב",
    "bodyLength": 2609,
+   "notes": 0,
    "pages": [
     60,
     61,
@@ -474,6 +514,7 @@
    "id": 1200920041,
    "heading": "ו'תקמג",
    "bodyLength": 1062,
+   "notes": 1,
    "pages": [
     62,
     63
@@ -486,6 +527,7 @@
    "id": 1200920042,
    "heading": "ו'תקמד",
    "bodyLength": 781,
+   "notes": 1,
    "pages": [
     63
    ],
@@ -497,6 +539,7 @@
    "id": 1200920043,
    "heading": "ו'תקמה",
    "bodyLength": 1322,
+   "notes": 1,
    "pages": [
     64,
     65
@@ -509,6 +552,7 @@
    "id": 1200920044,
    "heading": "ו'תקמו",
    "bodyLength": 821,
+   "notes": 1,
    "pages": [
     65,
     66
@@ -521,6 +565,7 @@
    "id": 1200920045,
    "heading": "ו'תקמז",
    "bodyLength": 654,
+   "notes": 2,
    "pages": [
     66
    ],
@@ -532,6 +577,7 @@
    "id": 1200920046,
    "heading": "ו'תקמח",
    "bodyLength": 793,
+   "notes": 1,
    "pages": [
     66,
     67
@@ -544,6 +590,7 @@
    "id": 1200920047,
    "heading": "ו'תקמט",
    "bodyLength": 1514,
+   "notes": 4,
    "pages": [
     67,
     68,
@@ -557,6 +604,7 @@
    "id": 1200920048,
    "heading": "ו'תקנ",
    "bodyLength": 928,
+   "notes": 0,
    "pages": [
     69,
     70
@@ -569,6 +617,7 @@
    "id": 1200920049,
    "heading": "ו'תקנא",
    "bodyLength": 1078,
+   "notes": 0,
    "pages": [
     70,
     71
@@ -581,6 +630,7 @@
    "id": 1200920050,
    "heading": "ו'תקנב",
    "bodyLength": 2477,
+   "notes": 3,
    "pages": [
     71,
     72,
@@ -594,6 +644,7 @@
    "id": 1200920051,
    "heading": "ו'תקנג",
    "bodyLength": 2294,
+   "notes": 1,
    "pages": [
     73,
     74
@@ -606,6 +657,7 @@
    "id": 1200920052,
    "heading": "ו'תקנד",
    "bodyLength": 1277,
+   "notes": 0,
    "pages": [
     74,
     75
@@ -618,6 +670,7 @@
    "id": 1200920053,
    "heading": "ו'תקנה",
    "bodyLength": 1362,
+   "notes": 0,
    "pages": [
     75,
     76
@@ -630,6 +683,7 @@
    "id": 1200920054,
    "heading": "ו'תקנו",
    "bodyLength": 870,
+   "notes": 0,
    "pages": [
     76,
     77
@@ -642,6 +696,7 @@
    "id": 1200920055,
    "heading": "ו'תקנז",
    "bodyLength": 796,
+   "notes": 3,
    "pages": [
     77,
     78
@@ -654,6 +709,7 @@
    "id": 1200920056,
    "heading": "ו'תקנח",
    "bodyLength": 524,
+   "notes": 1,
    "pages": [
     78
    ],
@@ -665,6 +721,7 @@
    "id": 1200920057,
    "heading": "ו'תקנט",
    "bodyLength": 858,
+   "notes": 2,
    "pages": [
     78,
     79
@@ -677,6 +734,7 @@
    "id": 1200920058,
    "heading": "ו'תקס",
    "bodyLength": 627,
+   "notes": 1,
    "pages": [
     79,
     80
@@ -689,6 +747,7 @@
    "id": 1200920059,
    "heading": "ו'תקסא",
    "bodyLength": 1066,
+   "notes": 0,
    "pages": [
     80,
     81
@@ -701,6 +760,7 @@
    "id": 1200920060,
    "heading": "ו'תקסב",
    "bodyLength": 1451,
+   "notes": 0,
    "pages": [
     81,
     82
@@ -713,6 +773,7 @@
    "id": 1200920061,
    "heading": "ו'תקסג",
    "bodyLength": 2057,
+   "notes": 2,
    "pages": [
     82,
     83
@@ -725,6 +786,7 @@
    "id": 1200920062,
    "heading": "ו'תקסד",
    "bodyLength": 1072,
+   "notes": 4,
    "pages": [
     83,
     84
@@ -737,6 +799,7 @@
    "id": 1200920063,
    "heading": "ו'תקסה",
    "bodyLength": 847,
+   "notes": 1,
    "pages": [
     84,
     85
@@ -749,6 +812,7 @@
    "id": 1200920064,
    "heading": "ו'תקסו",
    "bodyLength": 920,
+   "notes": 1,
    "pages": [
     85,
     86
@@ -761,6 +825,7 @@
    "id": 1200920065,
    "heading": "ו'תקסז",
    "bodyLength": 1466,
+   "notes": 1,
    "pages": [
     86,
     87
@@ -773,6 +838,7 @@
    "id": 1200920066,
    "heading": "ו'תקסח",
    "bodyLength": 446,
+   "notes": 2,
    "pages": [
     87,
     88
@@ -785,6 +851,7 @@
    "id": 1200920067,
    "heading": "ו'תקסט",
    "bodyLength": 854,
+   "notes": 0,
    "pages": [
     88,
     89
@@ -797,6 +864,7 @@
    "id": 1200920068,
    "heading": "ו'תקע",
    "bodyLength": 874,
+   "notes": 0,
    "pages": [
     89
    ],
@@ -808,6 +876,7 @@
    "id": 1200920069,
    "heading": "ו'תקעא",
    "bodyLength": 377,
+   "notes": 0,
    "pages": [
     89,
     90
@@ -820,6 +889,7 @@
    "id": 1200920070,
    "heading": "ו'תקעב",
    "bodyLength": 1126,
+   "notes": 3,
    "pages": [
     90,
     91
@@ -832,6 +902,7 @@
    "id": 1200920071,
    "heading": "ו'תקעג",
    "bodyLength": 920,
+   "notes": 0,
    "pages": [
     91,
     92
@@ -844,6 +915,7 @@
    "id": 1200920072,
    "heading": "ו'תקעד",
    "bodyLength": 1343,
+   "notes": 1,
    "pages": [
     92,
     93
@@ -856,6 +928,7 @@
    "id": 1200920073,
    "heading": "ו'תקעה",
    "bodyLength": 619,
+   "notes": 2,
    "pages": [
     93
    ],
@@ -867,6 +940,7 @@
    "id": 1200920074,
    "heading": "ו'תקעו",
    "bodyLength": 1845,
+   "notes": 0,
    "pages": [
     93,
     94
@@ -879,6 +953,7 @@
    "id": 1200920075,
    "heading": "ו'תקעז",
    "bodyLength": 1244,
+   "notes": 0,
    "pages": [
     95
    ],
@@ -890,6 +965,7 @@
    "id": 1200920076,
    "heading": "ו'תקעח",
    "bodyLength": 1098,
+   "notes": 0,
    "pages": [
     96
    ],
@@ -901,6 +977,7 @@
    "id": 1200920077,
    "heading": "ו'תקעט",
    "bodyLength": 750,
+   "notes": 1,
    "pages": [
     97,
     98
@@ -913,6 +990,7 @@
    "id": 1200920078,
    "heading": "ו'תקפ",
    "bodyLength": 737,
+   "notes": 1,
    "pages": [
     98,
     99
@@ -925,6 +1003,7 @@
    "id": 1200920079,
    "heading": "ו'תקפא",
    "bodyLength": 1097,
+   "notes": 0,
    "pages": [
     99,
     100
@@ -937,6 +1016,7 @@
    "id": 1200920080,
    "heading": "ו'תקפב",
    "bodyLength": 790,
+   "notes": 2,
    "pages": [
     100,
     101
@@ -949,6 +1029,7 @@
    "id": 1200920081,
    "heading": "ו'תקפג",
    "bodyLength": 987,
+   "notes": 3,
    "pages": [
     101,
     102
@@ -961,6 +1042,7 @@
    "id": 1200920082,
    "heading": "ו'תקפד",
    "bodyLength": 658,
+   "notes": 2,
    "pages": [
     102
    ],
@@ -972,6 +1054,7 @@
    "id": 1200920083,
    "heading": "ו'תקפה",
    "bodyLength": 1096,
+   "notes": 0,
    "pages": [
     103,
     104
@@ -984,6 +1067,7 @@
    "id": 1200920084,
    "heading": "ו'תקפו",
    "bodyLength": 805,
+   "notes": 1,
    "pages": [
     104
    ],
@@ -995,6 +1079,7 @@
    "id": 1200920085,
    "heading": "ו'תקפז",
    "bodyLength": 1125,
+   "notes": 0,
    "pages": [
     105,
     106
@@ -1007,6 +1092,7 @@
    "id": 1200920086,
    "heading": "ו'תקפח",
    "bodyLength": 1164,
+   "notes": 1,
    "pages": [
     106,
     107
@@ -1019,6 +1105,7 @@
    "id": 1200920087,
    "heading": "ו'תקפט",
    "bodyLength": 555,
+   "notes": 0,
    "pages": [
     107
    ],
@@ -1030,6 +1117,7 @@
    "id": 1200920088,
    "heading": "ו'תקצ",
    "bodyLength": 905,
+   "notes": 0,
    "pages": [
     108,
     109
@@ -1042,6 +1130,7 @@
    "id": 1200920089,
    "heading": "ו'תקצא",
    "bodyLength": 1992,
+   "notes": 2,
    "pages": [
     109,
     110
@@ -1054,6 +1143,7 @@
    "id": 1200920090,
    "heading": "ו'תקצב",
    "bodyLength": 1990,
+   "notes": 1,
    "pages": [
     110,
     111
@@ -1066,6 +1156,7 @@
    "id": 1200920091,
    "heading": "ו'תקצג",
    "bodyLength": 2099,
+   "notes": 0,
    "pages": [
     112,
     113
@@ -1078,6 +1169,7 @@
    "id": 1200920092,
    "heading": "ו'תקצד",
    "bodyLength": 1073,
+   "notes": 0,
    "pages": [
     113,
     114
@@ -1090,6 +1182,7 @@
    "id": 1200920093,
    "heading": "ו'תקצה",
    "bodyLength": 1063,
+   "notes": 1,
    "pages": [
     114
    ],
@@ -1101,6 +1194,7 @@
    "id": 1200920094,
    "heading": "ו'תקצו",
    "bodyLength": 643,
+   "notes": 0,
    "pages": [
     115
    ],
@@ -1112,6 +1206,7 @@
    "id": 1200920095,
    "heading": "ו'תקצז",
    "bodyLength": 850,
+   "notes": 0,
    "pages": [
     115,
     116
@@ -1124,6 +1219,7 @@
    "id": 1200920096,
    "heading": "ו'תקצח",
    "bodyLength": 1202,
+   "notes": 0,
    "pages": [
     116,
     117
@@ -1136,6 +1232,7 @@
    "id": 1200920097,
    "heading": "ו'תקצט",
    "bodyLength": 635,
+   "notes": 0,
    "pages": [
     117,
     118
@@ -1148,6 +1245,7 @@
    "id": 1200920098,
    "heading": "ו'תר",
    "bodyLength": 1372,
+   "notes": 0,
    "pages": [
     118,
     119
@@ -1160,6 +1258,7 @@
    "id": 1200920099,
    "heading": "ו'תרא",
    "bodyLength": 1152,
+   "notes": 1,
    "pages": [
     119
    ],
@@ -1171,6 +1270,7 @@
    "id": 1200920100,
    "heading": "ו'תרב",
    "bodyLength": 721,
+   "notes": 0,
    "pages": [
     120,
     121
@@ -1183,6 +1283,7 @@
    "id": 1200920101,
    "heading": "ו'תרג",
    "bodyLength": 2405,
+   "notes": 0,
    "pages": [
     121,
     122,
@@ -1196,6 +1297,7 @@
    "id": 1200920102,
    "heading": "ו'תרד",
    "bodyLength": 327,
+   "notes": 1,
    "pages": [
     123
    ],
@@ -1207,6 +1309,7 @@
    "id": 1200920103,
    "heading": "ו'תרה",
    "bodyLength": 1069,
+   "notes": 4,
    "pages": [
     123,
     124
@@ -1219,6 +1322,7 @@
    "id": 1200920104,
    "heading": "ו'תרו",
    "bodyLength": 362,
+   "notes": 1,
    "pages": [
     124,
     125
@@ -1231,6 +1335,7 @@
    "id": 1200920105,
    "heading": "ו'תרז",
    "bodyLength": 682,
+   "notes": 1,
    "pages": [
     125
    ],
@@ -1242,6 +1347,7 @@
    "id": 1200920106,
    "heading": "ו'תרח",
    "bodyLength": 2068,
+   "notes": 1,
    "pages": [
     126,
     127
@@ -1254,6 +1360,7 @@
    "id": 1200920107,
    "heading": "ו'תרט",
    "bodyLength": 401,
+   "notes": 1,
    "pages": [
     127,
     128
@@ -1266,6 +1373,7 @@
    "id": 1200920108,
    "heading": "ו'תרי",
    "bodyLength": 1673,
+   "notes": 1,
    "pages": [
     128,
     129
@@ -1278,6 +1386,7 @@
    "id": 1200920109,
    "heading": "ו'תריא",
    "bodyLength": 1444,
+   "notes": 1,
    "pages": [
     129,
     130
@@ -1290,6 +1399,7 @@
    "id": 1200920110,
    "heading": "ו'תריב",
    "bodyLength": 924,
+   "notes": 2,
    "pages": [
     130,
     131
@@ -1302,6 +1412,7 @@
    "id": 1200920111,
    "heading": "ו'תריג",
    "bodyLength": 459,
+   "notes": 1,
    "pages": [
     131
    ],
@@ -1313,6 +1424,7 @@
    "id": 1200920112,
    "heading": "ו'תריד",
    "bodyLength": 829,
+   "notes": 5,
    "pages": [
     132,
     133
@@ -1325,6 +1437,7 @@
    "id": 1200920113,
    "heading": "ו'תרטו",
    "bodyLength": 1043,
+   "notes": 0,
    "pages": [
     133
    ],
@@ -1336,6 +1449,7 @@
    "id": 1200920114,
    "heading": "ו'תרטז",
    "bodyLength": 449,
+   "notes": 2,
    "pages": [
     134,
     135
@@ -1348,6 +1462,7 @@
    "id": 1200920115,
    "heading": "ו'תריז",
    "bodyLength": 1258,
+   "notes": 1,
    "pages": [
     135
    ],
@@ -1359,6 +1474,7 @@
    "id": 1200920116,
    "heading": "ו'תריח",
    "bodyLength": 1380,
+   "notes": 3,
    "pages": [
     136,
     137
@@ -1371,6 +1487,7 @@
    "id": 1200920117,
    "heading": "ו'תריט",
    "bodyLength": 955,
+   "notes": 2,
    "pages": [
     137,
     138
@@ -1383,6 +1500,7 @@
    "id": 1200920118,
    "heading": "ו'תרכ",
    "bodyLength": 751,
+   "notes": 1,
    "pages": [
     138,
     139
@@ -1395,6 +1513,7 @@
    "id": 1200920119,
    "heading": "ו'תרכא",
    "bodyLength": 1277,
+   "notes": 0,
    "pages": [
     139,
     140
@@ -1407,6 +1526,7 @@
    "id": 1200920120,
    "heading": "ו'תרכב",
    "bodyLength": 740,
+   "notes": 0,
    "pages": [
     140,
     141
@@ -1419,6 +1539,7 @@
    "id": 1200920121,
    "heading": "ו'תרכג",
    "bodyLength": 2378,
+   "notes": 0,
    "pages": [
     141,
     142
@@ -1431,6 +1552,7 @@
    "id": 1200920122,
    "heading": "ו'תרכד",
    "bodyLength": 1647,
+   "notes": 1,
    "pages": [
     142,
     143,
@@ -1444,6 +1566,7 @@
    "id": 1200920123,
    "heading": "ו'תרכה",
    "bodyLength": 614,
+   "notes": 0,
    "pages": [
     144
    ],
@@ -1455,6 +1578,7 @@
    "id": 1200920124,
    "heading": "ו'תרכו",
    "bodyLength": 1392,
+   "notes": 0,
    "pages": [
     144,
     145
@@ -1467,6 +1591,7 @@
    "id": 1200920125,
    "heading": "ו'תרכז",
    "bodyLength": 477,
+   "notes": 0,
    "pages": [
     145,
     146
@@ -1479,6 +1604,7 @@
    "id": 1200920126,
    "heading": "ו'תרכח",
    "bodyLength": 1427,
+   "notes": 1,
    "pages": [
     146,
     147
@@ -1491,6 +1617,7 @@
    "id": 1200920127,
    "heading": "ו'תרכט",
    "bodyLength": 773,
+   "notes": 0,
    "pages": [
     147,
     148
@@ -1503,6 +1630,7 @@
    "id": 1200920128,
    "heading": "ו'תרל",
    "bodyLength": 952,
+   "notes": 1,
    "pages": [
     148,
     149
@@ -1515,6 +1643,7 @@
    "id": 1200920129,
    "heading": "ו'תרלא",
    "bodyLength": 1096,
+   "notes": 1,
    "pages": [
     149,
     150
@@ -1527,6 +1656,7 @@
    "id": 1200920130,
    "heading": "ו'תרלב",
    "bodyLength": 640,
+   "notes": 2,
    "pages": [
     150,
     151
@@ -1539,6 +1669,7 @@
    "id": 1200920131,
    "heading": "ו'תרלג",
    "bodyLength": 1157,
+   "notes": 1,
    "pages": [
     151,
     152
@@ -1551,6 +1682,7 @@
    "id": 1200920132,
    "heading": "ו'תרלד",
    "bodyLength": 765,
+   "notes": 1,
    "pages": [
     152,
     153
@@ -1563,6 +1695,7 @@
    "id": 1200920133,
    "heading": "ו'תרלה",
    "bodyLength": 865,
+   "notes": 2,
    "pages": [
     153,
     154
@@ -1575,6 +1708,7 @@
    "id": 1200920134,
    "heading": "ו'תרלו",
    "bodyLength": 735,
+   "notes": 2,
    "pages": [
     154,
     155
@@ -1587,6 +1721,7 @@
    "id": 1200920135,
    "heading": "ו'תרלז",
    "bodyLength": 977,
+   "notes": 0,
    "pages": [
     155,
     156
@@ -1599,6 +1734,7 @@
    "id": 1200920136,
    "heading": "ו'תרלח",
    "bodyLength": 1255,
+   "notes": 0,
    "pages": [
     156
    ],
@@ -1610,6 +1746,7 @@
    "id": 1200920137,
    "heading": "ו'תרלט",
    "bodyLength": 2741,
+   "notes": 0,
    "pages": [
     157,
     158
@@ -1622,6 +1759,7 @@
    "id": 1200920138,
    "heading": "ו'תרמ",
    "bodyLength": 1357,
+   "notes": 0,
    "pages": [
     159
    ],
@@ -1633,6 +1771,7 @@
    "id": 1200920139,
    "heading": "ו'תרמא",
    "bodyLength": 982,
+   "notes": 3,
    "pages": [
     160,
     161
@@ -1645,6 +1784,7 @@
    "id": 1200920140,
    "heading": "ו'תרמב",
    "bodyLength": 898,
+   "notes": 1,
    "pages": [
     161
    ],
@@ -1656,6 +1796,7 @@
    "id": 1200920141,
    "heading": "ו'תרמג",
    "bodyLength": 1494,
+   "notes": 0,
    "pages": [
     162,
     163
@@ -1668,6 +1809,7 @@
    "id": 1200920142,
    "heading": "ו'תרמד",
    "bodyLength": 1367,
+   "notes": 1,
    "pages": [
     163,
     164
@@ -1680,6 +1822,7 @@
    "id": 1200920143,
    "heading": "ו'תרמה",
    "bodyLength": 759,
+   "notes": 0,
    "pages": [
     164
    ],
@@ -1691,6 +1834,7 @@
    "id": 1200920144,
    "heading": "ו'תרמו",
    "bodyLength": 1455,
+   "notes": 1,
    "pages": [
     165,
     166
@@ -1703,6 +1847,7 @@
    "id": 1200920145,
    "heading": "ו'תרמז",
    "bodyLength": 1265,
+   "notes": 2,
    "pages": [
     166
    ],
@@ -1714,6 +1859,7 @@
    "id": 1200920146,
    "heading": "ו'תרמח",
    "bodyLength": 663,
+   "notes": 0,
    "pages": [
     167
    ],
@@ -1725,6 +1871,7 @@
    "id": 1200920147,
    "heading": "ו'תרמט",
    "bodyLength": 522,
+   "notes": 2,
    "pages": [
     167,
     168
@@ -1737,6 +1884,7 @@
    "id": 1200920148,
    "heading": "ו'תרנ",
    "bodyLength": 833,
+   "notes": 0,
    "pages": [
     168,
     169
@@ -1749,6 +1897,7 @@
    "id": 1200920149,
    "heading": "ו'תרנא",
    "bodyLength": 1099,
+   "notes": 1,
    "pages": [
     169,
     170
@@ -1761,6 +1910,7 @@
    "id": 1200920150,
    "heading": "ו'תרנב",
    "bodyLength": 948,
+   "notes": 0,
    "pages": [
     170
    ],
@@ -1772,6 +1922,7 @@
    "id": 1200920151,
    "heading": "ו'תרנג",
    "bodyLength": 3330,
+   "notes": 0,
    "pages": [
     171,
     172,
@@ -1785,6 +1936,7 @@
    "id": 1200920152,
    "heading": "ו'תרנד",
    "bodyLength": 1475,
+   "notes": 1,
    "pages": [
     173,
     174
@@ -1797,6 +1949,7 @@
    "id": 1200920153,
    "heading": "ו'תרנה",
    "bodyLength": 994,
+   "notes": 1,
    "pages": [
     174,
     175
@@ -1809,6 +1962,7 @@
    "id": 1200920154,
    "heading": "ו'תרנו",
    "bodyLength": 393,
+   "notes": 1,
    "pages": [
     175,
     176
@@ -1821,6 +1975,7 @@
    "id": 1200920155,
    "heading": "ו'תרנז",
    "bodyLength": 1477,
+   "notes": 2,
    "pages": [
     176,
     177
@@ -1833,6 +1988,7 @@
    "id": 1200920156,
    "heading": "ו'תרנח",
    "bodyLength": 977,
+   "notes": 0,
    "pages": [
     177,
     178
@@ -1845,6 +2001,7 @@
    "id": 1200920157,
    "heading": "ו'תרנט",
    "bodyLength": 1057,
+   "notes": 0,
    "pages": [
     178
    ],
@@ -1856,6 +2013,7 @@
    "id": 1200920158,
    "heading": "ו'תרס",
    "bodyLength": 851,
+   "notes": 2,
    "pages": [
     179
    ],
@@ -1867,6 +2025,7 @@
    "id": 1200920159,
    "heading": "ו'תרסא",
    "bodyLength": 295,
+   "notes": 0,
    "pages": [
     180
    ],
@@ -1878,6 +2037,7 @@
    "id": 1200920160,
    "heading": "ו'תרסב",
    "bodyLength": 921,
+   "notes": 3,
    "pages": [
     180,
     181
@@ -1890,6 +2050,7 @@
    "id": 1200920161,
    "heading": "ו'תרסג",
    "bodyLength": 1226,
+   "notes": 0,
    "pages": [
     181,
     182
@@ -1902,6 +2063,7 @@
    "id": 1200920162,
    "heading": "ו'תרסד",
    "bodyLength": 693,
+   "notes": 0,
    "pages": [
     182,
     183
@@ -1914,6 +2076,7 @@
    "id": 1200920163,
    "heading": "ו'תרסה",
    "bodyLength": 602,
+   "notes": 0,
    "pages": [
     183
    ],
@@ -1925,6 +2088,7 @@
    "id": 1200920164,
    "heading": "ו'תרסו",
    "bodyLength": 1031,
+   "notes": 1,
    "pages": [
     183,
     184
@@ -1937,6 +2101,7 @@
    "id": 1200920165,
    "heading": "ו'תרסז",
    "bodyLength": 1700,
+   "notes": 2,
    "pages": [
     184,
     185,
@@ -1950,6 +2115,7 @@
    "id": 1200920166,
    "heading": "ו'תרסח",
    "bodyLength": 1162,
+   "notes": 1,
    "pages": [
     186,
     187
@@ -1962,6 +2128,7 @@
    "id": 1200920167,
    "heading": "ו'תרסט",
    "bodyLength": 3064,
+   "notes": 1,
    "pages": [
     187,
     188,
@@ -1975,6 +2142,7 @@
    "id": 1200920168,
    "heading": "ו'עתר",
    "bodyLength": 1725,
+   "notes": 0,
    "pages": [
     189,
     190
@@ -1987,6 +2155,7 @@
    "id": 1200920169,
    "heading": "ו'תרעא",
    "bodyLength": 509,
+   "notes": 1,
    "pages": [
     190,
     191
@@ -1999,6 +2168,7 @@
    "id": 1200920170,
    "heading": "ו'תערב",
    "bodyLength": 758,
+   "notes": 2,
    "pages": [
     191
    ],
@@ -2010,6 +2180,7 @@
    "id": 1200920171,
    "heading": "ו'תרעג",
    "bodyLength": 490,
+   "notes": 0,
    "pages": [
     192
    ],
@@ -2021,6 +2192,7 @@
    "id": 1200920172,
    "heading": "ו'תרדע",
    "bodyLength": 551,
+   "notes": 0,
    "pages": [
     192
    ],
@@ -2032,6 +2204,7 @@
    "id": 1200920173,
    "heading": "ו'תרעה",
    "bodyLength": 1001,
+   "notes": 2,
    "pages": [
     193
    ],
@@ -2043,6 +2216,7 @@
    "id": 1200920174,
    "heading": "ו'תרעו",
    "bodyLength": 977,
+   "notes": 0,
    "pages": [
     194
    ],
@@ -2054,6 +2228,7 @@
    "id": 1200920175,
    "heading": "ו'תרעז",
    "bodyLength": 961,
+   "notes": 1,
    "pages": [
     195,
     196
@@ -2066,6 +2241,7 @@
    "id": 1200920176,
    "heading": "ו'תרעח",
    "bodyLength": 705,
+   "notes": 0,
    "pages": [
     196
    ],
@@ -2077,6 +2253,7 @@
    "id": 1200920177,
    "heading": "ו'תרעט",
    "bodyLength": 936,
+   "notes": 0,
    "pages": [
     196,
     197
@@ -2089,6 +2266,7 @@
    "id": 1200920178,
    "heading": "ו'תרפ",
    "bodyLength": 1510,
+   "notes": 0,
    "pages": [
     197,
     198
@@ -2101,6 +2279,7 @@
    "id": 1200920179,
    "heading": "ו'תרפא",
    "bodyLength": 748,
+   "notes": 1,
    "pages": [
     198,
     199
@@ -2113,6 +2292,7 @@
    "id": 1200920180,
    "heading": "ו'תרפב",
    "bodyLength": 947,
+   "notes": 0,
    "pages": [
     199
    ],
@@ -2124,6 +2304,7 @@
    "id": 1200920181,
    "heading": "ו'תרפג",
    "bodyLength": 608,
+   "notes": 1,
    "pages": [
     200
    ],
@@ -2135,6 +2316,7 @@
    "id": 1200920182,
    "heading": "ו'תרפד",
    "bodyLength": 1124,
+   "notes": 1,
    "pages": [
     200,
     201
@@ -2147,6 +2329,7 @@
    "id": 1200920183,
    "heading": "ו'תרפה",
    "bodyLength": 490,
+   "notes": 1,
    "pages": [
     201,
     202
@@ -2159,6 +2342,7 @@
    "id": 1200920184,
    "heading": "ו'תרפו",
    "bodyLength": 725,
+   "notes": 1,
    "pages": [
     202,
     203
@@ -2171,6 +2355,7 @@
    "id": 1200920185,
    "heading": "ו'תרפז",
    "bodyLength": 1104,
+   "notes": 1,
    "pages": [
     203,
     204
@@ -2183,6 +2368,7 @@
    "id": 1200920186,
    "heading": "ו'תרפח",
    "bodyLength": 441,
+   "notes": 1,
    "pages": [
     204,
     205
@@ -2195,6 +2381,7 @@
    "id": 1200920187,
    "heading": "ו'תרפט",
    "bodyLength": 640,
+   "notes": 1,
    "pages": [
     205
    ],
@@ -2206,6 +2393,7 @@
    "id": 1200920188,
    "heading": "ו'תרצ",
    "bodyLength": 650,
+   "notes": 1,
    "pages": [
     206,
     207
@@ -2218,6 +2406,7 @@
    "id": 1200920189,
    "heading": "ו'תרצא",
    "bodyLength": 628,
+   "notes": 2,
    "pages": [
     207,
     208
@@ -2230,6 +2419,7 @@
    "id": 1200920190,
    "heading": "ו'תרצב",
    "bodyLength": 1143,
+   "notes": 1,
    "pages": [
     208,
     209
@@ -2242,6 +2432,7 @@
    "id": 1200920191,
    "heading": "ו'תרצג",
    "bodyLength": 2090,
+   "notes": 2,
    "pages": [
     209,
     210
@@ -2254,6 +2445,7 @@
    "id": 1200920192,
    "heading": "ו'תרצד",
    "bodyLength": 1404,
+   "notes": 0,
    "pages": [
     210,
     211
@@ -2266,6 +2458,7 @@
    "id": 1200920193,
    "heading": "ו'תרצה",
    "bodyLength": 507,
+   "notes": 1,
    "pages": [
     211,
     212
@@ -2278,6 +2471,7 @@
    "id": 1200920194,
    "heading": "ו'תרצו",
    "bodyLength": 1361,
+   "notes": 2,
    "pages": [
     212,
     213
@@ -2290,6 +2484,7 @@
    "id": 1200920195,
    "heading": "ו'תרצז",
    "bodyLength": 1147,
+   "notes": 1,
    "pages": [
     213,
     214
@@ -2302,6 +2497,7 @@
    "id": 1200920196,
    "heading": "ו'תרחצ",
    "bodyLength": 613,
+   "notes": 2,
    "pages": [
     214
    ],
@@ -2313,6 +2509,7 @@
    "id": 1200920197,
    "heading": "ו'תרצט",
    "bodyLength": 845,
+   "notes": 0,
    "pages": [
     215,
     216
@@ -2325,6 +2522,7 @@
    "id": 1200920198,
    "heading": "ו'תש",
    "bodyLength": 488,
+   "notes": 1,
    "pages": [
     216,
     217
@@ -2337,6 +2535,7 @@
    "id": 1200920199,
    "heading": "ו'תשא",
    "bodyLength": 792,
+   "notes": 1,
    "pages": [
     217,
     218
@@ -2349,6 +2548,7 @@
    "id": 1200920200,
    "heading": "ו'תשב",
    "bodyLength": 1132,
+   "notes": 1,
    "pages": [
     218,
     219
@@ -2361,6 +2561,7 @@
    "id": 1200920201,
    "heading": "ו'תשג",
    "bodyLength": 1400,
+   "notes": 0,
    "pages": [
     219,
     220
@@ -2373,6 +2574,7 @@
    "id": 1200920202,
    "heading": "ו'תדש",
    "bodyLength": 985,
+   "notes": 2,
    "pages": [
     220
    ],
@@ -2384,6 +2586,7 @@
    "id": 1200920203,
    "heading": "ו'תשה",
    "bodyLength": 776,
+   "notes": 0,
    "pages": [
     221,
     222
@@ -2396,6 +2599,7 @@
    "id": 1200920204,
    "heading": "ו'תשו",
    "bodyLength": 551,
+   "notes": 2,
    "pages": [
     222
    ],
@@ -2407,6 +2611,7 @@
    "id": 1200920205,
    "heading": "ו'תשז",
    "bodyLength": 1492,
+   "notes": 1,
    "pages": [
     223,
     224
@@ -2419,6 +2624,7 @@
    "id": 1200920206,
    "heading": "ו'תשח",
    "bodyLength": 974,
+   "notes": 1,
    "pages": [
     224,
     225
@@ -2431,6 +2637,7 @@
    "id": 1200920207,
    "heading": "ו'תשט",
    "bodyLength": 484,
+   "notes": 0,
    "pages": [
     225
    ],
@@ -2442,6 +2649,7 @@
    "id": 1200920208,
    "heading": "ו'תשי",
    "bodyLength": 848,
+   "notes": 1,
    "pages": [
     225,
     226
@@ -2454,6 +2662,7 @@
    "id": 1200920209,
    "heading": "ו'תשיא",
    "bodyLength": 1096,
+   "notes": 0,
    "pages": [
     226,
     227
@@ -2466,6 +2675,7 @@
    "id": 1200920210,
    "heading": "ו'תשיב",
    "bodyLength": 880,
+   "notes": 2,
    "pages": [
     227,
     228
@@ -2478,6 +2688,7 @@
    "id": 1200920211,
    "heading": "ו'תשיג",
    "bodyLength": 1301,
+   "notes": 1,
    "pages": [
     228,
     229
@@ -2490,6 +2701,7 @@
    "id": 1200920212,
    "heading": "ו'תשיד",
    "bodyLength": 3636,
+   "notes": 2,
    "pages": [
     229,
     230,
@@ -2504,6 +2716,7 @@
    "id": 1200920213,
    "heading": "ו'תשטו",
    "bodyLength": 4951,
+   "notes": 0,
    "pages": [
     232,
     233,
@@ -2518,6 +2731,7 @@
    "id": 1200920214,
    "heading": "ו'תשטז",
    "bodyLength": 1650,
+   "notes": 0,
    "pages": [
     235,
     236
@@ -2530,6 +2744,7 @@
    "id": 1200920215,
    "heading": "ו'תשיז",
    "bodyLength": 2104,
+   "notes": 1,
    "pages": [
     236,
     237,
@@ -2543,6 +2758,7 @@
    "id": 1200920216,
    "heading": "ו'תשיח",
    "bodyLength": 1278,
+   "notes": 2,
    "pages": [
     238
    ],
@@ -2554,6 +2770,7 @@
    "id": 1200920217,
    "heading": "ו'תשיט",
    "bodyLength": 844,
+   "notes": 0,
    "pages": [
     239
    ],
@@ -2565,6 +2782,7 @@
    "id": 1200920218,
    "heading": "ו'תשכ",
    "bodyLength": 542,
+   "notes": 2,
    "pages": [
     240
    ],
@@ -2576,6 +2794,7 @@
    "id": 1200920219,
    "heading": "ו'תשכא",
    "bodyLength": 1001,
+   "notes": 1,
    "pages": [
     240,
     241
@@ -2588,6 +2807,7 @@
    "id": 1200920220,
    "heading": "ו'תשכב",
    "bodyLength": 423,
+   "notes": 3,
    "pages": [
     241,
     242
@@ -2600,6 +2820,7 @@
    "id": 1200920221,
    "heading": "ו'תשכג",
    "bodyLength": 262,
+   "notes": 0,
    "pages": [
     242
    ],
@@ -2611,6 +2832,7 @@
    "id": 1200920222,
    "heading": "ו'תשכד",
    "bodyLength": 1887,
+   "notes": 0,
    "pages": [
     242,
     243,
@@ -2624,6 +2846,7 @@
    "id": 1200920223,
    "heading": "ו'תשכה",
    "bodyLength": 606,
+   "notes": 0,
    "pages": [
     244
    ],
@@ -2635,6 +2858,7 @@
    "id": 1200920224,
    "heading": "ו'תשכו",
    "bodyLength": 1002,
+   "notes": 0,
    "pages": [
     244,
     245
@@ -2647,6 +2871,7 @@
    "id": 1200920225,
    "heading": "ו'תשכז",
    "bodyLength": 1128,
+   "notes": 0,
    "pages": [
     245,
     246
@@ -2659,6 +2884,7 @@
    "id": 1200920226,
    "heading": "ו'תשכח",
    "bodyLength": 191,
+   "notes": 1,
    "pages": [
     246
    ],
@@ -2670,6 +2896,7 @@
    "id": 1200920227,
    "heading": "ו'תשכט",
    "bodyLength": 1147,
+   "notes": 2,
    "pages": [
     246,
     247
@@ -2682,6 +2909,7 @@
    "id": 1200920228,
    "heading": "ו'תשל",
    "bodyLength": 869,
+   "notes": 1,
    "pages": [
     247,
     248
@@ -2694,6 +2922,7 @@
    "id": 1200920229,
    "heading": "ו'תשלא",
    "bodyLength": 1126,
+   "notes": 1,
    "pages": [
     248,
     249
@@ -2706,6 +2935,7 @@
    "id": 1200920230,
    "heading": "ו'תשלב",
    "bodyLength": 2125,
+   "notes": 1,
    "pages": [
     249,
     250
@@ -2718,6 +2948,7 @@
    "id": 1200920231,
    "heading": "ו'תשלג",
    "bodyLength": 3188,
+   "notes": 3,
    "pages": [
     250,
     251,
@@ -2732,6 +2963,7 @@
    "id": 1200920232,
    "heading": "ו'תשלד",
    "bodyLength": 1278,
+   "notes": 1,
    "pages": [
     253,
     254
@@ -2744,6 +2976,7 @@
    "id": 1200920233,
    "heading": "ו'תשלה",
    "bodyLength": 687,
+   "notes": 1,
    "pages": [
     254
    ],
@@ -2755,6 +2988,7 @@
    "id": 1200920234,
    "heading": "ו'תשלו",
    "bodyLength": 1378,
+   "notes": 0,
    "pages": [
     255,
     256
@@ -2767,6 +3001,7 @@
    "id": 1200920235,
    "heading": "ו'תשלז",
    "bodyLength": 1167,
+   "notes": 0,
    "pages": [
     256,
     257
@@ -2779,6 +3014,7 @@
    "id": 1200920236,
    "heading": "ו'תשלח",
    "bodyLength": 1085,
+   "notes": 0,
    "pages": [
     257,
     258
@@ -2791,6 +3027,7 @@
    "id": 1200920237,
    "heading": "ו'תשלט",
    "bodyLength": 777,
+   "notes": 2,
    "pages": [
     258,
     259
@@ -2803,6 +3040,7 @@
    "id": 1200920238,
    "heading": "ו'תשמ",
    "bodyLength": 1282,
+   "notes": 1,
    "pages": [
     259
    ],
@@ -2814,6 +3052,7 @@
    "id": 1200920239,
    "heading": "ו'תשמא",
    "bodyLength": 1156,
+   "notes": 1,
    "pages": [
     260,
     261
@@ -2826,6 +3065,7 @@
    "id": 1200920240,
    "heading": "ו'תשמב",
    "bodyLength": 865,
+   "notes": 0,
    "pages": [
     261,
     262
@@ -2838,6 +3078,7 @@
    "id": 1200920241,
    "heading": "ו'תשמג",
    "bodyLength": 2021,
+   "notes": 0,
    "pages": [
     262,
     263
@@ -2850,6 +3091,7 @@
    "id": 1200920242,
    "heading": "ו'תשדמ",
    "bodyLength": 738,
+   "notes": 2,
    "pages": [
     263,
     264
@@ -2862,6 +3104,7 @@
    "id": 1200920243,
    "heading": "ו'תשמה",
    "bodyLength": 1821,
+   "notes": 1,
    "pages": [
     264,
     265
@@ -2874,6 +3117,7 @@
    "id": 1200920244,
    "heading": "ו'תשמו",
    "bodyLength": 1323,
+   "notes": 0,
    "pages": [
     265,
     266
@@ -2886,6 +3130,7 @@
    "id": 1200920245,
    "heading": "ו'תשמז",
    "bodyLength": 2135,
+   "notes": 1,
    "pages": [
     266,
     267,
@@ -2899,6 +3144,7 @@
    "id": 1200920246,
    "heading": "ו'תשמח",
    "bodyLength": 1626,
+   "notes": 2,
    "pages": [
     268,
     269,
@@ -2912,6 +3158,7 @@
    "id": 1200920247,
    "heading": "ו'תשמט",
    "bodyLength": 572,
+   "notes": 2,
    "pages": [
     270
    ],
@@ -2923,6 +3170,7 @@
    "id": 1200920248,
    "heading": "ו'תשנ",
    "bodyLength": 1302,
+   "notes": 0,
    "pages": [
     270,
     271
@@ -2935,6 +3183,7 @@
    "id": 1200920249,
    "heading": "ו'תשנא",
    "bodyLength": 449,
+   "notes": 0,
    "pages": [
     271,
     272
@@ -2947,6 +3196,7 @@
    "id": 1200920250,
    "heading": "ו'תשנב",
    "bodyLength": 799,
+   "notes": 2,
    "pages": [
     272,
     273
@@ -2959,6 +3209,7 @@
    "id": 1200920251,
    "heading": "ו'תשנג",
    "bodyLength": 1084,
+   "notes": 0,
    "pages": [
     273,
     274
@@ -2971,6 +3222,7 @@
    "id": 1200920252,
    "heading": "ו'תשנד",
    "bodyLength": 970,
+   "notes": 0,
    "pages": [
     274,
     275
@@ -2983,6 +3235,7 @@
    "id": 1200920253,
    "heading": "ו'תשנה",
    "bodyLength": 1519,
+   "notes": 0,
    "pages": [
     275
    ],
@@ -2994,6 +3247,7 @@
    "id": 1200920254,
    "heading": "ו'תשנו",
    "bodyLength": 862,
+   "notes": 1,
    "pages": [
     276
    ],
@@ -3005,6 +3259,7 @@
    "id": 1200920255,
    "heading": "ו'תשנז",
    "bodyLength": 1091,
+   "notes": 0,
    "pages": [
     277,
     278
@@ -3017,6 +3272,7 @@
    "id": 1200920256,
    "heading": "ו'תשנח",
    "bodyLength": 728,
+   "notes": 1,
    "pages": [
     278,
     279
@@ -3029,6 +3285,7 @@
    "id": 1200920257,
    "heading": "ו'תשנט",
    "bodyLength": 1112,
+   "notes": 2,
    "pages": [
     279,
     280
@@ -3041,6 +3298,7 @@
    "id": 1200920258,
    "heading": "ו'תשס",
    "bodyLength": 2025,
+   "notes": 0,
    "pages": [
     280,
     281
@@ -3053,6 +3311,7 @@
    "id": 1200920259,
    "heading": "ו'תשסא",
    "bodyLength": 4684,
+   "notes": 2,
    "pages": [
     281,
     282,
@@ -3068,6 +3327,7 @@
    "id": 1200920260,
    "heading": "ו'תשסב",
    "bodyLength": 2147,
+   "notes": 2,
    "pages": [
     285,
     286,
@@ -3081,6 +3341,7 @@
    "id": 1200920261,
    "heading": "ו'תשסג",
    "bodyLength": 556,
+   "notes": 1,
    "pages": [
     287,
     288
@@ -3093,6 +3354,7 @@
    "id": 1200920262,
    "heading": "ו'תשסד",
    "bodyLength": 1455,
+   "notes": 1,
    "pages": [
     288,
     289
@@ -3105,6 +3367,7 @@
    "id": 1200920263,
    "heading": "ו'תשסה",
    "bodyLength": 1305,
+   "notes": 3,
    "pages": [
     289
    ],
@@ -3116,6 +3379,7 @@
    "id": 1200920264,
    "heading": "ו'תשסו",
    "bodyLength": 788,
+   "notes": 0,
    "pages": [
     290,
     291
@@ -3128,6 +3392,7 @@
    "id": 1200920265,
    "heading": "ו'תשסז",
    "bodyLength": 1132,
+   "notes": 2,
    "pages": [
     291
    ],
@@ -3139,6 +3404,7 @@
    "id": 1200920266,
    "heading": "ו'תשסח",
    "bodyLength": 523,
+   "notes": 3,
    "pages": [
     292
    ],
@@ -3150,6 +3416,7 @@
    "id": 1200920267,
    "heading": "ו'תשסט",
    "bodyLength": 722,
+   "notes": 1,
    "pages": [
     292,
     293
@@ -3162,6 +3429,7 @@
    "id": 1200920268,
    "heading": "ו'תשע",
    "bodyLength": 797,
+   "notes": 2,
    "pages": [
     293,
     294
@@ -3174,6 +3442,7 @@
    "id": 1200920269,
    "heading": "ו'תשעא",
    "bodyLength": 498,
+   "notes": 0,
    "pages": [
     294,
     295
@@ -3186,6 +3455,7 @@
    "id": 1200920270,
    "heading": "ו'תשעב",
    "bodyLength": 1349,
+   "notes": 1,
    "pages": [
     295,
     296
@@ -3198,6 +3468,7 @@
    "id": 1200920271,
    "heading": "ו'תשעג",
    "bodyLength": 1445,
+   "notes": 1,
    "pages": [
     296,
     297
@@ -3210,6 +3481,7 @@
    "id": 1200920272,
    "heading": "ו'תשעד",
    "bodyLength": 2521,
+   "notes": 1,
    "pages": [
     297,
     298,
@@ -3223,6 +3495,7 @@
    "id": 1200920273,
    "heading": "ו'תשעה",
    "bodyLength": 1712,
+   "notes": 3,
    "pages": [
     299,
     300
@@ -3235,6 +3508,7 @@
    "id": 1200920274,
    "heading": "ו'תשעו",
    "bodyLength": 1936,
+   "notes": 1,
    "pages": [
     300,
     301,
@@ -3248,6 +3522,7 @@
    "id": 1200920275,
    "heading": "ו'תשעז",
    "bodyLength": 2806,
+   "notes": 1,
    "pages": [
     302,
     303,
@@ -3261,6 +3536,7 @@
    "id": 1200920276,
    "heading": "ו'תשעח",
    "bodyLength": 990,
+   "notes": 0,
    "pages": [
     304,
     305
@@ -3273,6 +3549,7 @@
    "id": 1200920277,
    "heading": "ו'תשעט",
    "bodyLength": 1511,
+   "notes": 1,
    "pages": [
     305,
     306
@@ -3285,6 +3562,7 @@
    "id": 1200920278,
    "heading": "ו'תשפ",
    "bodyLength": 777,
+   "notes": 1,
    "pages": [
     306
    ],
@@ -3296,6 +3574,7 @@
    "id": 1200920279,
    "heading": "ו'תשפא",
    "bodyLength": 1009,
+   "notes": 0,
    "pages": [
     307
    ],
@@ -3307,6 +3586,7 @@
    "id": 1200920280,
    "heading": "ו'תשפב",
    "bodyLength": 663,
+   "notes": 0,
    "pages": [
     308
    ],
@@ -3318,6 +3598,7 @@
    "id": 1200920281,
    "heading": "ו'תשפג",
    "bodyLength": 1391,
+   "notes": 1,
    "pages": [
     308,
     309
@@ -3330,6 +3611,7 @@
    "id": 1200920282,
    "heading": "ו'תשפד",
    "bodyLength": 495,
+   "notes": 2,
    "pages": [
     309,
     310
@@ -3342,6 +3624,7 @@
    "id": 1200920283,
    "heading": "ו'תשפה",
    "bodyLength": 1002,
+   "notes": 1,
    "pages": [
     310,
     311
@@ -3354,6 +3637,7 @@
    "id": 1200920284,
    "heading": "ו'תשפו",
    "bodyLength": 1248,
+   "notes": 1,
    "pages": [
     311,
     312
@@ -3366,6 +3650,7 @@
    "id": 1200920285,
    "heading": "ו'תשפז",
    "bodyLength": 1325,
+   "notes": 2,
    "pages": [
     312,
     313,
@@ -3379,6 +3664,7 @@
    "id": 1200920286,
    "heading": "ו'תשפח",
    "bodyLength": 714,
+   "notes": 2,
    "pages": [
     314,
     315
@@ -3391,6 +3677,7 @@
    "id": 1200920287,
    "heading": "ו'תשפט",
    "bodyLength": 970,
+   "notes": 2,
    "pages": [
     315
    ],
@@ -3402,6 +3689,7 @@
    "id": 1200920288,
    "heading": "ו'תשצ",
    "bodyLength": 1804,
+   "notes": 0,
    "pages": [
     316,
     317
@@ -3414,6 +3702,7 @@
    "id": 1200920289,
    "heading": "ו'תשצא",
    "bodyLength": 324,
+   "notes": 3,
    "pages": [
     317,
     318
@@ -3426,6 +3715,7 @@
    "id": 1200920290,
    "heading": "ו'תשצב",
    "bodyLength": 1036,
+   "notes": 4,
    "pages": [
     318,
     319
@@ -3438,6 +3728,7 @@
    "id": 1200920291,
    "heading": "ו'תשצג",
    "bodyLength": 911,
+   "notes": 0,
    "pages": [
     319
    ],
@@ -3449,6 +3740,7 @@
    "id": 1200920292,
    "heading": "ו'תשצד",
    "bodyLength": 2451,
+   "notes": 0,
    "pages": [
     320,
     321,
@@ -3462,6 +3754,7 @@
    "id": 1200920293,
    "heading": "ו'תשצד*",
    "bodyLength": 1596,
+   "notes": 0,
    "pages": [
     322,
     323
@@ -3474,6 +3767,7 @@
    "id": 1200920294,
    "heading": "ו'תשצה",
    "bodyLength": 3704,
+   "notes": 1,
    "pages": [
     323,
     324,
@@ -3488,6 +3782,7 @@
    "id": 1200920295,
    "heading": "ו'תשצו",
    "bodyLength": 663,
+   "notes": 0,
    "pages": [
     326
    ],
@@ -3499,6 +3794,7 @@
    "id": 1200920296,
    "heading": "ו'תשצז",
    "bodyLength": 1503,
+   "notes": 0,
    "pages": [
     326,
     327
@@ -3511,6 +3807,7 @@
    "id": 1200920297,
    "heading": "ו'תשצח",
    "bodyLength": 4865,
+   "notes": 0,
    "pages": [
     327,
     328,
@@ -3525,6 +3822,7 @@
    "id": 1200920298,
    "heading": "ו'תשצט",
    "bodyLength": 1598,
+   "notes": 0,
    "pages": [
     330,
     331
@@ -3537,6 +3835,7 @@
    "id": 1200920299,
    "heading": "ו'תת",
    "bodyLength": 1340,
+   "notes": 1,
    "pages": [
     331,
     332
@@ -3549,6 +3848,7 @@
    "id": 1200920300,
    "heading": "ו'תתא",
    "bodyLength": 2011,
+   "notes": 4,
    "pages": [
     332,
     333,
@@ -3562,6 +3862,7 @@
    "id": 1200920301,
    "heading": "ו'תתב",
    "bodyLength": 497,
+   "notes": 0,
    "pages": [
     334,
     335
@@ -3574,6 +3875,7 @@
    "id": 1200920302,
    "heading": "ו'תתג",
    "bodyLength": 1070,
+   "notes": 1,
    "pages": [
     335,
     336
@@ -3586,6 +3888,7 @@
    "id": 1200920303,
    "heading": "ו'תתד",
    "bodyLength": 1352,
+   "notes": 0,
    "pages": [
     336,
     337
@@ -3598,6 +3901,7 @@
    "id": 1200920304,
    "heading": "ו'תתה",
    "bodyLength": 4438,
+   "notes": 1,
    "pages": [
     337,
     338,
@@ -3612,6 +3916,7 @@
    "id": 1200920305,
    "heading": "ו'תתו",
    "bodyLength": 2087,
+   "notes": 2,
    "pages": [
     340,
     341
@@ -3624,6 +3929,7 @@
    "id": 1200920306,
    "heading": "ו'תתז",
    "bodyLength": 1687,
+   "notes": 0,
    "pages": [
     341,
     342,
@@ -3637,6 +3943,7 @@
    "id": 1200920307,
    "heading": "ו'תתח",
    "bodyLength": 789,
+   "notes": 2,
    "pages": [
     343
    ],
@@ -3648,6 +3955,7 @@
    "id": 1200920308,
    "heading": "ו'תתט",
    "bodyLength": 1110,
+   "notes": 0,
    "pages": [
     343,
     344
@@ -3660,6 +3968,7 @@
    "id": 1200920309,
    "heading": "ו'תתי",
    "bodyLength": 846,
+   "notes": 1,
    "pages": [
     344,
     345
@@ -3672,6 +3981,7 @@
    "id": 1200920310,
    "heading": "ו'תתיא",
    "bodyLength": 1738,
+   "notes": 0,
    "pages": [
     345,
     346
@@ -3684,6 +3994,7 @@
    "id": 1200920311,
    "heading": "ו'תתיב",
    "bodyLength": 750,
+   "notes": 0,
    "pages": [
     346,
     347
@@ -3696,6 +4007,7 @@
    "id": 1200920312,
    "heading": "ו'תתיג",
    "bodyLength": 776,
+   "notes": 1,
    "pages": [
     347,
     348
@@ -3708,6 +4020,7 @@
    "id": 1200920313,
    "heading": "ו'תתיד",
    "bodyLength": 693,
+   "notes": 0,
    "pages": [
     348
    ],
@@ -3719,6 +4032,7 @@
    "id": 1200920314,
    "heading": "ו'תתטו",
    "bodyLength": 794,
+   "notes": 0,
    "pages": [
     349
    ],
@@ -3730,6 +4044,7 @@
    "id": 1200920315,
    "heading": "ו'תתטז",
    "bodyLength": 2232,
+   "notes": 2,
    "pages": [
     350,
     351
@@ -3742,6 +4057,7 @@
    "id": 1200920316,
    "heading": "ו'תתיז",
    "bodyLength": 755,
+   "notes": 1,
    "pages": [
     351,
     352
@@ -3754,6 +4070,7 @@
    "id": 1200920317,
    "heading": "ו'תתיח",
    "bodyLength": 1317,
+   "notes": 0,
    "pages": [
     352,
     353
@@ -3766,6 +4083,7 @@
    "id": 1200920318,
    "heading": "ו'תתיט",
    "bodyLength": 329,
+   "notes": 1,
    "pages": [
     353
    ],
@@ -3777,6 +4095,7 @@
    "id": 1200920319,
    "heading": "ו'תתכ",
    "bodyLength": 1179,
+   "notes": 0,
    "pages": [
     354
    ],
@@ -3788,6 +4107,7 @@
    "id": 1200920320,
    "heading": "ו'תתכא",
    "bodyLength": 824,
+   "notes": 0,
    "pages": [
     355
    ],
@@ -3799,6 +4119,7 @@
    "id": 1200920321,
    "heading": "ו'תתכב",
    "bodyLength": 1273,
+   "notes": 0,
    "pages": [
     356,
     357
@@ -3811,6 +4132,7 @@
    "id": 1200920322,
    "heading": "ו'תתכג",
    "bodyLength": 890,
+   "notes": 0,
    "pages": [
     357,
     358
@@ -3823,6 +4145,7 @@
    "id": 1200920323,
    "heading": "ו'תתכד",
    "bodyLength": 759,
+   "notes": 1,
    "pages": [
     358,
     359
@@ -3835,6 +4158,7 @@
    "id": 1200920324,
    "heading": "ו'תתכה",
    "bodyLength": 1008,
+   "notes": 1,
    "pages": [
     359,
     360
@@ -3847,6 +4171,7 @@
    "id": 1200920325,
    "heading": "ו'תתכו",
    "bodyLength": 846,
+   "notes": 1,
    "pages": [
     360,
     361
@@ -3859,6 +4184,7 @@
    "id": 1200920326,
    "heading": "ו'תתכז",
    "bodyLength": 1147,
+   "notes": 1,
    "pages": [
     361,
     362
@@ -3871,6 +4197,7 @@
    "id": 1200920327,
    "heading": "ו'תתכח",
    "bodyLength": 1544,
+   "notes": 2,
    "pages": [
     362,
     363
@@ -3883,6 +4210,7 @@
    "id": 1200920328,
    "heading": "ו'תתכט",
    "bodyLength": 1011,
+   "notes": 1,
    "pages": [
     363,
     364
@@ -3895,6 +4223,7 @@
    "id": 1200920329,
    "heading": "ו'תתל",
    "bodyLength": 409,
+   "notes": 1,
    "pages": [
     364
    ],
@@ -3906,6 +4235,7 @@
    "id": 1200920330,
    "heading": "ו'תתלא",
    "bodyLength": 854,
+   "notes": 1,
    "pages": [
     364,
     365
@@ -3918,6 +4248,7 @@
    "id": 1200920331,
    "heading": "ו'תתלב",
    "bodyLength": 1038,
+   "notes": 1,
    "pages": [
     365,
     366
@@ -3930,6 +4261,7 @@
    "id": 1200920332,
    "heading": "ו'תתלג",
    "bodyLength": 323,
+   "notes": 1,
    "pages": [
     366
    ],
@@ -3941,6 +4273,7 @@
    "id": 1200920333,
    "heading": "ו'תתלד",
    "bodyLength": 676,
+   "notes": 0,
    "pages": [
     366,
     367
@@ -3953,6 +4286,7 @@
    "id": 1200920334,
    "heading": "ו'תתלה",
    "bodyLength": 1159,
+   "notes": 1,
    "pages": [
     367,
     368
@@ -3965,6 +4299,7 @@
    "id": 1200920335,
    "heading": "ו'תתלו",
    "bodyLength": 1528,
+   "notes": 3,
    "pages": [
     368,
     369
@@ -3977,6 +4312,7 @@
    "id": 1200920336,
    "heading": "ו'תתלז",
    "bodyLength": 662,
+   "notes": 0,
    "pages": [
     369,
     370
@@ -3989,6 +4325,7 @@
    "id": 1200920337,
    "heading": "ו'תתלח",
    "bodyLength": 831,
+   "notes": 1,
    "pages": [
     370
    ],
@@ -4000,6 +4337,7 @@
    "id": 1200920338,
    "heading": "ו'תתלט",
    "bodyLength": 1155,
+   "notes": 0,
    "pages": [
     370,
     371
@@ -4012,6 +4350,7 @@
    "id": 1200920339,
    "heading": "ו'תתמ",
    "bodyLength": 737,
+   "notes": 0,
    "pages": [
     371,
     372
@@ -4024,6 +4363,7 @@
    "id": 1200920340,
    "heading": "ו'תתמא",
    "bodyLength": 722,
+   "notes": 0,
    "pages": [
     372,
     373
@@ -4036,6 +4376,7 @@
    "id": 1200920341,
    "heading": "ו'תתמב",
    "bodyLength": 2064,
+   "notes": 2,
    "pages": [
     373,
     374
@@ -4048,6 +4389,7 @@
    "id": 1200920342,
    "heading": "ו'תתמג",
    "bodyLength": 2414,
+   "notes": 0,
    "pages": [
     374,
     375,
@@ -4061,6 +4403,7 @@
    "id": 1200920343,
    "heading": "ו'תתמד",
    "bodyLength": 1309,
+   "notes": 0,
    "pages": [
     376,
     377
@@ -4073,6 +4416,7 @@
    "id": 1200920344,
    "heading": "ו'תתמה",
    "bodyLength": 1614,
+   "notes": 1,
    "pages": [
     377,
     378
@@ -4085,6 +4429,7 @@
    "id": 1200920345,
    "heading": "ו'תתמו",
    "bodyLength": 871,
+   "notes": 0,
    "pages": [
     378
    ],
@@ -4096,6 +4441,7 @@
    "id": 1200920346,
    "heading": "ו'תתמז",
    "bodyLength": 1473,
+   "notes": 0,
    "pages": [
     379
    ],
@@ -4107,6 +4453,7 @@
    "id": 1200920347,
    "heading": "ו'תתמח",
    "bodyLength": 918,
+   "notes": 1,
    "pages": [
     379,
     380,
@@ -4120,6 +4467,7 @@
    "id": 1200920348,
    "heading": "ו'תתמט",
    "bodyLength": 885,
+   "notes": 2,
    "pages": [
     381,
     382
@@ -4132,6 +4480,7 @@
    "id": 1200920349,
    "heading": "ו'תתנ",
    "bodyLength": 559,
+   "notes": 1,
    "pages": [
     382
    ],
@@ -4143,6 +4492,7 @@
    "id": 1200920350,
    "heading": "ו'תתנא",
    "bodyLength": 866,
+   "notes": 0,
    "pages": [
     382,
     383
@@ -4155,6 +4505,7 @@
    "id": 1200920351,
    "heading": "ו'תתנב",
    "bodyLength": 488,
+   "notes": 1,
    "pages": [
     383,
     384
@@ -4167,6 +4518,7 @@
    "id": 1200920352,
    "heading": "ו'תתנג",
    "bodyLength": 877,
+   "notes": 1,
    "pages": [
     384,
     385
@@ -4179,6 +4531,7 @@
    "id": 1200920353,
    "heading": "ו'תתנד",
    "bodyLength": 617,
+   "notes": 1,
    "pages": [
     385
    ],
@@ -4190,6 +4543,7 @@
    "id": 1200920354,
    "heading": "ו'תתנה",
    "bodyLength": 3449,
+   "notes": 2,
    "pages": [
     385,
     386,
@@ -4204,6 +4558,7 @@
    "id": 1200920355,
    "heading": "ו'תתנו",
    "bodyLength": 831,
+   "notes": 2,
    "pages": [
     388,
     389
@@ -4216,6 +4571,7 @@
    "id": 1200920356,
    "heading": "ו'תתנז",
    "bodyLength": 1562,
+   "notes": 0,
    "pages": [
     389,
     390
@@ -4228,6 +4584,7 @@
    "id": 1200920357,
    "heading": "ו'תתנח",
    "bodyLength": 1288,
+   "notes": 1,
    "pages": [
     390,
     391
@@ -4240,6 +4597,7 @@
    "id": 1200920358,
    "heading": "ו'תתנט",
    "bodyLength": 1241,
+   "notes": 0,
    "pages": [
     391,
     392
@@ -4252,6 +4610,7 @@
    "id": 1200920359,
    "heading": "ו'תתס",
    "bodyLength": 1045,
+   "notes": 0,
    "pages": [
     392,
     393
@@ -4264,6 +4623,7 @@
    "id": 1200920360,
    "heading": "ו'תתסא",
    "bodyLength": 1106,
+   "notes": 0,
    "pages": [
     393,
     394
@@ -4276,6 +4636,7 @@
    "id": 1200920361,
    "heading": "ו'תתסב",
    "bodyLength": 546,
+   "notes": 0,
    "pages": [
     394
    ],
@@ -4287,6 +4648,7 @@
    "id": 1200920362,
    "heading": "ו'תתסג",
    "bodyLength": 733,
+   "notes": 2,
    "pages": [
     394,
     395
@@ -4299,6 +4661,7 @@
    "id": 1200920363,
    "heading": "ו'תתסד",
    "bodyLength": 863,
+   "notes": 2,
    "pages": [
     395,
     396
@@ -4311,6 +4674,7 @@
    "id": 1200920364,
    "heading": "ו'תתסה",
    "bodyLength": 1237,
+   "notes": 1,
    "pages": [
     396,
     397
@@ -4323,6 +4687,7 @@
    "id": 1200920365,
    "heading": "ו'תתסו",
    "bodyLength": 390,
+   "notes": 1,
    "pages": [
     397,
     398
@@ -4335,6 +4700,7 @@
    "id": 1200920366,
    "heading": "ו'תתסז",
    "bodyLength": 448,
+   "notes": 0,
    "pages": [
     398
    ],
@@ -4346,6 +4712,7 @@
    "id": 1200920367,
    "heading": "ו'תתסח",
    "bodyLength": 973,
+   "notes": 1,
    "pages": [
     398,
     399
@@ -4358,6 +4725,7 @@
    "id": 1200920368,
    "heading": "ו'תתסט",
    "bodyLength": 724,
+   "notes": 0,
    "pages": [
     399,
     400
@@ -4370,6 +4738,7 @@
    "id": 1200920369,
    "heading": "ו'תתע",
    "bodyLength": 1035,
+   "notes": 1,
    "pages": [
     400,
     401
@@ -4382,6 +4751,7 @@
    "id": 1200920370,
    "heading": "ו'תתע*",
    "bodyLength": 829,
+   "notes": 3,
    "pages": [
     401
    ],
@@ -4393,6 +4763,7 @@
    "id": 1200920371,
    "heading": "ו'תתעא",
    "bodyLength": 805,
+   "notes": 1,
    "pages": [
     402,
     403
@@ -4405,6 +4776,7 @@
    "id": 1200920372,
    "heading": "ו'תתעב",
    "bodyLength": 553,
+   "notes": 1,
    "pages": [
     403
    ],
@@ -4416,6 +4788,7 @@
    "id": 1200920373,
    "heading": "ו'תתעג",
    "bodyLength": 1153,
+   "notes": 0,
    "pages": [
     403,
     404
@@ -4428,6 +4801,7 @@
    "id": 1200920374,
    "heading": "ו'תתעד",
    "bodyLength": 3179,
+   "notes": 1,
    "pages": [
     404,
     405,
@@ -4442,6 +4816,7 @@
    "id": 1200920375,
    "heading": "ו'תתעה",
    "bodyLength": 1657,
+   "notes": 0,
    "pages": [
     407,
     408
@@ -4454,6 +4829,7 @@
    "id": 1200920376,
    "heading": "ו'תתעו",
    "bodyLength": 9355,
+   "notes": 2,
    "pages": [
     408,
     409,
@@ -4470,6 +4846,7 @@
    "id": 1200920377,
    "heading": "ו'תתעז",
    "bodyLength": 867,
+   "notes": 1,
    "pages": [
     413,
     414
@@ -4482,6 +4859,7 @@
    "id": 1200920378,
    "heading": "ו'תתעח",
    "bodyLength": 1736,
+   "notes": 1,
    "pages": [
     414,
     415
@@ -4494,6 +4872,7 @@
    "id": 1200920379,
    "heading": "ו'תתעט",
    "bodyLength": 535,
+   "notes": 1,
    "pages": [
     415
    ],
@@ -4505,6 +4884,7 @@
    "id": 1200920380,
    "heading": "ו'תתפ",
    "bodyLength": 545,
+   "notes": 0,
    "pages": [
     415,
     416
@@ -4517,6 +4897,7 @@
    "id": 1200920381,
    "heading": "ו'תתפא",
    "bodyLength": 2004,
+   "notes": 2,
    "pages": [
     416,
     417,
@@ -4530,6 +4911,7 @@
    "id": 1200920382,
    "heading": "ו'תתפב",
    "bodyLength": 949,
+   "notes": 1,
    "pages": [
     418,
     419
@@ -4542,6 +4924,7 @@
    "id": 1200920383,
    "heading": "ו'תתפג",
    "bodyLength": 1132,
+   "notes": 0,
    "pages": [
     419,
     420
@@ -4554,6 +4937,7 @@
    "id": 1200920384,
    "heading": "ו'תתפד",
    "bodyLength": 454,
+   "notes": 0,
    "pages": [
     420
    ],
@@ -4565,6 +4949,7 @@
    "id": 1200920385,
    "heading": "ו'תתפה",
    "bodyLength": 2569,
+   "notes": 1,
    "pages": [
     420,
     421,
@@ -4578,6 +4963,7 @@
    "id": 1200920386,
    "heading": "ו'תתפו",
    "bodyLength": 2010,
+   "notes": 2,
    "pages": [
     422,
     423
@@ -4590,6 +4976,7 @@
    "id": 1200920387,
    "heading": "ו'תתפז",
    "bodyLength": 920,
+   "notes": 0,
    "pages": [
     423,
     424
@@ -4602,6 +4989,7 @@
    "id": 1200920388,
    "heading": "ו'תתפח",
    "bodyLength": 870,
+   "notes": 2,
    "pages": [
     424,
     425
@@ -4614,6 +5002,7 @@
    "id": 1200920389,
    "heading": "ו'תתפט",
    "bodyLength": 459,
+   "notes": 0,
    "pages": [
     425
    ],
@@ -4625,6 +5014,7 @@
    "id": 1200920390,
    "heading": "ו'תתצ",
    "bodyLength": 888,
+   "notes": 3,
    "pages": [
     426
    ],
@@ -4636,6 +5026,7 @@
    "id": 1200920391,
    "heading": "ו'תתצא",
    "bodyLength": 819,
+   "notes": 0,
    "pages": [
     427
    ],
@@ -4647,6 +5038,7 @@
    "id": 1200920392,
    "heading": "ו'תתצב",
    "bodyLength": 649,
+   "notes": 1,
    "pages": [
     427,
     428
@@ -4659,6 +5051,7 @@
    "id": 1200920393,
    "heading": "ו'תתצג",
    "bodyLength": 1948,
+   "notes": 0,
    "pages": [
     428,
     429,
@@ -4672,6 +5065,7 @@
    "id": 1200920394,
    "heading": "ו'תתצד",
    "bodyLength": 499,
+   "notes": 2,
    "pages": [
     430
    ],
@@ -4683,6 +5077,7 @@
    "id": 1200920395,
    "heading": "ו'תתצה",
    "bodyLength": 1177,
+   "notes": 0,
    "pages": [
     430,
     431
@@ -4695,6 +5090,7 @@
    "id": 1200920396,
    "heading": "ו'תתצו",
    "bodyLength": 549,
+   "notes": 0,
    "pages": [
     431,
     432
@@ -4707,6 +5103,7 @@
    "id": 1200920397,
    "heading": "ו'תתצז",
    "bodyLength": 665,
+   "notes": 2,
    "pages": [
     432,
     433
@@ -4719,6 +5116,7 @@
    "id": 1200920398,
    "heading": "ו'תתצח",
    "bodyLength": 4158,
+   "notes": 2,
    "pages": [
     433,
     434,
@@ -4733,6 +5131,7 @@
    "id": 1200920399,
    "heading": "ו'תתצט",
    "bodyLength": 557,
+   "notes": 1,
    "pages": [
     436
    ],
@@ -4744,6 +5143,7 @@
    "id": 1200920400,
    "heading": "ו'תתק",
    "bodyLength": 2424,
+   "notes": 2,
    "pages": [
     436,
     437,
@@ -4757,6 +5157,7 @@
    "id": 1200920401,
    "heading": "ו'תתקא",
    "bodyLength": 2304,
+   "notes": 0,
    "pages": [
     438,
     439
@@ -4769,6 +5170,7 @@
    "id": 1200920402,
    "heading": "ו'תתקב",
    "bodyLength": 353,
+   "notes": 2,
    "pages": [
     439,
     440
@@ -4781,6 +5183,7 @@
    "id": 1200920403,
    "heading": "ו'תתקג",
    "bodyLength": 3834,
+   "notes": 3,
    "pages": [
     440,
     441,
@@ -4795,6 +5198,7 @@
    "id": 1200920404,
    "heading": "ו'תתקד",
    "bodyLength": 211,
+   "notes": 0,
    "pages": [
     443
    ],
@@ -4806,6 +5210,7 @@
    "id": 1200920405,
    "heading": "ו'תתקה",
    "bodyLength": 2849,
+   "notes": 5,
    "pages": [
     443,
     444
@@ -4818,6 +5223,7 @@
    "id": 1200920406,
    "heading": "ו'תתקו",
    "bodyLength": 512,
+   "notes": 1,
    "pages": [
     445
    ],
@@ -4829,6 +5235,7 @@
    "id": 1200920407,
    "heading": "ו'תתקז",
    "bodyLength": 1126,
+   "notes": 0,
    "pages": [
     446
    ],
@@ -4840,6 +5247,7 @@
    "id": 1200920408,
    "heading": "ו'תתקח",
    "bodyLength": 1236,
+   "notes": 1,
    "pages": [
     446,
     447
@@ -4852,6 +5260,7 @@
    "id": 1200920409,
    "heading": "ו'תתקט",
    "bodyLength": 740,
+   "notes": 0,
    "pages": [
     448,
     449
@@ -4864,6 +5273,7 @@
    "id": 1200920410,
    "heading": "ו'תתקי",
    "bodyLength": 2872,
+   "notes": 3,
    "pages": [
     449,
     450
@@ -4876,6 +5286,7 @@
    "id": 1200920411,
    "heading": "ו'תתקיא",
    "bodyLength": 1004,
+   "notes": 2,
    "pages": [
     450,
     451
@@ -4888,6 +5299,7 @@
    "id": 1200920412,
    "heading": "ו'תתקיב",
    "bodyLength": 950,
+   "notes": 1,
    "pages": [
     452,
     453
@@ -4900,6 +5312,7 @@
    "id": 1200920413,
    "heading": "ו'תתקיג",
    "bodyLength": 850,
+   "notes": 2,
    "pages": [
     453
    ],
@@ -4911,6 +5324,7 @@
    "id": 1200920414,
    "heading": "ו'תתקיד",
    "bodyLength": 1010,
+   "notes": 0,
    "pages": [
     454,
     455
@@ -4923,6 +5337,7 @@
    "id": 1200920415,
    "heading": "ו'תתקטו",
    "bodyLength": 754,
+   "notes": 0,
    "pages": [
     455
    ],
@@ -4934,6 +5349,7 @@
    "id": 1200920416,
    "heading": "ו'תתקטז",
    "bodyLength": 662,
+   "notes": 0,
    "pages": [
     456
    ],
@@ -4945,6 +5361,7 @@
    "id": 1200920417,
    "heading": "ו'תתקיז",
    "bodyLength": 87,
+   "notes": 0,
    "pages": [
     456,
     457
@@ -4957,6 +5374,7 @@
    "id": 1200920418,
    "heading": "ו'תתקיח",
    "bodyLength": 674,
+   "notes": 2,
    "pages": [
     457,
     458
@@ -4969,6 +5387,7 @@
    "id": 1200920419,
    "heading": "ו'תתקיט",
    "bodyLength": 623,
+   "notes": 2,
    "pages": [
     458,
     459
@@ -4981,6 +5400,7 @@
    "id": 1200920420,
    "heading": "ו'תתקכ",
    "bodyLength": 593,
+   "notes": 1,
    "pages": [
     459
    ],
@@ -4992,6 +5412,7 @@
    "id": 1200920421,
    "heading": "ו'תתקכא",
    "bodyLength": 1364,
+   "notes": 2,
    "pages": [
     459,
     460,
@@ -5005,6 +5426,7 @@
    "id": 1200920422,
    "heading": "ו'תתקכב",
    "bodyLength": 1938,
+   "notes": 1,
    "pages": [
     461,
     462
@@ -5017,6 +5439,7 @@
    "id": 1200920423,
    "heading": "ו'תתקכג",
    "bodyLength": 1076,
+   "notes": 0,
    "pages": [
     462,
     463
@@ -5029,6 +5452,7 @@
    "id": 1200920424,
    "heading": "ו'תתקכד",
    "bodyLength": 668,
+   "notes": 0,
    "pages": [
     463,
     464
@@ -5041,6 +5465,7 @@
    "id": 1200920425,
    "heading": "ו'תתקכה",
    "bodyLength": 1356,
+   "notes": 1,
    "pages": [
     464,
     465
@@ -5053,6 +5478,7 @@
    "id": 1200920426,
    "heading": "ו'תתקכו",
    "bodyLength": 1038,
+   "notes": 1,
    "pages": [
     465
    ],
@@ -5064,6 +5490,7 @@
    "id": 1200920427,
    "heading": "ו'תתקכז",
    "bodyLength": 966,
+   "notes": 2,
    "pages": [
     466,
     467
@@ -5076,6 +5503,7 @@
    "id": 1200920428,
    "heading": "ו'תתקכח",
    "bodyLength": 924,
+   "notes": 5,
    "pages": [
     467,
     468
@@ -5088,6 +5516,7 @@
    "id": 1200920429,
    "heading": "ו'תתקכט",
    "bodyLength": 1296,
+   "notes": 2,
    "pages": [
     468,
     469
@@ -5100,6 +5529,7 @@
    "id": 1200920430,
    "heading": "ו'תתקל",
    "bodyLength": 1927,
+   "notes": 1,
    "pages": [
     469,
     470
@@ -5112,6 +5542,7 @@
    "id": 1200920431,
    "heading": "ו'תתקלא",
    "bodyLength": 987,
+   "notes": 1,
    "pages": [
     470,
     471
@@ -5124,6 +5555,7 @@
    "id": 1200920432,
    "heading": "ו'תתקלב",
    "bodyLength": 910,
+   "notes": 1,
    "pages": [
     471,
     472
@@ -5136,6 +5568,7 @@
    "id": 1200920433,
    "heading": "ו'תתקלג",
    "bodyLength": 984,
+   "notes": 1,
    "pages": [
     472
    ],
@@ -5147,6 +5580,7 @@
    "id": 1200920434,
    "heading": "ו'תתקלד",
    "bodyLength": 463,
+   "notes": 0,
    "pages": [
     473
    ],
@@ -5158,6 +5592,7 @@
    "id": 1200920435,
    "heading": "ו'תתקלה",
    "bodyLength": 1588,
+   "notes": 1,
    "pages": [
     473,
     474,
@@ -5171,6 +5606,7 @@
    "id": 1200920436,
    "heading": "ו'תתקלו",
    "bodyLength": 2204,
+   "notes": 4,
    "pages": [
     475,
     476,
@@ -5184,6 +5620,7 @@
    "id": 1200920437,
    "heading": "ו'תתקלז",
    "bodyLength": 1807,
+   "notes": 3,
    "pages": [
     477,
     478
@@ -5196,6 +5633,7 @@
    "id": 1200920438,
    "heading": "ו'תתקלח",
    "bodyLength": 1294,
+   "notes": 1,
    "pages": [
     478,
     479
@@ -5208,6 +5646,7 @@
    "id": 1200920439,
    "heading": "ו'תתקלט",
    "bodyLength": 724,
+   "notes": 0,
    "pages": [
     479,
     480
@@ -5220,6 +5659,7 @@
    "id": 1200920440,
    "heading": "ו'תתקמ",
    "bodyLength": 778,
+   "notes": 1,
    "pages": [
     480,
     481
@@ -5232,6 +5672,7 @@
    "id": 1200920441,
    "heading": "ו'תתקמא",
    "bodyLength": 636,
+   "notes": 1,
    "pages": [
     481
    ],
@@ -5243,6 +5684,7 @@
    "id": 1200920442,
    "heading": "ו'תתקמב",
    "bodyLength": 1808,
+   "notes": 0,
    "pages": [
     481,
     482,
@@ -5256,6 +5698,7 @@
    "id": 1200920443,
    "heading": "ו'תתקמג",
    "bodyLength": 905,
+   "notes": 2,
    "pages": [
     483
    ],
@@ -5267,6 +5710,7 @@
    "id": 1200920444,
    "heading": "ו'תתקמד",
    "bodyLength": 1216,
+   "notes": 0,
    "pages": [
     484,
     485
@@ -5279,6 +5723,7 @@
    "id": 1200920445,
    "heading": "ו'תתקמה",
    "bodyLength": 1086,
+   "notes": 1,
    "pages": [
     485
    ],
@@ -5290,6 +5735,7 @@
    "id": 1200920446,
    "heading": "ו'תתקמו",
    "bodyLength": 575,
+   "notes": 0,
    "pages": [
     486
    ],
@@ -5301,6 +5747,7 @@
    "id": 1200920447,
    "heading": "ו'תתקמז",
    "bodyLength": 1059,
+   "notes": 0,
    "pages": [
     486,
     487
@@ -5313,6 +5760,7 @@
    "id": 1200920448,
    "heading": "ו'תתקמח",
    "bodyLength": 1619,
+   "notes": 0,
    "pages": [
     487,
     488
@@ -5325,6 +5773,7 @@
    "id": 1200920449,
    "heading": "ו'תתקמט",
    "bodyLength": 390,
+   "notes": 1,
    "pages": [
     488,
     489
@@ -5337,6 +5786,7 @@
    "id": 1200920450,
    "heading": "ו'תתקנ",
    "bodyLength": 583,
+   "notes": 1,
    "pages": [
     489
    ],
@@ -5348,6 +5798,7 @@
    "id": 1200920451,
    "heading": "ו'תתקנא",
    "bodyLength": 377,
+   "notes": 0,
    "pages": [
     490
    ],
@@ -5359,6 +5810,7 @@
    "id": 1200920452,
    "heading": "ו'תתקנב",
    "bodyLength": 947,
+   "notes": 0,
    "pages": [
     490,
     491
@@ -5371,6 +5823,7 @@
    "id": 1200920453,
    "heading": "ו'תתקנג",
    "bodyLength": 692,
+   "notes": 1,
    "pages": [
     491
    ],
@@ -5382,6 +5835,7 @@
    "id": 1200920454,
    "heading": "ו'תתקנד",
    "bodyLength": 1210,
+   "notes": 0,
    "pages": [
     492
    ],
@@ -5393,6 +5847,7 @@
    "id": 1200920455,
    "heading": "ו'תתקנה",
    "bodyLength": 553,
+   "notes": 0,
    "pages": [
     493
    ],
@@ -5404,6 +5859,7 @@
    "id": 1200920456,
    "heading": "ו'תתקנו",
    "bodyLength": 727,
+   "notes": 1,
    "pages": [
     493,
     494
@@ -5416,6 +5872,7 @@
    "id": 1200920457,
    "heading": "ו'תתקנז",
    "bodyLength": 964,
+   "notes": 0,
    "pages": [
     494,
     495
@@ -5428,6 +5885,7 @@
    "id": 1200920458,
    "heading": "ו'תתקנח",
    "bodyLength": 2199,
+   "notes": 2,
    "pages": [
     495,
     496,
@@ -5441,6 +5899,7 @@
    "id": 1200920459,
    "heading": "ו'תתקנט",
    "bodyLength": 3447,
+   "notes": 2,
    "pages": [
     497,
     498,
@@ -5454,6 +5913,7 @@
    "id": 1200920460,
    "heading": "ו'תתקס",
    "bodyLength": 2284,
+   "notes": 0,
    "pages": [
     499,
     500,
@@ -5467,6 +5927,7 @@
    "id": 1200920461,
    "heading": "ו'תתקסא",
    "bodyLength": 1855,
+   "notes": 0,
    "pages": [
     501,
     502
@@ -5479,6 +5940,7 @@
    "id": 1200920462,
    "heading": "ו'תתקסב",
    "bodyLength": 0,
+   "notes": 4,
    "pages": [],
    "coverage": 0,
    "status": "empty"
@@ -5488,6 +5950,7 @@
    "id": 1200920463,
    "heading": "ו'תתקסב*",
    "bodyLength": 258,
+   "notes": 0,
    "pages": [
     502,
     503
@@ -5500,6 +5963,7 @@
    "id": 1200920464,
    "heading": "ו'תתקסג",
    "bodyLength": 638,
+   "notes": 0,
    "pages": [
     503
    ],
@@ -5511,6 +5975,7 @@
    "id": 1200920465,
    "heading": "ו'תתקסד",
    "bodyLength": 2050,
+   "notes": 0,
    "pages": [
     503,
     504,
@@ -5524,6 +5989,7 @@
    "id": 1200920466,
    "heading": "ו'תתקסה",
    "bodyLength": 1675,
+   "notes": 0,
    "pages": [
     505
    ],
@@ -5535,6 +6001,7 @@
    "id": 1200920467,
    "heading": "ו'תתקסו",
    "bodyLength": 817,
+   "notes": 2,
    "pages": [
     506,
     507
@@ -5547,6 +6014,7 @@
    "id": 1200920468,
    "heading": "ו'תתקסז",
    "bodyLength": 2047,
+   "notes": 3,
    "pages": [
     507,
     508
@@ -5559,6 +6027,7 @@
    "id": 1200920469,
    "heading": "ו'תתקסח",
    "bodyLength": 1886,
+   "notes": 1,
    "pages": [
     508,
     509,
@@ -5572,6 +6041,7 @@
    "id": 1200920470,
    "heading": "ו'תתקסט",
    "bodyLength": 6853,
+   "notes": 3,
    "pages": [
     510,
     511,
@@ -5586,6 +6056,7 @@
    "id": 1200920471,
    "heading": "ו'תתקע",
    "bodyLength": 975,
+   "notes": 1,
    "pages": [
     514,
     515
@@ -5598,6 +6069,7 @@
    "id": 1200920472,
    "heading": "ו'תתקעא",
    "bodyLength": 1474,
+   "notes": 2,
    "pages": [
     515,
     516
@@ -5610,6 +6082,7 @@
    "id": 1200920473,
    "heading": "ו'תתקעב",
    "bodyLength": 3898,
+   "notes": 1,
    "pages": [
     516,
     517,
@@ -5623,6 +6096,7 @@
    "id": 1200920474,
    "heading": "ו'תתקעג",
    "bodyLength": 490,
+   "notes": 0,
    "pages": [
     518,
     519
@@ -5635,6 +6109,7 @@
    "id": 1200920475,
    "heading": "ו'תתקעד",
    "bodyLength": 2335,
+   "notes": 1,
    "pages": [
     519,
     520
@@ -5647,6 +6122,7 @@
    "id": 1200920476,
    "heading": "ו'תתקעה",
    "bodyLength": 1662,
+   "notes": 2,
    "pages": [
     521,
     522
@@ -5659,6 +6135,7 @@
    "id": 1200920477,
    "heading": "ו'תתקעו",
    "bodyLength": 699,
+   "notes": 0,
    "pages": [
     522
    ],
@@ -5670,6 +6147,7 @@
    "id": 1200920478,
    "heading": "ו'תתקעז",
    "bodyLength": 1147,
+   "notes": 2,
    "pages": [
     523,
     524
@@ -5682,6 +6160,7 @@
    "id": 1200920479,
    "heading": "ו'תתקעח",
    "bodyLength": 1793,
+   "notes": 2,
    "pages": [
     524,
     525
@@ -5694,6 +6173,7 @@
    "id": 1200920480,
    "heading": "ו'תתקעח*",
    "bodyLength": 1081,
+   "notes": 0,
    "pages": [
     525,
     526
@@ -5706,6 +6186,7 @@
    "id": 1200920481,
    "heading": "ו'תתקעט",
    "bodyLength": 1464,
+   "notes": 0,
    "pages": [
     526,
     527
@@ -5718,6 +6199,7 @@
    "id": 1200920482,
    "heading": "ו'תתקפ",
    "bodyLength": 1020,
+   "notes": 2,
    "pages": [
     527,
     528
@@ -5730,6 +6212,7 @@
    "id": 1200920483,
    "heading": "ו'תתקפא",
    "bodyLength": 1792,
+   "notes": 0,
    "pages": [
     528,
     529
@@ -5742,6 +6225,7 @@
    "id": 1200920484,
    "heading": "ו'תתקפב",
    "bodyLength": 747,
+   "notes": 2,
    "pages": [
     529,
     530
@@ -5754,6 +6238,7 @@
    "id": 1200920485,
    "heading": "ו'תתקפג",
    "bodyLength": 1984,
+   "notes": 0,
    "pages": [
     530,
     531,
@@ -5767,6 +6252,7 @@
    "id": 1200920486,
    "heading": "ו'תתקפד",
    "bodyLength": 1026,
+   "notes": 1,
    "pages": [
     532,
     533
@@ -5779,6 +6265,7 @@
    "id": 1200920487,
    "heading": "ו'תתקפה",
    "bodyLength": 1387,
+   "notes": 3,
    "pages": [
     533,
     534
@@ -5791,6 +6278,7 @@
    "id": 1200920488,
    "heading": "ו'תתקפו",
    "bodyLength": 601,
+   "notes": 2,
    "pages": [
     534,
     535
@@ -5803,6 +6291,7 @@
    "id": 1200920489,
    "heading": "ו'תתקפז",
    "bodyLength": 1749,
+   "notes": 1,
    "pages": [
     535,
     536
@@ -5815,6 +6304,7 @@
    "id": 1200920490,
    "heading": "ו'תתקפח",
    "bodyLength": 862,
+   "notes": 0,
    "pages": [
     536,
     537
@@ -5827,6 +6317,7 @@
    "id": 1200920491,
    "heading": "ו'תתקפט",
    "bodyLength": 1200,
+   "notes": 1,
    "pages": [
     537,
     538
@@ -5839,6 +6330,7 @@
    "id": 1200920492,
    "heading": "ו'תתקצ",
    "bodyLength": 767,
+   "notes": 2,
    "pages": [
     538,
     539
@@ -5851,6 +6343,7 @@
    "id": 1200920493,
    "heading": "ו'תתקצא",
    "bodyLength": 674,
+   "notes": 1,
    "pages": [
     539,
     540
@@ -5863,6 +6356,7 @@
    "id": 1200920494,
    "heading": "ו'תתקצב",
    "bodyLength": 819,
+   "notes": 3,
    "pages": [
     540,
     541
@@ -5875,6 +6369,7 @@
    "id": 1200920495,
    "heading": "ו'תתקצג",
    "bodyLength": 558,
+   "notes": 2,
    "pages": [
     541
    ],
@@ -5886,6 +6381,7 @@
    "id": 1200920496,
    "heading": "ו'תתקצד",
    "bodyLength": 601,
+   "notes": 1,
    "pages": [
     542
    ],
@@ -5897,6 +6393,7 @@
    "id": 1200920497,
    "heading": "ו'תתקצה",
    "bodyLength": 478,
+   "notes": 0,
    "pages": [
     542,
     543
@@ -5909,6 +6406,7 @@
    "id": 1200920498,
    "heading": "ו'תתקצו",
    "bodyLength": 754,
+   "notes": 1,
    "pages": [
     543,
     544
@@ -5921,6 +6419,7 @@
    "id": 1200920499,
    "heading": "ו'תתקצז",
    "bodyLength": 1947,
+   "notes": 2,
    "pages": [
     544,
     545
@@ -5933,6 +6432,7 @@
    "id": 1200920500,
    "heading": "ו'תתקצח",
    "bodyLength": 415,
+   "notes": 0,
    "pages": [
     545,
     546
@@ -5945,6 +6445,7 @@
    "id": 1200920501,
    "heading": "ו'תתקצט",
    "bodyLength": 1561,
+   "notes": 0,
    "pages": [
     546,
     547
@@ -5957,6 +6458,7 @@
    "id": 1200920502,
    "heading": "ו'תתר",
    "bodyLength": 1091,
+   "notes": 2,
    "pages": [
     547,
     548
@@ -5969,6 +6471,7 @@
    "id": 1200920503,
    "heading": "ז'א",
    "bodyLength": 756,
+   "notes": 0,
    "pages": [
     548
    ],
@@ -5980,6 +6483,7 @@
    "id": 1200920504,
    "heading": "ז'ב",
    "bodyLength": 1291,
+   "notes": 2,
    "pages": [
     549
    ],
@@ -5991,6 +6495,7 @@
    "id": 1200920505,
    "heading": "ז'ג",
    "bodyLength": 969,
+   "notes": 0,
    "pages": [
     550
    ],
@@ -6002,6 +6507,7 @@
    "id": 1200920506,
    "heading": "ז'ד",
    "bodyLength": 1175,
+   "notes": 0,
    "pages": [
     551
    ],
@@ -6013,6 +6519,7 @@
    "id": 1200920507,
    "heading": "ז'ה",
    "bodyLength": 903,
+   "notes": 0,
    "pages": [
     552
    ],
@@ -6024,6 +6531,7 @@
    "id": 1200920508,
    "heading": "ז'ו",
    "bodyLength": 617,
+   "notes": 0,
    "pages": [
     552,
     553
@@ -6036,6 +6544,7 @@
    "id": 1200920509,
    "heading": "ז'ז",
    "bodyLength": 1469,
+   "notes": 0,
    "pages": [
     553,
     554
@@ -6048,6 +6557,7 @@
    "id": 1200920510,
    "heading": "ז'ח",
    "bodyLength": 1584,
+   "notes": 0,
    "pages": [
     554,
     555
@@ -6060,6 +6570,7 @@
    "id": 1200920511,
    "heading": "ז'ט",
    "bodyLength": 1644,
+   "notes": 0,
    "pages": [
     555,
     556
@@ -6072,6 +6583,7 @@
    "id": 1200920512,
    "heading": "ז'י",
    "bodyLength": 1243,
+   "notes": 0,
    "pages": [
     556,
     557
@@ -6084,6 +6596,7 @@
    "id": 1200920513,
    "heading": "ז'יא",
    "bodyLength": 2080,
+   "notes": 0,
    "pages": [
     557,
     558
@@ -6096,6 +6609,7 @@
    "id": 1200920514,
    "heading": "ז'יב",
    "bodyLength": 797,
+   "notes": 2,
    "pages": [
     559
    ],
@@ -6107,6 +6621,7 @@
    "id": 1200920515,
    "heading": "ז'יג",
    "bodyLength": 991,
+   "notes": 0,
    "pages": [
     560
    ],
@@ -6118,6 +6633,7 @@
    "id": 1200920516,
    "heading": "ז'יד",
    "bodyLength": 4274,
+   "notes": 1,
    "pages": [
     561,
     562,
@@ -6131,6 +6647,7 @@
    "id": 1200920517,
    "heading": "ז'טו",
    "bodyLength": 1691,
+   "notes": 1,
    "pages": [
     563,
     564,
@@ -6144,6 +6661,7 @@
    "id": 1200920518,
    "heading": "ז'טז",
    "bodyLength": 1310,
+   "notes": 0,
    "pages": [
     565,
     566
@@ -6156,6 +6674,7 @@
    "id": 1200920519,
    "heading": "ז'יז",
    "bodyLength": 1213,
+   "notes": 0,
    "pages": [
     566,
     567
@@ -6168,6 +6687,7 @@
    "id": 1200920520,
    "heading": "ז'יח",
    "bodyLength": 1577,
+   "notes": 0,
    "pages": [
     567,
     568
@@ -6180,6 +6700,7 @@
    "id": 1200920521,
    "heading": "ז'יט",
    "bodyLength": 1297,
+   "notes": 0,
    "pages": [
     568,
     569
@@ -6192,6 +6713,7 @@
    "id": 1200920522,
    "heading": "ז'כ",
    "bodyLength": 2289,
+   "notes": 1,
    "pages": [
     569,
     570
@@ -6204,6 +6726,7 @@
    "id": 1200920523,
    "heading": "ז'כא",
    "bodyLength": 752,
+   "notes": 1,
    "pages": [
     571
    ],
@@ -6215,6 +6738,7 @@
    "id": 1200920524,
    "heading": "ז'כב",
    "bodyLength": 914,
+   "notes": 1,
    "pages": [
     572
    ],
@@ -6226,6 +6750,7 @@
    "id": 1200920525,
    "heading": "ז'כג",
    "bodyLength": 1154,
+   "notes": 1,
    "pages": [
     573
    ],
@@ -6237,6 +6762,7 @@
    "id": 1200920526,
    "heading": "ז'כד",
    "bodyLength": 690,
+   "notes": 3,
    "pages": [
     574
    ],
@@ -6248,6 +6774,7 @@
    "id": 1200920527,
    "heading": "ז'כה",
    "bodyLength": 393,
+   "notes": 2,
    "pages": [
     574,
     575
@@ -6260,6 +6787,7 @@
    "id": 1200920528,
    "heading": "ז'כו",
    "bodyLength": 2505,
+   "notes": 1,
    "pages": [
     575,
     576,
@@ -6273,6 +6801,7 @@
    "id": 1200920529,
    "heading": "ז'כז",
    "bodyLength": 898,
+   "notes": 3,
    "pages": [
     577,
     578
@@ -6285,6 +6814,7 @@
    "id": 1200920530,
    "heading": "ז'כח",
    "bodyLength": 336,
+   "notes": 1,
    "pages": [
     578
    ],
@@ -6296,6 +6826,7 @@
    "id": 1200920531,
    "heading": "ז'כט",
    "bodyLength": 656,
+   "notes": 0,
    "pages": [
     578
    ],
@@ -6307,6 +6838,7 @@
    "id": 1200920532,
    "heading": "ז'ל",
    "bodyLength": 1158,
+   "notes": 1,
    "pages": [
     578,
     579,
@@ -6320,6 +6852,7 @@
    "id": 1200920533,
    "heading": "ז'לא",
    "bodyLength": 1103,
+   "notes": 2,
    "pages": [
     580
    ],
@@ -6570,6 +7103,16 @@
      "from": 0,
      "to": 561
     }
+   ],
+   "notes": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ]
    ]
   },
   {
@@ -6590,6 +7133,12 @@
      "from": 561,
      "to": 2039
     }
+   ],
+   "notes": [
+    [
+     0,
+     2
+    ]
    ]
   },
   {
@@ -6644,6 +7193,12 @@
      "from": 923,
      "to": 2795
     }
+   ],
+   "notes": [
+    [
+     1,
+     0
+    ]
    ]
   },
   {
@@ -6670,6 +7225,12 @@
      "from": 0,
      "to": 558
     }
+   ],
+   "notes": [
+    [
+     2,
+     0
+    ]
    ]
   },
   {
@@ -6692,6 +7253,12 @@
      "from": 0,
      "to": 624
     }
+   ],
+   "notes": [
+    [
+     3,
+     0
+    ]
    ]
   },
   {
@@ -6741,6 +7308,16 @@
      "from": 0,
      "to": 364
     }
+   ],
+   "notes": [
+    [
+     6,
+     0
+    ],
+    [
+     6,
+     1
+    ]
    ]
   },
   {
@@ -6838,6 +7415,16 @@
      "from": 0,
      "to": 153
     }
+   ],
+   "notes": [
+    [
+     10,
+     0
+    ],
+    [
+     11,
+     0
+    ]
    ]
   },
   {
@@ -6887,6 +7474,16 @@
      "from": 0,
      "to": 189
     }
+   ],
+   "notes": [
+    [
+     12,
+     0
+    ],
+    [
+     13,
+     0
+    ]
    ]
   },
   {
@@ -6937,6 +7534,12 @@
      "from": 0,
      "to": 158
     }
+   ],
+   "notes": [
+    [
+     16,
+     0
+    ]
    ]
   },
   {
@@ -6987,6 +7590,16 @@
      "from": 0,
      "to": 554
     }
+   ],
+   "notes": [
+    [
+     18,
+     0
+    ],
+    [
+     18,
+     1
+    ]
    ]
   },
   {
@@ -7002,6 +7615,16 @@
      "from": 0,
      "to": 1045
     }
+   ],
+   "notes": [
+    [
+     19,
+     0
+    ],
+    [
+     19,
+     1
+    ]
    ]
   },
   {
@@ -7050,6 +7673,12 @@
      "from": 0,
      "to": 205
     }
+   ],
+   "notes": [
+    [
+     22,
+     0
+    ]
    ]
   },
   {
@@ -7067,6 +7696,16 @@
      "from": 205,
      "to": 1659
     }
+   ],
+   "notes": [
+    [
+     22,
+     1
+    ],
+    [
+     22,
+     2
+    ]
    ]
   },
   {
@@ -7094,6 +7733,16 @@
      "from": 0,
      "to": 102
     }
+   ],
+   "notes": [
+    [
+     23,
+     0
+    ],
+    [
+     23,
+     1
+    ]
    ]
   },
   {
@@ -7116,6 +7765,12 @@
      "from": 0,
      "to": 338
     }
+   ],
+   "notes": [
+    [
+     25,
+     0
+    ]
    ]
   },
   {
@@ -7181,6 +7836,16 @@
      "from": 0,
      "to": 1256
     }
+   ],
+   "notes": [
+    [
+     26,
+     0
+    ],
+    [
+     26,
+     1
+    ]
    ]
   },
   {
@@ -7256,6 +7921,12 @@
      "from": 0,
      "to": 217
     }
+   ],
+   "notes": [
+    [
+     30,
+     0
+    ]
    ]
   },
   {
@@ -7327,6 +7998,16 @@
      "from": 0,
      "to": 741
     }
+   ],
+   "notes": [
+    [
+     33,
+     0
+    ],
+    [
+     33,
+     1
+    ]
    ]
   },
   {
@@ -7349,6 +8030,12 @@
      "from": 0,
      "to": 874
     }
+   ],
+   "notes": [
+    [
+     34,
+     0
+    ]
    ]
   },
   {
@@ -7374,6 +8061,20 @@
      "from": 0,
      "to": 1212
     }
+   ],
+   "notes": [
+    [
+     35,
+     0
+    ],
+    [
+     35,
+     1
+    ],
+    [
+     35,
+     2
+    ]
    ]
   },
   {
@@ -7391,6 +8092,12 @@
      "from": 1212,
      "to": 3042
     }
+   ],
+   "notes": [
+    [
+     35,
+     3
+    ]
    ]
   },
   {
@@ -7417,6 +8124,12 @@
      "from": 0,
      "to": 489
     }
+   ],
+   "notes": [
+    [
+     36,
+     0
+    ]
    ]
   },
   {
@@ -7467,6 +8180,16 @@
      "from": 0,
      "to": 1012
     }
+   ],
+   "notes": [
+    [
+     37,
+     0
+    ],
+    [
+     37,
+     1
+    ]
    ]
   },
   {
@@ -7509,6 +8232,12 @@
      "from": 0,
      "to": 1055
     }
+   ],
+   "notes": [
+    [
+     39,
+     0
+    ]
    ]
   },
   {
@@ -7531,6 +8260,12 @@
      "from": 0,
      "to": 780
     }
+   ],
+   "notes": [
+    [
+     40,
+     0
+    ]
    ]
   },
   {
@@ -7551,6 +8286,12 @@
      "from": 0,
      "to": 1316
     }
+   ],
+   "notes": [
+    [
+     41,
+     0
+    ]
    ]
   },
   {
@@ -7573,6 +8314,12 @@
      "from": 0,
      "to": 811
     }
+   ],
+   "notes": [
+    [
+     42,
+     0
+    ]
    ]
   },
   {
@@ -7605,6 +8352,20 @@
      "from": 0,
      "to": 98
     }
+   ],
+   "notes": [
+    [
+     43,
+     0
+    ],
+    [
+     43,
+     1
+    ],
+    [
+     44,
+     0
+    ]
    ]
   },
   {
@@ -7627,6 +8388,12 @@
      "from": 0,
      "to": 351
     }
+   ],
+   "notes": [
+    [
+     45,
+     0
+    ]
    ]
   },
   {
@@ -7644,6 +8411,20 @@
      "from": 351,
      "to": 1509
     }
+   ],
+   "notes": [
+    [
+     45,
+     1
+    ],
+    [
+     45,
+     2
+    ],
+    [
+     45,
+     3
+    ]
    ]
   },
   {
@@ -7710,6 +8491,12 @@
      "from": 0,
      "to": 1147
     }
+   ],
+   "notes": [
+    [
+     48,
+     0
+    ]
    ]
   },
   {
@@ -7729,6 +8516,16 @@
      "from": 1147,
      "to": 2477
     }
+   ],
+   "notes": [
+    [
+     48,
+     1
+    ],
+    [
+     48,
+     2
+    ]
    ]
   },
   {
@@ -7754,6 +8551,12 @@
      "from": 0,
      "to": 1528
     }
+   ],
+   "notes": [
+    [
+     49,
+     0
+    ]
    ]
   },
   {
@@ -7840,6 +8643,20 @@
      "from": 0,
      "to": 791
     }
+   ],
+   "notes": [
+    [
+     53,
+     0
+    ],
+    [
+     53,
+     1
+    ],
+    [
+     53,
+     2
+    ]
    ]
   },
   {
@@ -7867,6 +8684,16 @@
      "from": 0,
      "to": 188
     }
+   ],
+   "notes": [
+    [
+     54,
+     0
+    ],
+    [
+     55,
+     0
+    ]
    ]
   },
   {
@@ -7889,6 +8716,16 @@
      "from": 0,
      "to": 315
     }
+   ],
+   "notes": [
+    [
+     55,
+     1
+    ],
+    [
+     56,
+     0
+    ]
    ]
   },
   {
@@ -7958,6 +8795,16 @@
      "from": 0,
      "to": 1313
     }
+   ],
+   "notes": [
+    [
+     59,
+     0
+    ],
+    [
+     59,
+     1
+    ]
    ]
   },
   {
@@ -7980,6 +8827,24 @@
      "from": 0,
      "to": 276
     }
+   ],
+   "notes": [
+    [
+     60,
+     0
+    ],
+    [
+     60,
+     1
+    ],
+    [
+     60,
+     2
+    ],
+    [
+     60,
+     3
+    ]
    ]
   },
   {
@@ -8002,6 +8867,12 @@
      "from": 0,
      "to": 364
     }
+   ],
+   "notes": [
+    [
+     61,
+     0
+    ]
    ]
   },
   {
@@ -8024,6 +8895,12 @@
      "from": 0,
      "to": 617
     }
+   ],
+   "notes": [
+    [
+     62,
+     0
+    ]
    ]
   },
   {
@@ -8046,6 +8923,12 @@
      "from": 0,
      "to": 545
     }
+   ],
+   "notes": [
+    [
+     63,
+     0
+    ]
    ]
   },
   {
@@ -8068,6 +8951,16 @@
      "from": 0,
      "to": 231
     }
+   ],
+   "notes": [
+    [
+     64,
+     0
+    ],
+    [
+     64,
+     1
+    ]
    ]
   },
   {
@@ -8143,6 +9036,20 @@
      "from": 0,
      "to": 779
     }
+   ],
+   "notes": [
+    [
+     68,
+     0
+    ],
+    [
+     68,
+     1
+    ],
+    [
+     68,
+     2
+    ]
    ]
   },
   {
@@ -8187,6 +9094,12 @@
      "from": 0,
      "to": 1338
     }
+   ],
+   "notes": [
+    [
+     70,
+     0
+    ]
    ]
   },
   {
@@ -8214,6 +9127,16 @@
      "from": 0,
      "to": 176
     }
+   ],
+   "notes": [
+    [
+     71,
+     0
+    ],
+    [
+     71,
+     1
+    ]
    ]
   },
   {
@@ -8288,6 +9211,12 @@
      "from": 0,
      "to": 745
     }
+   ],
+   "notes": [
+    [
+     75,
+     0
+    ]
    ]
   },
   {
@@ -8310,6 +9239,12 @@
      "from": 0,
      "to": 731
     }
+   ],
+   "notes": [
+    [
+     76,
+     0
+    ]
    ]
   },
   {
@@ -8357,6 +9292,16 @@
      "from": 0,
      "to": 784
     }
+   ],
+   "notes": [
+    [
+     78,
+     0
+    ],
+    [
+     78,
+     1
+    ]
    ]
   },
   {
@@ -8379,6 +9324,20 @@
      "from": 0,
      "to": 987
     }
+   ],
+   "notes": [
+    [
+     79,
+     0
+    ],
+    [
+     79,
+     1
+    ],
+    [
+     79,
+     2
+    ]
    ]
   },
   {
@@ -8406,6 +9365,16 @@
      "from": 0,
      "to": 655
     }
+   ],
+   "notes": [
+    [
+     80,
+     0
+    ],
+    [
+     80,
+     1
+    ]
    ]
   },
   {
@@ -8449,6 +9418,12 @@
      "from": 0,
      "to": 804
     }
+   ],
+   "notes": [
+    [
+     82,
+     0
+    ]
    ]
   },
   {
@@ -8491,6 +9466,12 @@
      "from": 0,
      "to": 994
     }
+   ],
+   "notes": [
+    [
+     84,
+     0
+    ]
    ]
   },
   {
@@ -8552,6 +9533,16 @@
      "from": 0,
      "to": 1253
     }
+   ],
+   "notes": [
+    [
+     87,
+     0
+    ],
+    [
+     87,
+     1
+    ]
    ]
   },
   {
@@ -8595,6 +9586,12 @@
      "from": 725,
      "to": 1989
     }
+   ],
+   "notes": [
+    [
+     88,
+     0
+    ]
    ]
   },
   {
@@ -8663,6 +9660,12 @@
      "from": 0,
      "to": 1063
     }
+   ],
+   "notes": [
+    [
+     91,
+     0
+    ]
    ]
   },
   {
@@ -8778,6 +9781,12 @@
      "from": 0,
      "to": 1151
     }
+   ],
+   "notes": [
+    [
+     97,
+     0
+    ]
    ]
   },
   {
@@ -8863,6 +9872,24 @@
      "from": 0,
      "to": 440
     }
+   ],
+   "notes": [
+    [
+     100,
+     0
+    ],
+    [
+     101,
+     0
+    ],
+    [
+     101,
+     1
+    ],
+    [
+     101,
+     2
+    ]
    ]
   },
   {
@@ -8885,6 +9912,16 @@
      "from": 0,
      "to": 286
     }
+   ],
+   "notes": [
+    [
+     101,
+     3
+    ],
+    [
+     102,
+     0
+    ]
    ]
   },
   {
@@ -8907,6 +9944,12 @@
      "from": 0,
      "to": 682
     }
+   ],
+   "notes": [
+    [
+     103,
+     0
+    ]
    ]
   },
   {
@@ -8946,6 +9989,16 @@
      "from": 0,
      "to": 290
     }
+   ],
+   "notes": [
+    [
+     104,
+     0
+    ],
+    [
+     105,
+     0
+    ]
    ]
   },
   {
@@ -8968,6 +10021,12 @@
      "from": 0,
      "to": 1003
     }
+   ],
+   "notes": [
+    [
+     106,
+     0
+    ]
    ]
   },
   {
@@ -8990,6 +10049,12 @@
      "from": 0,
      "to": 733
     }
+   ],
+   "notes": [
+    [
+     107,
+     0
+    ]
    ]
   },
   {
@@ -9017,6 +10082,16 @@
      "from": 0,
      "to": 379
     }
+   ],
+   "notes": [
+    [
+     108,
+     0
+    ],
+    [
+     108,
+     1
+    ]
    ]
   },
   {
@@ -9040,6 +10115,12 @@
      "from": 0,
      "to": 458
     }
+   ],
+   "notes": [
+    [
+     109,
+     0
+    ]
    ]
   },
   {
@@ -9061,6 +10142,24 @@
      "from": 0,
      "to": 822
     }
+   ],
+   "notes": [
+    [
+     110,
+     0
+    ],
+    [
+     110,
+     1
+    ],
+    [
+     110,
+     2
+    ],
+    [
+     110,
+     3
+    ]
    ]
   },
   {
@@ -9083,6 +10182,12 @@
      "from": 0,
      "to": 1041
     }
+   ],
+   "notes": [
+    [
+     110,
+     4
+    ]
    ]
   },
   {
@@ -9100,6 +10205,16 @@
      "from": 0,
      "to": 439
     }
+   ],
+   "notes": [
+    [
+     112,
+     0
+    ],
+    [
+     112,
+     1
+    ]
    ]
   },
   {
@@ -9122,6 +10237,12 @@
      "from": 0,
      "to": 1257
     }
+   ],
+   "notes": [
+    [
+     113,
+     0
+    ]
    ]
   },
   {
@@ -9139,6 +10260,20 @@
      "from": 0,
      "to": 1287
     }
+   ],
+   "notes": [
+    [
+     114,
+     0
+    ],
+    [
+     114,
+     1
+    ],
+    [
+     114,
+     2
+    ]
    ]
   },
   {
@@ -9161,6 +10296,16 @@
      "from": 0,
      "to": 952
     }
+   ],
+   "notes": [
+    [
+     115,
+     0
+    ],
+    [
+     115,
+     1
+    ]
    ]
   },
   {
@@ -9183,6 +10328,12 @@
      "from": 0,
      "to": 743
     }
+   ],
+   "notes": [
+    [
+     116,
+     0
+    ]
    ]
   },
   {
@@ -9274,6 +10425,12 @@
      "from": 0,
      "to": 219
     }
+   ],
+   "notes": [
+    [
+     120,
+     0
+    ]
    ]
   },
   {
@@ -9366,6 +10523,12 @@
      "from": 0,
      "to": 755
     }
+   ],
+   "notes": [
+    [
+     124,
+     0
+    ]
    ]
   },
   {
@@ -9410,6 +10573,12 @@
      "from": 0,
      "to": 729
     }
+   ],
+   "notes": [
+    [
+     126,
+     0
+    ]
    ]
   },
   {
@@ -9432,6 +10601,12 @@
      "from": 0,
      "to": 710
     }
+   ],
+   "notes": [
+    [
+     127,
+     0
+    ]
    ]
   },
   {
@@ -9454,6 +10629,16 @@
      "from": 0,
      "to": 630
     }
+   ],
+   "notes": [
+    [
+     128,
+     0
+    ],
+    [
+     128,
+     1
+    ]
    ]
   },
   {
@@ -9476,6 +10661,12 @@
      "from": 0,
      "to": 1030
     }
+   ],
+   "notes": [
+    [
+     129,
+     0
+    ]
    ]
   },
   {
@@ -9498,6 +10689,12 @@
      "from": 0,
      "to": 765
     }
+   ],
+   "notes": [
+    [
+     130,
+     0
+    ]
    ]
   },
   {
@@ -9520,6 +10717,16 @@
      "from": 0,
      "to": 859
     }
+   ],
+   "notes": [
+    [
+     131,
+     0
+    ],
+    [
+     131,
+     1
+    ]
    ]
   },
   {
@@ -9545,6 +10752,16 @@
      "from": 0,
      "to": 729
     }
+   ],
+   "notes": [
+    [
+     132,
+     0
+    ],
+    [
+     132,
+     1
+    ]
    ]
   },
   {
@@ -9660,6 +10877,20 @@
      "from": 0,
      "to": 972
     }
+   ],
+   "notes": [
+    [
+     137,
+     0
+    ],
+    [
+     137,
+     1
+    ],
+    [
+     137,
+     2
+    ]
    ]
   },
   {
@@ -9682,6 +10913,12 @@
      "from": 0,
      "to": 897
     }
+   ],
+   "notes": [
+    [
+     138,
+     0
+    ]
    ]
   },
   {
@@ -9726,6 +10963,12 @@
      "from": 0,
      "to": 1054
     }
+   ],
+   "notes": [
+    [
+     140,
+     0
+    ]
    ]
   },
   {
@@ -9770,6 +11013,12 @@
      "from": 0,
      "to": 1449
     }
+   ],
+   "notes": [
+    [
+     142,
+     0
+    ]
    ]
   },
   {
@@ -9792,6 +11041,16 @@
      "from": 0,
      "to": 1264
     }
+   ],
+   "notes": [
+    [
+     143,
+     0
+    ],
+    [
+     143,
+     1
+    ]
    ]
   },
   {
@@ -9817,6 +11076,16 @@
      "from": 0,
      "to": 259
     }
+   ],
+   "notes": [
+    [
+     145,
+     0
+    ],
+    [
+     145,
+     1
+    ]
    ]
   },
   {
@@ -9861,6 +11130,12 @@
      "from": 0,
      "to": 1092
     }
+   ],
+   "notes": [
+    [
+     147,
+     0
+    ]
    ]
   },
   {
@@ -9939,6 +11214,12 @@
      "from": 0,
      "to": 1350
     }
+   ],
+   "notes": [
+    [
+     150,
+     0
+    ]
    ]
   },
   {
@@ -9961,6 +11242,12 @@
      "from": 0,
      "to": 889
     }
+   ],
+   "notes": [
+    [
+     151,
+     0
+    ]
    ]
   },
   {
@@ -9983,6 +11270,12 @@
      "from": 0,
      "to": 393
     }
+   ],
+   "notes": [
+    [
+     152,
+     0
+    ]
    ]
   },
   {
@@ -10005,6 +11298,16 @@
      "from": 0,
      "to": 1205
     }
+   ],
+   "notes": [
+    [
+     153,
+     0
+    ],
+    [
+     153,
+     1
+    ]
    ]
   },
   {
@@ -10066,6 +11369,16 @@
      "from": 0,
      "to": 851
     }
+   ],
+   "notes": [
+    [
+     156,
+     0
+    ],
+    [
+     156,
+     1
+    ]
    ]
   },
   {
@@ -10088,6 +11401,12 @@
      "from": 0,
      "to": 429
     }
+   ],
+   "notes": [
+    [
+     158,
+     0
+    ]
    ]
   },
   {
@@ -10110,6 +11429,16 @@
      "from": 0,
      "to": 741
     }
+   ],
+   "notes": [
+    [
+     158,
+     1
+    ],
+    [
+     158,
+     2
+    ]
    ]
   },
   {
@@ -10159,6 +11488,12 @@
      "from": 0,
      "to": 220
     }
+   ],
+   "notes": [
+    [
+     162,
+     0
+    ]
    ]
   },
   {
@@ -10185,6 +11520,16 @@
      "from": 0,
      "to": 146
     }
+   ],
+   "notes": [
+    [
+     163,
+     0
+    ],
+    [
+     163,
+     1
+    ]
    ]
   },
   {
@@ -10224,6 +11569,12 @@
      "from": 0,
      "to": 1152
     }
+   ],
+   "notes": [
+    [
+     164,
+     0
+    ]
    ]
   },
   {
@@ -10246,6 +11597,12 @@
      "from": 0,
      "to": 1358
     }
+   ],
+   "notes": [
+    [
+     165,
+     0
+    ]
    ]
   },
   {
@@ -10313,6 +11670,12 @@
      "from": 0,
      "to": 509
     }
+   ],
+   "notes": [
+    [
+     167,
+     0
+    ]
    ]
   },
   {
@@ -10335,6 +11698,16 @@
      "from": 0,
      "to": 758
     }
+   ],
+   "notes": [
+    [
+     168,
+     0
+    ],
+    [
+     168,
+     1
+    ]
    ]
   },
   {
@@ -10374,6 +11747,16 @@
      "from": 0,
      "to": 1000
     }
+   ],
+   "notes": [
+    [
+     171,
+     0
+    ],
+    [
+     171,
+     1
+    ]
    ]
   },
   {
@@ -10414,6 +11797,12 @@
      "from": 0,
      "to": 951
     }
+   ],
+   "notes": [
+    [
+     173,
+     0
+    ]
    ]
   },
   {
@@ -10498,6 +11887,12 @@
      "from": 0,
      "to": 587
     }
+   ],
+   "notes": [
+    [
+     177,
+     0
+    ]
    ]
   },
   {
@@ -10542,6 +11937,12 @@
      "from": 0,
      "to": 194
     }
+   ],
+   "notes": [
+    [
+     179,
+     0
+    ]
    ]
   },
   {
@@ -10564,6 +11965,16 @@
      "from": 0,
      "to": 146
     }
+   ],
+   "notes": [
+    [
+     180,
+     0
+    ],
+    [
+     181,
+     0
+    ]
    ]
   },
   {
@@ -10586,6 +11997,12 @@
      "from": 0,
      "to": 547
     }
+   ],
+   "notes": [
+    [
+     182,
+     0
+    ]
    ]
   },
   {
@@ -10608,6 +12025,12 @@
      "from": 0,
      "to": 760
     }
+   ],
+   "notes": [
+    [
+     183,
+     0
+    ]
    ]
   },
   {
@@ -10630,6 +12053,12 @@
      "from": 0,
      "to": 431
     }
+   ],
+   "notes": [
+    [
+     184,
+     0
+    ]
    ]
   },
   {
@@ -10652,6 +12081,12 @@
      "from": 0,
      "to": 639
     }
+   ],
+   "notes": [
+    [
+     185,
+     0
+    ]
    ]
   },
   {
@@ -10669,6 +12104,12 @@
      "from": 0,
      "to": 650
     }
+   ],
+   "notes": [
+    [
+     186,
+     0
+    ]
    ]
   },
   {
@@ -10691,6 +12132,16 @@
      "from": 0,
      "to": 618
     }
+   ],
+   "notes": [
+    [
+     187,
+     0
+    ],
+    [
+     187,
+     1
+    ]
    ]
   },
   {
@@ -10713,6 +12164,12 @@
      "from": 0,
      "to": 1133
     }
+   ],
+   "notes": [
+    [
+     188,
+     0
+    ]
    ]
   },
   {
@@ -10735,6 +12192,16 @@
      "from": 0,
      "to": 1462
     }
+   ],
+   "notes": [
+    [
+     189,
+     0
+    ],
+    [
+     189,
+     1
+    ]
    ]
   },
   {
@@ -10779,6 +12246,12 @@
      "from": 1,
      "to": 241
     }
+   ],
+   "notes": [
+    [
+     191,
+     0
+    ]
    ]
   },
   {
@@ -10801,6 +12274,16 @@
      "from": 0,
      "to": 790
     }
+   ],
+   "notes": [
+    [
+     192,
+     0
+    ],
+    [
+     192,
+     1
+    ]
    ]
   },
   {
@@ -10823,6 +12306,12 @@
      "from": 0,
      "to": 716
     }
+   ],
+   "notes": [
+    [
+     193,
+     0
+    ]
    ]
   },
   {
@@ -10845,6 +12334,16 @@
      "from": 1,
      "to": 612
     }
+   ],
+   "notes": [
+    [
+     194,
+     0
+    ],
+    [
+     194,
+     1
+    ]
    ]
   },
   {
@@ -10884,6 +12383,12 @@
      "from": 0,
      "to": 481
     }
+   ],
+   "notes": [
+    [
+     196,
+     0
+    ]
    ]
   },
   {
@@ -10906,6 +12411,12 @@
      "from": 0,
      "to": 786
     }
+   ],
+   "notes": [
+    [
+     197,
+     0
+    ]
    ]
   },
   {
@@ -10928,6 +12439,12 @@
      "from": 0,
      "to": 1125
     }
+   ],
+   "notes": [
+    [
+     198,
+     0
+    ]
    ]
   },
   {
@@ -10979,6 +12496,16 @@
      "from": 0,
      "to": 985
     }
+   ],
+   "notes": [
+    [
+     200,
+     0
+    ],
+    [
+     200,
+     1
+    ]
    ]
   },
   {
@@ -11018,6 +12545,16 @@
      "from": 0,
      "to": 551
     }
+   ],
+   "notes": [
+    [
+     202,
+     0
+    ],
+    [
+     202,
+     1
+    ]
    ]
   },
   {
@@ -11035,6 +12572,12 @@
      "from": 0,
      "to": 1260
     }
+   ],
+   "notes": [
+    [
+     203,
+     0
+    ]
    ]
   },
   {
@@ -11057,6 +12600,12 @@
      "from": 0,
      "to": 805
     }
+   ],
+   "notes": [
+    [
+     204,
+     0
+    ]
    ]
   },
   {
@@ -11084,6 +12633,12 @@
      "from": 0,
      "to": 123
     }
+   ],
+   "notes": [
+    [
+     206,
+     0
+    ]
    ]
   },
   {
@@ -11128,6 +12683,12 @@
      "from": 0,
      "to": 368
     }
+   ],
+   "notes": [
+    [
+     208,
+     0
+    ]
    ]
   },
   {
@@ -11153,6 +12714,16 @@
      "from": 1,
      "to": 827
     }
+   ],
+   "notes": [
+    [
+     208,
+     1
+    ],
+    [
+     209,
+     0
+    ]
    ]
   },
   {
@@ -11175,6 +12746,16 @@
      "from": 0,
      "to": 574
     }
+   ],
+   "notes": [
+    [
+     210,
+     0
+    ],
+    [
+     210,
+     1
+    ]
    ]
   },
   {
@@ -11318,6 +12899,12 @@
      "from": 0,
      "to": 433
     }
+   ],
+   "notes": [
+    [
+     213,
+     0
+    ]
    ]
   },
   {
@@ -11357,6 +12944,16 @@
      "from": 0,
      "to": 1277
     }
+   ],
+   "notes": [
+    [
+     214,
+     0
+    ],
+    [
+     214,
+     1
+    ]
    ]
   },
   {
@@ -11398,6 +12995,20 @@
      "from": 0,
      "to": 213
     }
+   ],
+   "notes": [
+    [
+     216,
+     0
+    ],
+    [
+     216,
+     1
+    ],
+    [
+     217,
+     0
+    ]
    ]
   },
   {
@@ -11420,6 +13031,16 @@
      "from": 0,
      "to": 234
     }
+   ],
+   "notes": [
+    [
+     218,
+     0
+    ],
+    [
+     218,
+     1
+    ]
    ]
   },
   {
@@ -11447,6 +13068,12 @@
      "from": 0,
      "to": 538
     }
+   ],
+   "notes": [
+    [
+     218,
+     2
+    ]
    ]
   },
   {
@@ -11542,6 +13169,20 @@
      "from": 0,
      "to": 212
     }
+   ],
+   "notes": [
+    [
+     224,
+     0
+    ],
+    [
+     225,
+     0
+    ],
+    [
+     225,
+     1
+    ]
    ]
   },
   {
@@ -11564,6 +13205,12 @@
      "from": 0,
      "to": 162
     }
+   ],
+   "notes": [
+    [
+     226,
+     0
+    ]
    ]
   },
   {
@@ -11586,6 +13233,12 @@
      "from": 0,
      "to": 450
     }
+   ],
+   "notes": [
+    [
+     227,
+     0
+    ]
    ]
   },
   {
@@ -11608,6 +13261,12 @@
      "from": 0,
      "to": 298
     }
+   ],
+   "notes": [
+    [
+     228,
+     0
+    ]
    ]
   },
   {
@@ -11647,6 +13306,20 @@
      "from": 2,
      "to": 1179
     }
+   ],
+   "notes": [
+    [
+     229,
+     0
+    ],
+    [
+     229,
+     1
+    ],
+    [
+     229,
+     2
+    ]
    ]
   },
   {
@@ -11686,6 +13359,12 @@
      "from": 0,
      "to": 919
     }
+   ],
+   "notes": [
+    [
+     230,
+     0
+    ]
    ]
   },
   {
@@ -11708,6 +13387,12 @@
      "from": 0,
      "to": 686
     }
+   ],
+   "notes": [
+    [
+     231,
+     0
+    ]
    ]
   },
   {
@@ -11795,6 +13480,16 @@
      "from": 0,
      "to": 777
     }
+   ],
+   "notes": [
+    [
+     235,
+     0
+    ],
+    [
+     235,
+     1
+    ]
    ]
   },
   {
@@ -11817,6 +13512,12 @@
      "from": 0,
      "to": 1281
     }
+   ],
+   "notes": [
+    [
+     236,
+     0
+    ]
    ]
   },
   {
@@ -11838,6 +13539,12 @@
      "from": 0,
      "to": 1150
     }
+   ],
+   "notes": [
+    [
+     237,
+     0
+    ]
    ]
   },
   {
@@ -11908,6 +13615,16 @@
      "from": 0,
      "to": 637
     }
+   ],
+   "notes": [
+    [
+     240,
+     0
+    ],
+    [
+     240,
+     1
+    ]
    ]
   },
   {
@@ -11936,6 +13653,12 @@
      "from": 0,
      "to": 1067
     }
+   ],
+   "notes": [
+    [
+     241,
+     0
+    ]
    ]
   },
   {
@@ -11985,6 +13708,12 @@
      "from": 0,
      "to": 303
     }
+   ],
+   "notes": [
+    [
+     243,
+     0
+    ]
    ]
   },
   {
@@ -12027,6 +13756,16 @@
      "from": 0,
      "to": 541
     }
+   ],
+   "notes": [
+    [
+     244,
+     0
+    ],
+    [
+     244,
+     1
+    ]
    ]
   },
   {
@@ -12074,6 +13813,16 @@
      "from": 0,
      "to": 228
     }
+   ],
+   "notes": [
+    [
+     245,
+     0
+    ],
+    [
+     245,
+     1
+    ]
    ]
   },
   {
@@ -12122,6 +13871,16 @@
      "from": 0,
      "to": 796
     }
+   ],
+   "notes": [
+    [
+     248,
+     0
+    ],
+    [
+     248,
+     1
+    ]
    ]
   },
   {
@@ -12212,6 +13971,12 @@
      "from": 0,
      "to": 861
     }
+   ],
+   "notes": [
+    [
+     252,
+     0
+    ]
    ]
   },
   {
@@ -12255,6 +14020,12 @@
      "from": 0,
      "to": 728
     }
+   ],
+   "notes": [
+    [
+     254,
+     0
+    ]
    ]
   },
   {
@@ -12277,6 +14048,16 @@
      "from": 0,
      "to": 987
     }
+   ],
+   "notes": [
+    [
+     255,
+     0
+    ],
+    [
+     255,
+     1
+    ]
    ]
   },
   {
@@ -12399,6 +14180,24 @@
      "from": 0,
      "to": 880
     }
+   ],
+   "notes": [
+    [
+     257,
+     0
+    ],
+    [
+     257,
+     1
+    ],
+    [
+     258,
+     0
+    ],
+    [
+     258,
+     1
+    ]
    ]
   },
   {
@@ -12445,6 +14244,12 @@
      "from": 0,
      "to": 551
     }
+   ],
+   "notes": [
+    [
+     259,
+     0
+    ]
    ]
   },
   {
@@ -12472,6 +14277,12 @@
      "from": 0,
      "to": 1446
     }
+   ],
+   "notes": [
+    [
+     260,
+     0
+    ]
    ]
   },
   {
@@ -12494,6 +14305,20 @@
      "from": 0,
      "to": 1304
     }
+   ],
+   "notes": [
+    [
+     261,
+     0
+    ],
+    [
+     261,
+     1
+    ],
+    [
+     261,
+     2
+    ]
    ]
   },
   {
@@ -12539,6 +14364,16 @@
      "from": 0,
      "to": 1131
     }
+   ],
+   "notes": [
+    [
+     263,
+     0
+    ],
+    [
+     263,
+     1
+    ]
    ]
   },
   {
@@ -12566,6 +14401,24 @@
      "from": 0,
      "to": 99
     }
+   ],
+   "notes": [
+    [
+     264,
+     0
+    ],
+    [
+     264,
+     1
+    ],
+    [
+     264,
+     2
+    ],
+    [
+     265,
+     0
+    ]
    ]
   },
   {
@@ -12588,6 +14441,16 @@
      "from": 1,
      "to": 472
     }
+   ],
+   "notes": [
+    [
+     266,
+     0
+    ],
+    [
+     266,
+     1
+    ]
    ]
   },
   {
@@ -12638,6 +14501,12 @@
      "from": 0,
      "to": 1343
     }
+   ],
+   "notes": [
+    [
+     268,
+     0
+    ]
    ]
   },
   {
@@ -12686,6 +14555,16 @@
      "from": 0,
      "to": 1142
     }
+   ],
+   "notes": [
+    [
+     269,
+     0
+    ],
+    [
+     270,
+     0
+    ]
    ]
   },
   {
@@ -12729,6 +14608,16 @@
      "from": 0,
      "to": 1316
     }
+   ],
+   "notes": [
+    [
+     271,
+     0
+    ],
+    [
+     271,
+     1
+    ]
    ]
   },
   {
@@ -12751,6 +14640,16 @@
      "from": 0,
      "to": 727
     }
+   ],
+   "notes": [
+    [
+     271,
+     2
+    ],
+    [
+     272,
+     0
+    ]
    ]
   },
   {
@@ -12794,6 +14693,12 @@
      "from": 0,
      "to": 1157
     }
+   ],
+   "notes": [
+    [
+     273,
+     0
+    ]
    ]
   },
   {
@@ -12858,6 +14763,12 @@
      "from": 0,
      "to": 1284
     }
+   ],
+   "notes": [
+    [
+     275,
+     0
+    ]
    ]
   },
   {
@@ -12883,6 +14794,12 @@
      "from": 0,
      "to": 776
     }
+   ],
+   "notes": [
+    [
+     276,
+     0
+    ]
    ]
   },
   {
@@ -12926,6 +14843,12 @@
      "from": 0,
      "to": 253
     }
+   ],
+   "notes": [
+    [
+     279,
+     0
+    ]
    ]
   },
   {
@@ -12948,6 +14871,12 @@
      "from": 0,
      "to": 213
     }
+   ],
+   "notes": [
+    [
+     280,
+     0
+    ]
    ]
   },
   {
@@ -12976,6 +14905,16 @@
      "from": 0,
      "to": 700
     }
+   ],
+   "notes": [
+    [
+     280,
+     1
+    ],
+    [
+     281,
+     0
+    ]
    ]
   },
   {
@@ -12998,6 +14937,12 @@
      "from": 0,
      "to": 492
     }
+   ],
+   "notes": [
+    [
+     282,
+     0
+    ]
    ]
   },
   {
@@ -13022,6 +14967,16 @@
      "from": 0,
      "to": 264
     }
+   ],
+   "notes": [
+    [
+     283,
+     0
+    ],
+    [
+     283,
+     1
+    ]
    ]
   },
   {
@@ -13061,6 +15016,16 @@
      "from": 0,
      "to": 704
     }
+   ],
+   "notes": [
+    [
+     284,
+     0
+    ],
+    [
+     284,
+     1
+    ]
    ]
   },
   {
@@ -13083,6 +15048,16 @@
      "from": 0,
      "to": 969
     }
+   ],
+   "notes": [
+    [
+     285,
+     0
+    ],
+    [
+     285,
+     1
+    ]
    ]
   },
   {
@@ -13128,6 +15103,20 @@
      "from": 0,
      "to": 315
     }
+   ],
+   "notes": [
+    [
+     287,
+     0
+    ],
+    [
+     287,
+     1
+    ],
+    [
+     287,
+     2
+    ]
    ]
   },
   {
@@ -13155,6 +15144,24 @@
      "from": 0,
      "to": 1027
     }
+   ],
+   "notes": [
+    [
+     288,
+     0
+    ],
+    [
+     288,
+     1
+    ],
+    [
+     288,
+     2
+    ],
+    [
+     288,
+     3
+    ]
    ]
   },
   {
@@ -13264,6 +15271,12 @@
      "from": 0,
      "to": 575
     }
+   ],
+   "notes": [
+    [
+     292,
+     0
+    ]
    ]
   },
   {
@@ -13433,6 +15446,12 @@
      "from": 0,
      "to": 445
     }
+   ],
+   "notes": [
+    [
+     297,
+     0
+    ]
    ]
   },
   {
@@ -13459,6 +15478,16 @@
      "from": 0,
      "to": 197
     }
+   ],
+   "notes": [
+    [
+     298,
+     0
+    ],
+    [
+     298,
+     1
+    ]
    ]
   },
   {
@@ -13476,6 +15505,12 @@
      "from": 197,
      "to": 1697
     }
+   ],
+   "notes": [
+    [
+     298,
+     2
+    ]
    ]
   },
   {
@@ -13504,6 +15539,12 @@
      "from": 0,
      "to": 488
     }
+   ],
+   "notes": [
+    [
+     298,
+     3
+    ]
    ]
   },
   {
@@ -13526,6 +15567,12 @@
      "from": 0,
      "to": 1061
     }
+   ],
+   "notes": [
+    [
+     300,
+     0
+    ]
    ]
   },
   {
@@ -13576,6 +15623,12 @@
      "from": 0,
      "to": 827
     }
+   ],
+   "notes": [
+    [
+     302,
+     0
+    ]
    ]
   },
   {
@@ -13638,6 +15691,16 @@
      "from": 0,
      "to": 1252
     }
+   ],
+   "notes": [
+    [
+     303,
+     0
+    ],
+    [
+     303,
+     1
+    ]
    ]
   },
   {
@@ -13708,6 +15771,16 @@
      "from": 0,
      "to": 186
     }
+   ],
+   "notes": [
+    [
+     305,
+     0
+    ],
+    [
+     305,
+     1
+    ]
    ]
   },
   {
@@ -13730,6 +15803,12 @@
      "from": 0,
      "to": 119
     }
+   ],
+   "notes": [
+    [
+     307,
+     0
+    ]
    ]
   },
   {
@@ -13796,6 +15875,12 @@
      "from": 0,
      "to": 482
     }
+   ],
+   "notes": [
+    [
+     310,
+     0
+    ]
    ]
   },
   {
@@ -13855,6 +15940,16 @@
      "from": 0,
      "to": 1302
     }
+   ],
+   "notes": [
+    [
+     313,
+     0
+    ],
+    [
+     313,
+     1
+    ]
    ]
   },
   {
@@ -13877,6 +15972,12 @@
      "from": 0,
      "to": 337
     }
+   ],
+   "notes": [
+    [
+     314,
+     0
+    ]
    ]
   },
   {
@@ -13925,6 +16026,12 @@
      "from": 1,
      "to": 328
     }
+   ],
+   "notes": [
+    [
+     316,
+     0
+    ]
    ]
   },
   {
@@ -14040,6 +16147,12 @@
      "from": 0,
      "to": 753
     }
+   ],
+   "notes": [
+    [
+     321,
+     0
+    ]
    ]
   },
   {
@@ -14066,6 +16179,12 @@
      "from": 0,
      "to": 1002
     }
+   ],
+   "notes": [
+    [
+     322,
+     0
+    ]
    ]
   },
   {
@@ -14093,6 +16212,12 @@
      "from": 0,
      "to": 839
     }
+   ],
+   "notes": [
+    [
+     323,
+     0
+    ]
    ]
   },
   {
@@ -14119,6 +16244,12 @@
      "from": 0,
      "to": 1142
     }
+   ],
+   "notes": [
+    [
+     324,
+     0
+    ]
    ]
   },
   {
@@ -14141,6 +16272,16 @@
      "from": 0,
      "to": 1288
     }
+   ],
+   "notes": [
+    [
+     325,
+     0
+    ],
+    [
+     325,
+     1
+    ]
    ]
   },
   {
@@ -14167,6 +16308,12 @@
      "from": 0,
      "to": 893
     }
+   ],
+   "notes": [
+    [
+     326,
+     0
+    ]
    ]
   },
   {
@@ -14199,6 +16346,16 @@
      "from": 0,
      "to": 213
     }
+   ],
+   "notes": [
+    [
+     327,
+     0
+    ],
+    [
+     328,
+     0
+    ]
    ]
   },
   {
@@ -14225,6 +16382,12 @@
      "from": 0,
      "to": 474
     }
+   ],
+   "notes": [
+    [
+     329,
+     0
+    ]
    ]
   },
   {
@@ -14258,6 +16421,12 @@
      "from": 0,
      "to": 149
     }
+   ],
+   "notes": [
+    [
+     330,
+     0
+    ]
    ]
   },
   {
@@ -14284,6 +16453,12 @@
      "from": 1,
      "to": 983
     }
+   ],
+   "notes": [
+    [
+     332,
+     0
+    ]
    ]
   },
   {
@@ -14309,6 +16484,16 @@
      "from": 0,
      "to": 1016
     }
+   ],
+   "notes": [
+    [
+     333,
+     0
+    ],
+    [
+     333,
+     1
+    ]
    ]
   },
   {
@@ -14331,6 +16516,12 @@
      "from": 0,
      "to": 656
     }
+   ],
+   "notes": [
+    [
+     333,
+     2
+    ]
    ]
   },
   {
@@ -14364,6 +16555,12 @@
      "from": 0,
      "to": 162
     }
+   ],
+   "notes": [
+    [
+     335,
+     0
+    ]
    ]
   },
   {
@@ -14434,6 +16631,16 @@
      "from": 0,
      "to": 1356
     }
+   ],
+   "notes": [
+    [
+     339,
+     0
+    ],
+    [
+     339,
+     1
+    ]
    ]
   },
   {
@@ -14517,6 +16724,12 @@
      "from": 0,
      "to": 1493
     }
+   ],
+   "notes": [
+    [
+     342,
+     0
+    ]
    ]
   },
   {
@@ -14578,6 +16791,12 @@
      "from": 2,
      "to": 911
     }
+   ],
+   "notes": [
+    [
+     345,
+     0
+    ]
    ]
   },
   {
@@ -14600,6 +16819,16 @@
      "from": 0,
      "to": 880
     }
+   ],
+   "notes": [
+    [
+     346,
+     0
+    ],
+    [
+     346,
+     1
+    ]
    ]
   },
   {
@@ -14627,6 +16856,12 @@
      "from": 0,
      "to": 544
     }
+   ],
+   "notes": [
+    [
+     347,
+     0
+    ]
    ]
   },
   {
@@ -14649,6 +16884,12 @@
      "from": 0,
      "to": 478
     }
+   ],
+   "notes": [
+    [
+     349,
+     0
+    ]
    ]
   },
   {
@@ -14677,6 +16918,12 @@
      "from": 0,
      "to": 877
     }
+   ],
+   "notes": [
+    [
+     350,
+     0
+    ]
    ]
   },
   {
@@ -14704,6 +16951,16 @@
      "from": 0,
      "to": 140
     }
+   ],
+   "notes": [
+    [
+     351,
+     0
+    ],
+    [
+     352,
+     0
+    ]
    ]
   },
   {
@@ -14721,6 +16978,12 @@
      "from": 140,
      "to": 2058
     }
+   ],
+   "notes": [
+    [
+     352,
+     1
+    ]
    ]
   },
   {
@@ -14765,6 +17028,16 @@
      "from": 0,
      "to": 831
     }
+   ],
+   "notes": [
+    [
+     353,
+     0
+    ],
+    [
+     353,
+     1
+    ]
    ]
   },
   {
@@ -14814,6 +17087,12 @@
      "from": 0,
      "to": 916
     }
+   ],
+   "notes": [
+    [
+     355,
+     0
+    ]
    ]
   },
   {
@@ -14912,6 +17191,16 @@
      "from": 0,
      "to": 458
     }
+   ],
+   "notes": [
+    [
+     360,
+     0
+    ],
+    [
+     360,
+     1
+    ]
    ]
   },
   {
@@ -14934,6 +17223,16 @@
      "from": 0,
      "to": 853
     }
+   ],
+   "notes": [
+    [
+     361,
+     0
+    ],
+    [
+     361,
+     1
+    ]
    ]
   },
   {
@@ -14958,6 +17257,12 @@
      "from": 0,
      "to": 1044
     }
+   ],
+   "notes": [
+    [
+     362,
+     0
+    ]
    ]
   },
   {
@@ -14980,6 +17285,12 @@
      "from": 0,
      "to": 380
     }
+   ],
+   "notes": [
+    [
+     363,
+     0
+    ]
    ]
   },
   {
@@ -15014,6 +17325,12 @@
      "from": 0,
      "to": 394
     }
+   ],
+   "notes": [
+    [
+     365,
+     0
+    ]
    ]
   },
   {
@@ -15058,6 +17375,12 @@
      "from": 0,
      "to": 1028
     }
+   ],
+   "notes": [
+    [
+     367,
+     0
+    ]
    ]
   },
   {
@@ -15080,6 +17403,20 @@
      "from": 0,
      "to": 828
     }
+   ],
+   "notes": [
+    [
+     368,
+     0
+    ],
+    [
+     368,
+     1
+    ],
+    [
+     368,
+     2
+    ]
    ]
   },
   {
@@ -15097,6 +17434,12 @@
      "from": 0,
      "to": 799
     }
+   ],
+   "notes": [
+    [
+     369,
+     0
+    ]
    ]
   },
   {
@@ -15124,6 +17467,12 @@
      "from": 0,
      "to": 259
     }
+   ],
+   "notes": [
+    [
+     370,
+     0
+    ]
    ]
   },
   {
@@ -15149,6 +17498,12 @@
      "from": 0,
      "to": 299
     }
+   ],
+   "notes": [
+    [
+     372,
+     0
+    ]
    ]
   },
   {
@@ -15227,6 +17582,16 @@
      "from": 0,
      "to": 1115
     }
+   ],
+   "notes": [
+    [
+     374,
+     0
+    ],
+    [
+     374,
+     1
+    ]
    ]
   },
   {
@@ -15324,6 +17689,12 @@
      "from": 1,
      "to": 861
     }
+   ],
+   "notes": [
+    [
+     375,
+     0
+    ]
    ]
   },
   {
@@ -15351,6 +17722,12 @@
      "from": 0,
      "to": 1539
     }
+   ],
+   "notes": [
+    [
+     376,
+     0
+    ]
    ]
   },
   {
@@ -15378,6 +17755,12 @@
      "from": 0,
      "to": 113
     }
+   ],
+   "notes": [
+    [
+     377,
+     0
+    ]
    ]
   },
   {
@@ -15407,6 +17790,16 @@
      "from": 0,
      "to": 517
     }
+   ],
+   "notes": [
+    [
+     379,
+     0
+    ],
+    [
+     379,
+     1
+    ]
    ]
   },
   {
@@ -15452,6 +17845,12 @@
      "from": 0,
      "to": 939
     }
+   ],
+   "notes": [
+    [
+     380,
+     0
+    ]
    ]
   },
   {
@@ -15516,6 +17915,12 @@
      "from": 492,
      "to": 2352
     }
+   ],
+   "notes": [
+    [
+     383,
+     0
+    ]
    ]
   },
   {
@@ -15541,6 +17946,16 @@
      "from": 0,
      "to": 843
     }
+   ],
+   "notes": [
+    [
+     384,
+     0
+    ],
+    [
+     384,
+     1
+    ]
    ]
   },
   {
@@ -15585,6 +18000,12 @@
      "from": 0,
      "to": 385
     }
+   ],
+   "notes": [
+    [
+     386,
+     0
+    ]
    ]
   },
   {
@@ -15607,6 +18028,12 @@
      "from": 0,
      "to": 459
     }
+   ],
+   "notes": [
+    [
+     386,
+     1
+    ]
    ]
   },
   {
@@ -15624,6 +18051,20 @@
      "from": 0,
      "to": 888
     }
+   ],
+   "notes": [
+    [
+     388,
+     0
+    ],
+    [
+     388,
+     1
+    ],
+    [
+     388,
+     2
+    ]
    ]
   },
   {
@@ -15674,6 +18115,12 @@
      "from": 0,
      "to": 784
     }
+   ],
+   "notes": [
+    [
+     390,
+     0
+    ]
    ]
   },
   {
@@ -15718,6 +18165,16 @@
      "from": 0,
      "to": 151
     }
+   ],
+   "notes": [
+    [
+     392,
+     0
+    ],
+    [
+     392,
+     1
+    ]
    ]
   },
   {
@@ -15763,6 +18220,16 @@
      "from": 0,
      "to": 652
     }
+   ],
+   "notes": [
+    [
+     395,
+     0
+    ],
+    [
+     395,
+     1
+    ]
    ]
   },
   {
@@ -15785,6 +18252,16 @@
      "from": 0,
      "to": 833
     }
+   ],
+   "notes": [
+    [
+     396,
+     0
+    ],
+    [
+     396,
+     1
+    ]
    ]
   },
   {
@@ -15847,6 +18324,16 @@
      "from": 0,
      "to": 121
     }
+   ],
+   "notes": [
+    [
+     397,
+     0
+    ],
+    [
+     398,
+     0
+    ]
    ]
   },
   {
@@ -15864,6 +18351,12 @@
      "from": 121,
      "to": 2155
     }
+   ],
+   "notes": [
+    [
+     398,
+     1
+    ]
    ]
   },
   {
@@ -15909,6 +18402,16 @@
      "from": 0,
      "to": 127
     }
+   ],
+   "notes": [
+    [
+     400,
+     0
+    ],
+    [
+     400,
+     1
+    ]
    ]
   },
   {
@@ -15931,6 +18434,12 @@
      "from": 0,
      "to": 848
     }
+   ],
+   "notes": [
+    [
+     401,
+     0
+    ]
    ]
   },
   {
@@ -15965,6 +18474,16 @@
      "from": 2413,
      "to": 3829
     }
+   ],
+   "notes": [
+    [
+     401,
+     1
+    ],
+    [
+     401,
+     2
+    ]
    ]
   },
   {
@@ -15992,6 +18511,24 @@
      "from": 0,
      "to": 356
     }
+   ],
+   "notes": [
+    [
+     403,
+     0
+    ],
+    [
+     403,
+     1
+    ],
+    [
+     403,
+     2
+    ],
+    [
+     403,
+     3
+    ]
    ]
   },
   {
@@ -16009,6 +18546,12 @@
      "from": 356,
      "to": 2849
     }
+   ],
+   "notes": [
+    [
+     403,
+     4
+    ]
    ]
   },
   {
@@ -16026,6 +18569,12 @@
      "from": 0,
      "to": 511
     }
+   ],
+   "notes": [
+    [
+     404,
+     0
+    ]
    ]
   },
   {
@@ -16065,6 +18614,12 @@
      "from": 2,
      "to": 1235
     }
+   ],
+   "notes": [
+    [
+     406,
+     0
+    ]
    ]
   },
   {
@@ -16104,6 +18659,20 @@
      "from": 0,
      "to": 1251
     }
+   ],
+   "notes": [
+    [
+     408,
+     0
+    ],
+    [
+     408,
+     1
+    ],
+    [
+     408,
+     2
+    ]
    ]
   },
   {
@@ -16148,6 +18717,16 @@
      "from": 5,
      "to": 1003
     }
+   ],
+   "notes": [
+    [
+     409,
+     0
+    ],
+    [
+     409,
+     1
+    ]
    ]
   },
   {
@@ -16165,6 +18744,12 @@
      "from": 0,
      "to": 940
     }
+   ],
+   "notes": [
+    [
+     410,
+     0
+    ]
    ]
   },
   {
@@ -16187,6 +18772,16 @@
      "from": 0,
      "to": 849
     }
+   ],
+   "notes": [
+    [
+     411,
+     0
+    ],
+    [
+     411,
+     1
+    ]
    ]
   },
   {
@@ -16270,6 +18865,16 @@
      "from": 0,
      "to": 664
     }
+   ],
+   "notes": [
+    [
+     416,
+     0
+    ],
+    [
+     416,
+     1
+    ]
    ]
   },
   {
@@ -16297,6 +18902,16 @@
      "from": 0,
      "to": 612
     }
+   ],
+   "notes": [
+    [
+     417,
+     0
+    ],
+    [
+     417,
+     1
+    ]
    ]
   },
   {
@@ -16324,6 +18939,12 @@
      "from": 0,
      "to": 174
     }
+   ],
+   "notes": [
+    [
+     418,
+     0
+    ]
    ]
   },
   {
@@ -16364,6 +18985,20 @@
      "from": 0,
      "to": 1374
     }
+   ],
+   "notes": [
+    [
+     419,
+     0
+    ],
+    [
+     419,
+     1
+    ],
+    [
+     420,
+     0
+    ]
    ]
   },
   {
@@ -16431,6 +19066,12 @@
      "from": 0,
      "to": 1269
     }
+   ],
+   "notes": [
+    [
+     423,
+     0
+    ]
    ]
   },
   {
@@ -16453,6 +19094,12 @@
      "from": 0,
      "to": 1036
     }
+   ],
+   "notes": [
+    [
+     424,
+     0
+    ]
    ]
   },
   {
@@ -16470,6 +19117,16 @@
      "from": 0,
      "to": 962
     }
+   ],
+   "notes": [
+    [
+     425,
+     0
+    ],
+    [
+     425,
+     1
+    ]
    ]
   },
   {
@@ -16492,6 +19149,28 @@
      "from": 0,
      "to": 920
     }
+   ],
+   "notes": [
+    [
+     426,
+     0
+    ],
+    [
+     426,
+     1
+    ],
+    [
+     426,
+     2
+    ],
+    [
+     426,
+     3
+    ],
+    [
+     426,
+     4
+    ]
    ]
   },
   {
@@ -16514,6 +19193,16 @@
      "from": 0,
      "to": 1292
     }
+   ],
+   "notes": [
+    [
+     427,
+     0
+    ],
+    [
+     427,
+     1
+    ]
    ]
   },
   {
@@ -16536,6 +19225,12 @@
      "from": 0,
      "to": 1559
     }
+   ],
+   "notes": [
+    [
+     428,
+     0
+    ]
    ]
   },
   {
@@ -16559,6 +19254,12 @@
      "from": 0,
      "to": 667
     }
+   ],
+   "notes": [
+    [
+     429,
+     0
+    ]
    ]
   },
   {
@@ -16581,6 +19282,12 @@
      "from": 0,
      "to": 618
     }
+   ],
+   "notes": [
+    [
+     430,
+     0
+    ]
    ]
   },
   {
@@ -16604,6 +19311,12 @@
      "from": 0,
      "to": 983
     }
+   ],
+   "notes": [
+    [
+     431,
+     0
+    ]
    ]
   },
   {
@@ -16626,6 +19339,12 @@
      "from": 0,
      "to": 219
     }
+   ],
+   "notes": [
+    [
+     433,
+     0
+    ]
    ]
   },
   {
@@ -16665,6 +19384,24 @@
      "from": 0,
      "to": 697
     }
+   ],
+   "notes": [
+    [
+     434,
+     0
+    ],
+    [
+     434,
+     1
+    ],
+    [
+     434,
+     2
+    ],
+    [
+     434,
+     3
+    ]
    ]
   },
   {
@@ -16704,6 +19441,16 @@
      "from": 0,
      "to": 1182
     }
+   ],
+   "notes": [
+    [
+     435,
+     0
+    ],
+    [
+     435,
+     1
+    ]
    ]
   },
   {
@@ -16731,6 +19478,12 @@
      "from": 0,
      "to": 397
     }
+   ],
+   "notes": [
+    [
+     435,
+     2
+    ]
    ]
   },
   {
@@ -16753,6 +19506,12 @@
      "from": 0,
      "to": 176
     }
+   ],
+   "notes": [
+    [
+     436,
+     0
+    ]
    ]
   },
   {
@@ -16775,6 +19534,12 @@
      "from": 1,
      "to": 773
     }
+   ],
+   "notes": [
+    [
+     438,
+     0
+    ]
    ]
   },
   {
@@ -16802,6 +19567,12 @@
      "from": 0,
      "to": 562
     }
+   ],
+   "notes": [
+    [
+     439,
+     0
+    ]
    ]
   },
   {
@@ -16848,6 +19619,16 @@
      "from": 0,
      "to": 905
     }
+   ],
+   "notes": [
+    [
+     441,
+     0
+    ],
+    [
+     441,
+     1
+    ]
    ]
   },
   {
@@ -16893,6 +19674,12 @@
      "from": 0,
      "to": 1085
     }
+   ],
+   "notes": [
+    [
+     443,
+     0
+    ]
    ]
   },
   {
@@ -16990,6 +19777,16 @@
      "from": 0,
      "to": 583
     }
+   ],
+   "notes": [
+    [
+     447,
+     0
+    ],
+    [
+     448,
+     0
+    ]
    ]
   },
   {
@@ -17034,6 +19831,12 @@
      "from": 0,
      "to": 691
     }
+   ],
+   "notes": [
+    [
+     451,
+     0
+    ]
    ]
   },
   {
@@ -17073,6 +19876,12 @@
      "from": 0,
      "to": 181
     }
+   ],
+   "notes": [
+    [
+     454,
+     0
+    ]
    ]
   },
   {
@@ -17123,6 +19932,16 @@
      "from": 0,
      "to": 738
     }
+   ],
+   "notes": [
+    [
+     456,
+     0
+    ],
+    [
+     456,
+     1
+    ]
    ]
   },
   {
@@ -17168,6 +19987,16 @@
      "from": 0,
      "to": 1286
     }
+   ],
+   "notes": [
+    [
+     457,
+     0
+    ],
+    [
+     457,
+     1
+    ]
    ]
   },
   {
@@ -17363,6 +20192,16 @@
      "from": 0,
      "to": 817
     }
+   ],
+   "notes": [
+    [
+     465,
+     0
+    ],
+    [
+     465,
+     1
+    ]
    ]
   },
   {
@@ -17385,6 +20224,20 @@
      "from": 0,
      "to": 1218
     }
+   ],
+   "notes": [
+    [
+     466,
+     0
+    ],
+    [
+     466,
+     1
+    ],
+    [
+     466,
+     2
+    ]
    ]
   },
   {
@@ -17407,6 +20260,12 @@
      "from": 1,
      "to": 533
     }
+   ],
+   "notes": [
+    [
+     467,
+     0
+    ]
    ]
   },
   {
@@ -17446,6 +20305,16 @@
      "from": 0,
      "to": 1467
     }
+   ],
+   "notes": [
+    [
+     468,
+     0
+    ],
+    [
+     468,
+     1
+    ]
    ]
   },
   {
@@ -17503,6 +20372,12 @@
      "from": 5358,
      "to": 6852
     }
+   ],
+   "notes": [
+    [
+     468,
+     2
+    ]
    ]
   },
   {
@@ -17523,6 +20398,12 @@
      "from": 0,
      "to": 970
     }
+   ],
+   "notes": [
+    [
+     469,
+     0
+    ]
    ]
   },
   {
@@ -17545,6 +20426,16 @@
      "from": 0,
      "to": 1353
     }
+   ],
+   "notes": [
+    [
+     470,
+     0
+    ],
+    [
+     470,
+     1
+    ]
    ]
   },
   {
@@ -17567,6 +20458,12 @@
      "from": 0,
      "to": 1137
     }
+   ],
+   "notes": [
+    [
+     471,
+     0
+    ]
    ]
   },
   {
@@ -17628,6 +20525,12 @@
      "from": 0,
      "to": 999
     }
+   ],
+   "notes": [
+    [
+     473,
+     0
+    ]
    ]
   },
   {
@@ -17662,6 +20565,16 @@
      "from": 0,
      "to": 1334
     }
+   ],
+   "notes": [
+    [
+     474,
+     0
+    ],
+    [
+     474,
+     1
+    ]
    ]
   },
   {
@@ -17701,6 +20614,16 @@
      "from": 0,
      "to": 1137
     }
+   ],
+   "notes": [
+    [
+     476,
+     0
+    ],
+    [
+     476,
+     1
+    ]
    ]
   },
   {
@@ -17723,6 +20646,16 @@
      "from": 0,
      "to": 1072
     }
+   ],
+   "notes": [
+    [
+     477,
+     0
+    ],
+    [
+     477,
+     1
+    ]
    ]
   },
   {
@@ -17790,6 +20723,16 @@
      "from": 0,
      "to": 705
     }
+   ],
+   "notes": [
+    [
+     480,
+     0
+    ],
+    [
+     480,
+     1
+    ]
    ]
   },
   {
@@ -17834,6 +20777,16 @@
      "from": 0,
      "to": 363
     }
+   ],
+   "notes": [
+    [
+     482,
+     0
+    ],
+    [
+     482,
+     1
+    ]
    ]
   },
   {
@@ -17896,6 +20849,12 @@
      "from": 0,
      "to": 1020
     }
+   ],
+   "notes": [
+    [
+     484,
+     0
+    ]
    ]
   },
   {
@@ -17918,6 +20877,20 @@
      "from": 0,
      "to": 1227
     }
+   ],
+   "notes": [
+    [
+     485,
+     0
+    ],
+    [
+     485,
+     1
+    ],
+    [
+     485,
+     2
+    ]
    ]
   },
   {
@@ -17940,6 +20913,16 @@
      "from": 0,
      "to": 601
     }
+   ],
+   "notes": [
+    [
+     486,
+     0
+    ],
+    [
+     486,
+     1
+    ]
    ]
   },
   {
@@ -17962,6 +20945,12 @@
      "from": 0,
      "to": 1032
     }
+   ],
+   "notes": [
+    [
+     487,
+     0
+    ]
    ]
   },
   {
@@ -18006,6 +20995,12 @@
      "from": 0,
      "to": 951
     }
+   ],
+   "notes": [
+    [
+     489,
+     0
+    ]
    ]
   },
   {
@@ -18028,6 +21023,16 @@
      "from": 0,
      "to": 759
     }
+   ],
+   "notes": [
+    [
+     490,
+     0
+    ],
+    [
+     490,
+     1
+    ]
    ]
   },
   {
@@ -18050,6 +21055,12 @@
      "from": 0,
      "to": 662
     }
+   ],
+   "notes": [
+    [
+     491,
+     0
+    ]
    ]
   },
   {
@@ -18094,6 +21105,28 @@
      "from": 0,
      "to": 557
     }
+   ],
+   "notes": [
+    [
+     492,
+     0
+    ],
+    [
+     492,
+     1
+    ],
+    [
+     492,
+     2
+    ],
+    [
+     493,
+     0
+    ],
+    [
+     493,
+     1
+    ]
    ]
   },
   {
@@ -18116,6 +21149,12 @@
      "from": 0,
      "to": 128
     }
+   ],
+   "notes": [
+    [
+     494,
+     0
+    ]
    ]
   },
   {
@@ -18138,6 +21177,12 @@
      "from": 0,
      "to": 541
     }
+   ],
+   "notes": [
+    [
+     496,
+     0
+    ]
    ]
   },
   {
@@ -18160,6 +21205,12 @@
      "from": 0,
      "to": 828
     }
+   ],
+   "notes": [
+    [
+     497,
+     0
+    ]
    ]
   },
   {
@@ -18182,6 +21233,12 @@
      "from": 0,
      "to": 158
     }
+   ],
+   "notes": [
+    [
+     497,
+     1
+    ]
    ]
   },
   {
@@ -18226,6 +21283,12 @@
      "from": 0,
      "to": 818
     }
+   ],
+   "notes": [
+    [
+     500,
+     0
+    ]
    ]
   },
   {
@@ -18248,6 +21311,12 @@
      "from": 0,
      "to": 755
     }
+   ],
+   "notes": [
+    [
+     500,
+     1
+    ]
    ]
   },
   {
@@ -18265,6 +21334,16 @@
      "from": 0,
      "to": 1291
     }
+   ],
+   "notes": [
+    [
+     502,
+     0
+    ],
+    [
+     502,
+     1
+    ]
    ]
   },
   {
@@ -18465,6 +21544,16 @@
      "from": 0,
      "to": 797
     }
+   ],
+   "notes": [
+    [
+     512,
+     0
+    ],
+    [
+     512,
+     1
+    ]
    ]
   },
   {
@@ -18499,6 +21588,12 @@
      "from": 0,
      "to": 1261
     }
+   ],
+   "notes": [
+    [
+     514,
+     0
+    ]
    ]
   },
   {
@@ -18564,6 +21659,12 @@
      "from": 125,
      "to": 1552
     }
+   ],
+   "notes": [
+    [
+     515,
+     0
+    ]
    ]
   },
   {
@@ -18674,6 +21775,12 @@
      "from": 0,
      "to": 561
     }
+   ],
+   "notes": [
+    [
+     520,
+     0
+    ]
    ]
   },
   {
@@ -18708,6 +21815,12 @@
      "from": 0,
      "to": 750
     }
+   ],
+   "notes": [
+    [
+     521,
+     0
+    ]
    ]
   },
   {
@@ -18725,6 +21838,12 @@
      "from": 1,
      "to": 912
     }
+   ],
+   "notes": [
+    [
+     522,
+     0
+    ]
    ]
   },
   {
@@ -18742,6 +21861,12 @@
      "from": 1,
      "to": 1153
     }
+   ],
+   "notes": [
+    [
+     523,
+     0
+    ]
    ]
   },
   {
@@ -18764,6 +21889,24 @@
      "from": 0,
      "to": 155
     }
+   ],
+   "notes": [
+    [
+     524,
+     0
+    ],
+    [
+     524,
+     1
+    ],
+    [
+     524,
+     2
+    ],
+    [
+     525,
+     0
+    ]
    ]
   },
   {
@@ -18786,6 +21929,16 @@
      "from": 0,
      "to": 579
     }
+   ],
+   "notes": [
+    [
+     525,
+     1
+    ],
+    [
+     526,
+     0
+    ]
    ]
   },
   {
@@ -18825,6 +21978,20 @@
      "from": 1,
      "to": 898
     }
+   ],
+   "notes": [
+    [
+     527,
+     0
+    ],
+    [
+     527,
+     1
+    ],
+    [
+     527,
+     2
+    ]
    ]
   },
   {
@@ -18857,6 +22024,12 @@
      "from": 1,
      "to": 364
     }
+   ],
+   "notes": [
+    [
+     528,
+     0
+    ]
    ]
   },
   {
@@ -18874,6 +22047,12 @@
      "from": 364,
      "to": 1155
     }
+   ],
+   "notes": [
+    [
+     530,
+     0
+    ]
    ]
   },
   {
@@ -18896,6 +22075,16 @@
      "from": 1,
      "to": 1102
     }
+   ],
+   "notes": [
+    [
+     531,
+     0
+    ],
+    [
+     531,
+     1
+    ]
    ]
   },
   {
