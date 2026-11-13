@@ -160,3 +160,20 @@ test('alignPages: a page that is not found does not hide the pages after it', ()
   assert.equal(res[4].start, null);
   [0, 1, 2, 3, 5, 6, 7, 8, 9].forEach((k) => assert.ok(Math.abs(res[k].start - 500 * k) <= 6, `page ${k}`));
 });
+
+test('a page before pages missing from the scan keeps its own text only, also inside one long letter', () => {
+  // 40 printed pages; letter 1 runs through pages 7 to 24
+  const v = syntheticVolume({ lens: [3000, 9000, 6000, 2000] });
+  // the scan lacks printed pages 21 and 22 (PDF pages 22 and 23)
+  const pdfPages = v.pdfPages.filter((_, k) => k !== 21 && k !== 22);
+  const { map } = buildVolumeMap({ volume: 99, pdfName: 'gap.pdf', letters: v.letters, bodies: v.bodies, pdfPages });
+  assert.deepEqual(map.offsetChanges.map((c) => c.missingPrinted), [[21, 22]]);
+  const before = map.pages.find((p) => p.printed === 20);
+  const after = map.pages.find((p) => p.printed === 23);
+  assert.ok(before && after, 'the pages around the gap keep their printed numbers');
+  assert.equal(before.segments.at(-1).i, 1);
+  assert.equal(after.segments[0].i, 1);
+  // page 20 holds stream 9500-10000, which is 6500-7000 of letter 1; page 23 starts at 8000 of it
+  assert.ok(Math.abs(before.segments.at(-1).to - 7000) <= 12, `page 20 ends at ${before.segments.at(-1).to}`);
+  assert.ok(Math.abs(after.segments[0].from - 8000) <= 12, `page 23 starts at ${after.segments[0].from}`);
+});

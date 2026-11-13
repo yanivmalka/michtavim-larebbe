@@ -650,6 +650,13 @@ export function buildVolumeMap({ volume, pdfName, letters, bodies, pdfPages, pdf
   for (let j = 0; j + 1 < textPagesList.length; j++) {
     const last = textPagesList[j].segments.at(-1);
     const first = textPagesList[j + 1].segments[0];
+    if (gapAfter.has(textPagesList[j].pdf - 1)) {
+      // The scan lacks the pages after this one: its text ends where the page ends, not where the
+      // next scanned page starts, even when the same letter carries on there.
+      const end = nearestWordStart(bodies[last.i], last.to);
+      if (end > last.from) last.to = end;
+      continue;
+    }
     if (last.i !== first.i) continue;
     const at = nearestWordStart(bodies[last.i], first.from);
     if (at <= last.from) continue;

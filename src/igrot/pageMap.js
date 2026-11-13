@@ -73,3 +73,71 @@ export function nearestWordStart(text, pos, radius = 20) {
   }
   return pos;
 }
+
+// ---------- spreads: the two facing pages the book opens on ----------
+
+const UNITS = ['', 'א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט'];
+const TENS = ['', 'י', 'כ', 'ל', 'מ', 'נ', 'ס', 'ע', 'פ', 'צ'];
+const HUNDREDS = ['', 'ק', 'ר', 'ש', 'ת', 'תק', 'תר', 'תש', 'תת', 'תתק'];
+
+/** A page number as the book prints it: 15 → טו, 236 → רלו. */
+export function hebrewNumeral(n) {
+  if (!Number.isInteger(n) || n < 1 || n > 999) return String(n);
+  const rest = n % 100;
+  const tail = rest === 15 ? 'טו' : rest === 16 ? 'טז' : TENS[Math.floor(rest / 10)] + UNITS[rest % 10];
+  return HUNDREDS[Math.floor(n / 100)] + tail;
+}
+
+const indexes = new WeakMap();
+/** printed page number → page, for the pages of a map that have letter text. */
+function printedIndex(map) {
+  let index = indexes.get(map);
+  if (!index) {
+    index = new Map();
+    for (const p of textPages(map)) if (Number.isInteger(p.printed) && !index.has(p.printed)) index.set(p.printed, p);
+    indexes.set(map, index);
+  }
+  return index;
+}
+
+/**
+ * The two facing pages of spread `e` (the even printed number of its right-hand page): in a Hebrew
+ * book the even page is on the right and the odd page after it on the left. A side is null when
+ * that page has no letter text in the map (front matter, a picture, a page missing from the scan).
+ */
+export function spreadPages(vol, e) {
+  if (!vol?.pageMap || !Number.isInteger(e) || e < 0 || e % 2) return null;
+  const index = printedIndex(vol.pageMap);
+  const right = index.get(e) ?? null;
+  const left = index.get(e + 1) ?? null;
+  return right || left ? { right, left } : null;
+}
+
+const spreadLists = new WeakMap();
+/** Every spread of a volume that has letter text on at least one side, in book order. */
+export function spreadsOf(vol) {
+  const map = vol?.pageMap;
+  if (!map) return [];
+  let list = spreadLists.get(map);
+  if (!list) {
+    const evens = new Set();
+    for (const n of printedIndex(map).keys()) evens.add(n - (n % 2));
+    list = [...evens].sort((a, b) => a - b);
+    spreadLists.set(map, list);
+  }
+  return list;
+}
+
+const ranges = new WeakMap();
+/** True when printed page `n` lies between the first and last text pages of the volume. */
+export function insideLetters(vol, n) {
+  const map = vol?.pageMap;
+  if (!map) return false;
+  let range = ranges.get(map);
+  if (!range) {
+    const numbers = [...printedIndex(map).keys()];
+    range = { min: Math.min(...numbers), max: Math.max(...numbers) };
+    ranges.set(map, range);
+  }
+  return n > range.min && n < range.max;
+}

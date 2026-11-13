@@ -1,6 +1,6 @@
 // Draws text that looks like a printed page of Igrot Kodesh, as PNG images.
 // Canvas (Skia) handles right-to-left and mixed Hebrew/Latin text correctly.
-import { createCanvas, GlobalFonts } from '@napi-rs/canvas';
+import { createCanvas, GlobalFonts, loadImage } from '@napi-rs/canvas';
 import { PDFDocument } from 'pdf-lib';
 
 const font = (f) => new URL(`../../assets/fonts/${f}`, import.meta.url).pathname;
@@ -64,9 +64,13 @@ function newCanvas(header) {
   ctx.fillStyle = MUTED;
   ctx.font = '24px FrankRuhl';
   ctx.textAlign = 'right';
-  ctx.fillText(header.right, PAGE.width - PAGE.side, 84);
+  if (header.right) ctx.fillText(header.right, PAGE.width - PAGE.side, 84);
   ctx.textAlign = 'left';
-  ctx.fillText(header.left, PAGE.side, 84);
+  if (header.left) ctx.fillText(header.left, PAGE.side, 84);
+  if (header.center) {
+    ctx.textAlign = 'center';
+    ctx.fillText(header.center, PAGE.width / 2, 84);
+  }
   ctx.strokeStyle = RULE;
   ctx.lineWidth = 1.5;
   ctx.beginPath();
@@ -80,7 +84,7 @@ function newCanvas(header) {
  * Lays out a flow of blocks onto pages.
  * @param {{ kind: string, text: string, letter: number, continued?: boolean }[]} flow
  *   blocks in reading order; `letter` is an index the caller uses to track what was shown.
- * @param {{ header: {right: string, left: string}, maxPages?: number, footer?: (i: number, n: number) => string, scale?: number }} opts
+ * @param {{ header: {right?: string, left?: string, center?: string}, maxPages?: number, footer?: (i: number, n: number) => string, scale?: number }} opts
  *   `scale` multiplies all text sizes (1 by default).
  * @returns {{ pages: Buffer[], shown: Map<number, { text: string, complete: boolean }> }}
  *   `shown` holds, per letter index, the text that made it onto the pages and whether
@@ -165,6 +169,39 @@ export function layout(flow, { header, maxPages = Infinity, footer, scale = 1 })
   });
 
   return { pages: pages.map((c) => c.toBuffer('image/png')), shown };
+}
+
+/** A page with no text: just the paper and its header, with an optional short note in the middle. */
+export function blankPage(header, note = '') {
+  const { canvas, ctx } = newCanvas(header);
+  if (note) {
+    ctx.font = '26px FrankRuhl';
+    ctx.fillStyle = MUTED;
+    ctx.textAlign = 'center';
+    ctx.fillText(note, PAGE.width / 2, PAGE.height / 2);
+  }
+  return canvas.toBuffer('image/png');
+}
+
+/**
+ * The open book: two page images side by side, the right-hand page on the right (Hebrew book),
+ * with the shadow of the fold between them.
+ */
+export async function spreadImage(rightPng, leftPng) {
+  const canvas = createCanvas(PAGE.width * 2, PAGE.height);
+  const ctx = canvas.getContext('2d');
+  const [right, left] = await Promise.all([loadImage(rightPng), loadImage(leftPng)]);
+  ctx.drawImage(left, 0, 0);
+  ctx.drawImage(right, PAGE.width, 0);
+  const fold = 70;
+  for (const [x0, x1] of [[PAGE.width - fold, PAGE.width], [PAGE.width + fold, PAGE.width]]) {
+    const shade = ctx.createLinearGradient(x0, 0, x1, 0);
+    shade.addColorStop(0, 'rgba(60, 45, 20, 0)');
+    shade.addColorStop(1, 'rgba(60, 45, 20, 0.22)');
+    ctx.fillStyle = shade;
+    ctx.fillRect(Math.min(x0, x1), 0, fold, PAGE.height);
+  }
+  return canvas.toBuffer('image/png');
 }
 
 /** Wraps PNG pages into a PDF (A4 width, page proportions kept). */

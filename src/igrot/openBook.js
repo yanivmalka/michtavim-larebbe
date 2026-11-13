@@ -1,12 +1,16 @@
-// "Opening the book": picks a random spot in a volume and builds the page found there –
-// possibly the end of one letter, whole short letters, and the beginning of the next.
+// "Opening the book": a volume is chosen, the letter is put between two of its leaves, and the
+// spread found there is the answer – the two facing pages, with the end of one letter, whole
+// short letters and the beginning of the next, as the printed pages hold them.
 //
-// The online source has the letters' text but not the printed page breaks, so the page is
-// simulated: a random point is chosen inside a random letter, the page starts up to about
-// one page-length before it, and the layout engine fills one book-sized page from there.
+// The printed page breaks come from the page maps (data/pages, see pageMap.js); the text itself
+// comes from the online source and is drawn in our own layout. A volume without a map falls back
+// to a simulated page: a random point inside a random letter, the page starting up to about one
+// page-length before it, and the layout engine filling one book-sized page from there.
 import { fetchLetter as defaultFetch, bodyOf } from './chabadlibrary.js';
-import { layout } from '../render/bookPage.js';
-import { bodyText, mappedPage, sliceBlocks, textPages } from './pageMap.js';
+import { blankPage, layout, spreadImage } from '../render/bookPage.js';
+import {
+  bodyText, hebrewNumeral, insideLetters, mappedPage, sliceBlocks, spreadPages, spreadsOf, textPages,
+} from './pageMap.js';
 
 /** Roughly how many characters fit on one rendered page – used only to pick a start point. */
 export const PAGE_CHARS = 1500;
@@ -35,15 +39,21 @@ function sliceFrom(blocks, at) {
  * A page is fully described by a small "spec" – volume, first letter, number of letters
  * and the character offset where the page starts – so its image can be drawn again at any
  * time (after a server restart, for sharing, for the full-screen view).
- * A page from a printed-page map is the spec ['m', volume, printed page] instead.
+ * A page from a printed-page map is the spec ['m', volume, PDF page] instead, and a spread (the
+ * two facing pages the book opens on) is ['s', volume, even printed number of the right-hand page].
  */
 export const encodeSpec = (spec) => Buffer.from(JSON.stringify(
-  spec.p !== undefined ? ['m', spec.v, spec.p] : [spec.v, spec.i, spec.n, spec.s],
+  spec.e !== undefined ? ['s', spec.v, spec.e]
+    : spec.p !== undefined ? ['m', spec.v, spec.p] : [spec.v, spec.i, spec.n, spec.s],
 )).toString('base64url');
 
 export function decodeSpec(str, volumes) {
   try {
     const arr = JSON.parse(Buffer.from(String(str), 'base64url').toString());
+    if (arr[0] === 's') {
+      const [, v, e] = arr;
+      return Number.isInteger(v) && volumes[v] && spreadPages(volumes[v], e) ? { v, e } : null;
+    }
     if (arr[0] === 'm') {
       const [, v, p] = arr;
       return Number.isInteger(v) && Number.isInteger(p) && volumes[v] && mappedPage(volumes[v], p) ? { v, p } : null;
@@ -57,7 +67,8 @@ export function decodeSpec(str, volumes) {
   }
 }
 
-const FIT_SCALES = [1, 0.94, 0.88, 0.82, 0.76, 0.7];
+const FIT_SCALES = [1, 0.94, 0.88, 0.82, 0.76, 0.7, 0.64, 0.58];
+const HEBREW_LETTER = /[\u05D0-\u05EA]/;
 
 /**
  * One page from a flow of blocks, with the text made smaller (in steps) until every letter on it fits.
@@ -71,6 +82,16 @@ function fitOnePage(flow, header) {
     if (letters.every((k) => result.shown.get(k)?.complete)) return { ...result, truncated: false };
   }
   return { ...result, truncated: true };
+}
+
+/**
+ * The running header of a printed page: the page number at the outer edge, as in the book
+ * (even pages are on the right, odd pages on the left).
+ */
+function pageHeader(vol, printed) {
+  const center = `אגרות קודש · ${vol.heading}`;
+  if (!Number.isInteger(printed) || printed < 1) return { center };
+  return printed % 2 === 0 ? { right: hebrewNumeral(printed), center } : { left: hebrewNumeral(printed), center };
 }
 
 /**
@@ -91,14 +112,18 @@ export async function renderMapped(volumes, spec, { fetchLetter = defaultFetch }
     if (vol.pageMap.letters[seg.i]?.bodyLength !== text.length || seg.to > text.length) return null;
     const k = parts.length;
     const number = l.letterHeading || heading;
-    const startsOnPage = seg.from === 0;
+    // The maps count Hebrew letters only, so a range can stop short of punctuation, digits or
+    // brackets at the very start or end of a letter: those belong to this page too.
+    const from = HEBREW_LETTER.test(text.slice(0, seg.from)) ? seg.from : 0;
+    const to = HEBREW_LETTER.test(text.slice(seg.to)) ? seg.to : text.length;
+    const startsOnPage = from === 0;
     if (startsOnPage) flow.push({ kind: 'number', text: number, letter: k });
-    for (const b of sliceBlocks(bodyOf(l.blocks), seg.from, seg.to)) flow.push({ ...b, letter: k });
-    parts.push({ id, number, startsOnPage, endsOnPage: seg.to >= text.trimEnd().length, full: l });
+    for (const b of sliceBlocks(bodyOf(l.blocks), from, to)) flow.push({ ...b, letter: k });
+    parts.push({ id, number, startsOnPage, endsOnPage: to >= text.length, full: l });
   }
   if (!flow.length) return null;
 
-  const { pages, shown, truncated } = fitOnePage(flow, { right: 'אגרות קודש', left: vol.heading });
+  const { pages, shown, truncated } = fitOnePage(flow, pageHeader(vol, page.printed));
   const letters = parts.map((p, k) => {
     const shownText = shown.get(k)?.text ?? '';
     return {
@@ -114,8 +139,57 @@ export async function renderMapped(volumes, spec, { fetchLetter = defaultFetch }
   return { volume: vol.volume, volumeHeading: vol.heading, png: pages[0], letters, spec: encodeSpec(spec), end: null, consumed: 0, truncated };
 }
 
+/**
+ * Draws a spread: the two facing pages a letter lies between when it is put into the book.
+ * `sides` describes each page (its own spec and image, or a blank page when the map has no text
+ * for it). A letter that runs over the fold is listed once, with the text of both pages.
+ * Returns null when a page cannot be drawn from the map any more.
+ */
+export async function renderSpread(volumes, spec, { fetchLetter = defaultFetch } = {}) {
+  const vol = volumes[spec.v];
+  const pair = spreadPages(vol, spec.e);
+  if (!pair) return null;
+
+  const sides = [];
+  for (const [side, page, printed] of [['right', pair.right, spec.e], ['left', pair.left, spec.e + 1]]) {
+    if (page) {
+      const drawn = await renderMapped(volumes, { v: spec.v, p: page.pdf }, { fetchLetter });
+      if (!drawn) return null;
+      sides.push({ side, printed, spec: drawn.spec, png: drawn.png, letters: drawn.letters, truncated: drawn.truncated });
+    } else {
+      const note = insideLetters(vol, printed) ? 'הטקסט של עמוד זה אינו זמין' : '';
+      sides.push({ side, printed, spec: null, png: blankPage(pageHeader(vol, printed), note), letters: [], truncated: false });
+    }
+  }
+
+  const letters = [];
+  for (const side of sides) {
+    for (const l of side.letters) {
+      const last = letters.at(-1);
+      if (last && last.id === l.id) {
+        last.pageText = `${last.pageText}\n${l.pageText}`;
+        last.endsOnPage = l.endsOnPage;
+      } else {
+        letters.push({ ...l });
+      }
+    }
+  }
+  return {
+    volume: vol.volume,
+    volumeHeading: vol.heading,
+    png: await spreadImage(sides[0].png, sides[1].png),
+    letters,
+    spec: encodeSpec(spec),
+    sides: sides.map(({ side, printed, spec: s, png }) => ({ side, printed, spec: s, png })),
+    end: null,
+    consumed: 0,
+    truncated: sides.some((s) => s.truncated),
+  };
+}
+
 /** Draws the page described by `spec`. */
 export async function renderSpec(volumes, spec, { fetchLetter = defaultFetch } = {}) {
+  if (spec.e !== undefined) return renderSpread(volumes, spec, { fetchLetter });
   if (spec.p !== undefined) return renderMapped(volumes, spec, { fetchLetter });
   const vol = volumes[spec.v];
   const chain = await Promise.all(Array.from({ length: spec.n }, async (_, k) => {
@@ -189,6 +263,13 @@ async function specFrom(volumes, v, i, s, fetchLetter) {
  * by a line or two. Returns null at the start / end of the volume.
  */
 export async function turnPage(volumes, spec, dir, { fetchLetter = defaultFetch } = {}) {
+  if (spec.e !== undefined) {
+    // spreads of a map: turning the leaf shows the next or previous two pages
+    const spreads = spreadsOf(volumes[spec.v]);
+    const at = spreads.indexOf(spec.e);
+    const next = at === -1 ? undefined : spreads[at + dir];
+    return next === undefined ? null : { v: spec.v, e: next };
+  }
   if (spec.p !== undefined) {
     // printed pages of a map: the next or previous page with text, within the volume
     const pages = textPages(volumes[spec.v].pageMap);
@@ -237,26 +318,27 @@ export async function turnPage(volumes, spec, dir, { fetchLetter = defaultFetch 
 }
 
 /**
- * Opens the book at a random spot.
- * @returns {Promise<{ volume: number, volumeHeading: string, png: Buffer, spec: string,
+ * Opens the book the way it is done by hand: a volume is taken off the shelf (every volume is
+ * as likely as any other), and the letter is put between two of its leaves (every gap is as
+ * likely as any other). The answer is the spread found there: the two facing pages.
+ * A volume without a printed-page map opens on one simulated page instead.
+ * @returns {Promise<{ volume: number, volumeHeading: string, png: Buffer, spec: string, sides?: object[],
  *   letters: { id, number, viewerUrl, startsOnPage: boolean, endsOnPage: boolean, pageText: string, full: object }[] }>}
  */
 export async function openBook(volumes, { random = Math.random, fetchLetter = defaultFetch } = {}) {
-  const total = volumes.reduce((n, v) => n + v.letters.length, 0);
-  if (!total) throw new Error('CATALOG_EMPTY');
-  let pick = Math.floor(random() * total);
-  let v = 0;
-  while (pick >= volumes[v].letters.length) pick -= volumes[v++].letters.length;
+  const shelf = volumes.map((_, k) => k).filter((k) => volumes[k].letters.length);
+  if (!shelf.length) throw new Error('CATALOG_EMPTY');
+  const v = shelf[Math.floor(random() * shelf.length)];
   const vol = volumes[v];
 
-  // a volume with a printed-page map: a random printed page of it
-  if (vol.pageMap) {
-    const pages = textPages(vol.pageMap);
-    if (pages.length) {
-      const page = await renderMapped(volumes, { v, p: pages[Math.floor(random() * pages.length)].pdf }, { fetchLetter });
-      if (page) return page;
-    }
+  const spreads = spreadsOf(vol);
+  if (spreads.length) {
+    const spread = await renderSpread(volumes, { v, e: spreads[Math.floor(random() * spreads.length)] }, { fetchLetter });
+    if (spread) return spread;
   }
+
+  // no map (or it no longer matches the letters): a simulated page around a random letter
+  const pick = Math.floor(random() * vol.letters.length);
 
   const load = async (i) => {
     const l = await fetchLetter(vol.letters[i][0]);
