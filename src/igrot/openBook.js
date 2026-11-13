@@ -106,6 +106,7 @@ export async function renderMapped(volumes, spec, { fetchLetter = defaultFetch }
   const flow = [];
   const parts = [];
   for (const seg of page.segments) {
+    if (seg.to <= seg.from) continue; // an empty range: the letter ended on the page before
     const [id, heading] = vol.letters[seg.i];
     const l = await fetchLetter(id);
     const text = bodyText(l.blocks);

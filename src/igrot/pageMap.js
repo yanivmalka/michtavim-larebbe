@@ -14,13 +14,16 @@ export const bodyText = (blocks) => bodyOf(blocks).map((b) => b.text).join('\n')
 /** The editors' notes of a letter (its footnotes in print), one text per note, as the maps count them. */
 export const notesOf = (blocks) => blocks.filter((b) => b.kind === 'note').map((b) => b.text);
 
+/** True for a page record that holds letter text (a range that is empty holds none). */
+const hasText = (p) => !!p && p.matched && p.segments.some((s) => s.to > s.from);
+
 /** The printed pages of a map that have letter text on them, in book order. */
-export const textPages = (map) => (map?.pages || []).filter((p) => p.matched && p.segments.length);
+export const textPages = (map) => (map?.pages || []).filter(hasText);
 
 /** The page with printed number `p` (PDF page number) in a volume's map, or null. */
 export function mappedPage(vol, p) {
   const page = vol?.pageMap?.pages?.[p - 1];
-  return page && page.pdf === p && page.matched && page.segments.length ? page : null;
+  return page && page.pdf === p && hasText(page) ? page : null;
 }
 
 /** Maps by volume number, read from `dir`. A map that does not parse is skipped. */

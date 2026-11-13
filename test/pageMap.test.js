@@ -241,3 +241,25 @@ test('a page draws the footnotes the map gives it, and leaves them out when the 
   assert.ok(stale.png.equals(bare.png), 'notes that no longer match the map are not drawn');
   assert.equal(withNotes.letters[0].pageText, text, 'footnotes are not part of the page text');
 });
+
+test('an empty range is not a part of the page, and a page with nothing else is not a text page', async () => {
+  const a = 'סוף האגרת הראשונה.';
+  const b = 'האגרת השניה כולה בעמוד';
+  const map = {
+    volume: 1,
+    letters: [{ bodyLength: a.length }, { bodyLength: b.length }],
+    pages: [
+      { pdf: 1, printed: 1, matched: true, segments: [{ i: 0, from: 0, to: a.length - 1 }] },
+      { pdf: 2, printed: 2, matched: true, segments: [{ i: 0, from: a.length, to: a.length - 1 }, { i: 1, from: 0, to: b.length }] },
+      { pdf: 3, printed: 3, matched: true, segments: [{ i: 1, from: b.length, to: b.length - 1 }] },
+    ],
+  };
+  const volumes = attachPageMaps([{ volume: 1, heading: 'כרך א', letters: [['a', 'א'], ['b', 'ב']] }], new Map([[1, map]]));
+  const texts = { a, b };
+  const fetchLetter = async (id) => ({ blocks: [{ kind: 'text', text: texts[id] }], text: texts[id], letterHeading: id, viewerUrl: 'u' });
+  const second = await renderSpec(volumes, { v: 0, p: 2 }, { fetchLetter });
+  assert.deepEqual(second.letters.map((l) => l.id), ['b'], 'the letter that ended on the page before is not listed');
+  assert.equal(decodeSpec(encodeSpec({ v: 0, p: 3 }), volumes), null);
+  assert.deepEqual(spreadsOf(volumes[0]), [0, 2]);
+  assert.equal(spreadPages(volumes[0], 2).left, null);
+});
