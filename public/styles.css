@@ -450,3 +450,53 @@ details.ana-part details.ana-part { margin-inline-start: 4px; }
 ::highlight(pop) { background-color: #b9e6ff; color: #0b2a44; }
 ::highlight(flash) { background-color: #ffb74d; color: #111; }
 .q-tools:empty { display: none; }
+
+/* ---------- page image: fetched in the background, shown when whole ---------- */
+@keyframes spin { to { transform: rotate(360deg); } }
+.page-wrap.empty { aspect-ratio: 1100 / 1560; background: #fbf6ea; border-radius: 4px; }
+.page-wrap.empty.spread { aspect-ratio: 2200 / 1560; }
+.page-wrap.empty img { display: none; }
+.page-wrap img { transition: opacity .2s; }
+.page-wrap.loading img { opacity: .5; }
+.page-spin, .lightbox-spin { display: none; position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%;
+  border: 4px solid rgba(31,58,95,.2); border-top-color: var(--accent); animation: spin .9s linear infinite; pointer-events: none; }
+.page-wrap.loading .page-spin { display: block; }
+.page-wrap.loading:not(.marking)::after { content: none; }
+.lightbox-spin { position: fixed; z-index: 31; border-color: rgba(255,255,255,.25); border-top-color: #fff; }
+.lightbox.loading .lightbox-spin { display: block; }
+.lightbox.loading img { opacity: .45; }
+.lightbox img:not([src]) { visibility: hidden; }
+.home-btn { font: inherit; font-size: .8rem; border: 1px solid var(--accent); background: transparent; color: var(--accent); border-radius: 14px;
+  padding: 3px 10px; cursor: pointer; margin: 0 0 6px; }
+.home-btn[hidden] { display: none; }
+.page-where { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.page-where[hidden] { display: none; }
+.page-where .home-btn { margin: 0; }
+.lightbox-nav { max-width: calc(100vw - 24px); }
+.lb-mid { min-width: 0; text-align: center; }
+/* "back to the opened page": a pill of its own, just above the page-turning controls */
+#lb-home { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); width: auto; height: auto; white-space: nowrap;
+  border-radius: 16px; padding: 6px 14px; font: inherit; font-size: .85rem; box-shadow: 0 2px 8px rgba(0,0,0,.5); }
+#lb-home[hidden] { display: none; }
+/* the passages the explanation chose from the page */
+.picked { margin: 6px 0; }
+.picked-title { font-size: .78rem; color: #9a7208; }
+.picked-list.clamp { max-height: 7.2em; overflow: hidden; -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent); mask-image: linear-gradient(to bottom, #000 60%, transparent); }
+.picked-more { padding: 2px 0; }
+/* read / unread inside the chat */
+.read-mark { flex: none; display: inline-flex; align-items: center; color: #9aa0a6; }
+.read-mark.unread { color: #1f6fd0; }
+.collapsed-a.unread { box-shadow: 0 0 0 2px #1f6fd0 inset, 0 1px .5px rgba(0,0,0,.13); }
+.ans-foot { display: flex; align-items: center; justify-content: flex-end; gap: 6px; direction: ltr; }
+.ans-foot .time { margin-top: 0; }
+/* the notice left when chats were moved to the archive */
+.arch-notice { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 8px 10px; padding: 10px 12px; border-radius: 10px;
+  background: var(--them); border: 1px solid var(--border); font-size: .88rem; }
+.arch-notice .an-text { flex: 1; min-width: 180px; }
+.arch-notice button { font: inherit; font-size: .85rem; border-radius: 14px; padding: 5px 12px; cursor: pointer; border: 1px solid var(--accent); background: transparent; color: var(--accent); }
+.arch-notice .an-close { border-color: var(--border); color: var(--muted); padding: 5px 9px; }
+.settings .row-label { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.settings select { font: inherit; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--input); color: var(--text); }
+.settings-user { margin: 4px 0 8px; }
+.opener.off { color: var(--muted); }
+.letters > summary .lang-wrap { margin-inline-start: 0; }

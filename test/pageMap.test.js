@@ -104,6 +104,10 @@ test('the answer to a letter carries the spread, its pages one by one, and a two
   assert.deepEqual(answer.sides.map((s) => s.side), ['right', 'left']);
   assert.match(answer.title, /עמ' ד–ה/);
   assert.deepEqual(answer.sides.map((s) => s.printed), [4, 5]);
+  // each page lists the letters on it, and together they are the letters of the answer
+  const onSides = new Set(answer.sides.flatMap((s) => s.ids));
+  assert.ok(answer.sides.every((s) => s.ids.length));
+  assert.deepEqual([...onSides].sort(), answer.letters.map((l) => l.id).sort());
   assert.equal(answer.footnotes, false);
   const spec = /page\/([\w-]+)\.png/.exec(answer.imagePath)[1];
   const pdf = await getPagePdf(spec, deps);

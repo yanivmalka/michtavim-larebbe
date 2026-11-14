@@ -65,12 +65,17 @@ async function wholeImage(specStr, deps, hl) {
 
 /**
  * The pages of a spread that have text, right-hand page first – for showing one page at a time on a
- * narrow screen (the client asks for the spread's image with `side=`). Undefined when not a spread.
+ * narrow screen (the client asks for the spread's image with `side=`), each with the ids of the letters
+ * on it. Undefined when not a spread.
  */
 function sidesOf(volumes, spec) {
   if (spec?.e === undefined) return undefined;
   const pair = spreadPages(volumes[spec.v], spec.e);
-  return [['right', pair.right], ['left', pair.left]].filter(([, page]) => page).map(([side, page]) => ({ side, printed: page.printed }));
+  const vol = volumes[spec.v];
+  // `ids`: the letters with text on that page – the client turns only within the letters that opened
+  return [['right', pair.right], ['left', pair.left]].filter(([, page]) => page).map(([side, page]) => ({
+    side, printed: page.printed, ids: page.segments.filter((seg) => seg.to > seg.from).map((seg) => vol.letters[seg.i][0]),
+  }));
 }
 /** What a spread adds to the links of a page: its pages one by one, and whether footnotes are shown. */
 function spreadInfo(volumes, specStr) {

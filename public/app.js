@@ -292,10 +292,83 @@ function pagerOf(entry) {
   // `sides`: the answer is a spread (two facing pages); its pages that have text, right-hand page first
   const page = { spec, imagePath: a.imagePath, pdfPath: a.pdfPath || (spec ? `/api/page/${spec}.pdf` : null), letters: a.letters || [], title: a.title, volumeHeading: a.volumeHeading, sides: a.sides };
   p = { pages: [page], at: 0, opened: 0, busy: false, onChange: null };
+  // Turning is allowed only within the letters the book opened on: back while the first letter of the
+  // opened page has not begun yet, forward while its last letter has not ended. (Answers saved before
+  // the pages said where a letter begins and ends turn freely, as they always did.)
+  const ls = page.letters;
+  const first = ls[0], last = ls.at(-1);
+  p.free = !!spec && ls.some((l) => l.startsOnPage === undefined || l.endsOnPage === undefined);
+  p.backId = first && first.startsOnPage === false ? letterKey(first) : null;
+  p.fwdId = last && last.endsOnPage === false ? letterKey(last) : null;
   pagers.set(entry.id, p);
   return p;
 }
+const letterKey = (l) => l.id ?? l.number;
 const currentPage = (p) => p.pages[p.at];
+/** Whether the page before (dir -1) / after (dir 1) the one shown still belongs to the letters that opened. */
+function canTurn(p, dir) {
+  if (!p.pages[0].spec) return false;
+  if (dir < 0 ? p.at > p.opened : p.at < p.opened) return true; // on the way back to the opened page
+  const page = currentPage(p);
+  if (dir < 0 ? (p.at === 0 && page.first) : (p.at === p.pages.length - 1 && page.last)) return false; // the volume ends here
+  if (p.free) return true;
+  const id = dir < 0 ? p.backId : p.fwdId;
+  if (id == null) return false;
+  const l = (page.letters || []).find((x) => letterKey(x) === id);
+  return !!l && (dir < 0 ? l.startsOnPage === false : l.endsOnPage === false);
+}
+/** Back to the page the book opened on. */
+function goOpened(p) {
+  if (p.busy || p.at === p.opened) return;
+  p.at = p.opened;
+  if (lb.pager === p) { lb.side = 0; lb.enter = 0; lb.spec = null; }
+  notifyPager(p);
+}
+
+// ---------- page images: fetched whole in the background, shown only when complete, and kept on the device ----------
+// The image of a page (also the one with the explanation's marks) is drawn by the server on demand. Once
+// fetched it is kept in the device's cache, so the next opening shows it at once instead of drawing it again.
+const PAGE_CACHE = 'mlr-pages-v1';
+const PAGE_CACHE_MAX = 80;
+const pageImgs = new Map(); // url → object URL (this session)
+const pageImgLoads = new Map(); // url → promise
+const pageStore = () => { try { return typeof caches !== 'undefined' ? caches.open(PAGE_CACHE) : Promise.resolve(null); } catch { return Promise.resolve(null); } };
+async function trimPageStore(store) {
+  const keys = await store.keys();
+  for (const k of keys.slice(0, Math.max(0, keys.length - PAGE_CACHE_MAX))) await store.delete(k);
+}
+/** Resolves, once the whole image is on the device, with a URL that shows it at once. */
+function loadPageImage(url) {
+  if (pageImgs.has(url)) return Promise.resolve(pageImgs.get(url));
+  if (pageImgLoads.has(url)) return pageImgLoads.get(url);
+  const job = (async () => {
+    let blob = null;
+    const store = await pageStore().catch(() => null);
+    try {
+      const hit = store && await store.match(url);
+      if (hit) blob = await hit.blob();
+    } catch { /* read it from the server */ }
+    if (!blob) {
+      let res;
+      try { res = await fetch(url); } catch { res = null; }
+      if (res && !res.ok) throw new Error(`HTTP ${res.status}`);
+      if (res) {
+        if (store) store.put(url, res.clone()).then(() => trimPageStore(store)).catch(() => {});
+        blob = await res.blob();
+      }
+    }
+    if (!blob) { // fetch is not possible here: let the browser load it, and wait until it has
+      await new Promise((resolve, reject) => { const im = new Image(); im.onload = resolve; im.onerror = () => reject(new Error('IMAGE')); im.src = url; });
+      return url;
+    }
+    const local = URL.createObjectURL(blob);
+    pageImgs.set(url, local);
+    return local;
+  })();
+  pageImgLoads.set(url, job);
+  job.catch(() => {}).finally(() => pageImgLoads.delete(url));
+  return job;
+}
 
 // the passages the explanation rests on: { spec, id, r: [start, end, …] } per letter, marked on the image and in the text
 const pairsOf = (flat) => { const out = []; for (let i = 0; i + 1 < (flat || []).length; i += 2) out.push([flat[i], flat[i + 1]]); return out; };
@@ -322,16 +395,14 @@ function whereLabel(p) {
   const offset = p.at - p.opened;
   if (p.busy) return 'טוען…';
   if (currentPage(p).sides) { // a spread: two facing pages
-    if (offset === 0) return 'הכפולה שנפתחה';
-    if (Math.abs(offset) === 1) return offset > 0 ? 'הכפולה הבאה' : 'הכפולה הקודמת';
-    return offset > 0 ? `${offset} כפולות קדימה` : `${-offset} כפולות אחורה`;
+    if (offset === 0) return 'האיגרות שנפתחו';
+    if (Math.abs(offset) === 1) return offset > 0 ? 'האיגרות הבאות' : 'האיגרות הקודמות';
+    return offset > 0 ? `${offset} דפים קדימה` : `${-offset} דפים אחורה`;
   }
   if (offset === 0) return 'העמוד שנפתח';
   if (Math.abs(offset) === 1) return offset > 0 ? 'העמוד הבא' : 'העמוד הקודם';
   return offset > 0 ? `${offset} עמודים קדימה` : `${-offset} עמודים אחורה`;
 }
-const atFirst = (p) => p.at === 0 && !!p.pages[0].first;
-const atLast = (p) => p.at === p.pages.length - 1 && !!p.pages.at(-1).last;
 function notifyPager(p) {
   p.onChange?.();
   if (lb.pager === p && !$('lightbox').hidden) paintLightbox();
@@ -360,7 +431,7 @@ function loadNeighbor(p, dir) {
       if (!page) { from[dir > 0 ? 'last' : 'first'] = true; return false; }
       if (dir > 0) p.pages.push(page);
       else { p.pages.unshift(page); p.at += 1; p.opened += 1; }
-      new Image().src = API + page.imagePath; // the browser fetches (and the server draws) the image now
+      loadPageImage(API + page.imagePath).catch(() => {}); // fetched (and drawn by the server) now, ready when turned to
       return true;
     } finally {
       p.inflight[key] = null;
@@ -373,11 +444,11 @@ function prefetchAround(p) {
   if (!p.pages[0].spec) return;
   for (const dir of [1, -1]) {
     const edge = dir > 0 ? p.at === p.pages.length - 1 : p.at === 0;
-    if (edge) loadNeighbor(p, dir).then((added) => { if (added) notifyNav(p); }).catch(() => {});
+    if (edge && canTurn(p, dir)) loadNeighbor(p, dir).then((added) => { if (added) notifyNav(p); }).catch(() => {});
   }
 }
 async function turnPager(p, dir) {
-  if (p.busy || !p.pages[0].spec) return;
+  if (p.busy || !canTurn(p, dir)) return;
   const edge = dir > 0 ? p.at === p.pages.length - 1 : p.at === 0;
   if (edge) {
     const from = dir > 0 ? p.pages.at(-1) : p.pages[0];
@@ -405,7 +476,13 @@ const lb = { pager: null, entry: null, scale: 1, fitWidth: 0, side: 0, spec: nul
 const lbScroll = () => $('lightbox').querySelector('.lightbox-scroll');
 const narrowScreen = () => window.innerWidth < window.innerHeight * 1.15;
 /** The pages of the spread to step through one by one, or null when the page is shown whole. */
-const lbSides = (page) => (page?.sides?.length && narrowScreen() ? page.sides : null);
+function lbSides(page, p = lb.pager) {
+  if (!page?.sides?.length || !narrowScreen()) return null;
+  // away from the spread that opened, only its pages that still hold the letter being followed
+  const id = !p || p.free || p.at === p.opened ? null : p.at < p.opened ? p.backId : p.fwdId;
+  const own = id == null ? page.sides : page.sides.filter((s) => !s.ids || s.ids.includes(id));
+  return own.length ? own : page.sides;
+}
 
 function paintLightbox() {
   const p = lb.pager;
@@ -419,12 +496,29 @@ function paintLightbox() {
   }
   if (sides) lb.side = Math.max(0, Math.min(lb.side, sides.length - 1));
   const src = pageImageUrl(lb.entry, page, sides ? sides[lb.side].side : '');
-  if (img.getAttribute('src') !== src) { setLightboxScale(1); img.src = src; lbScroll().scrollTo(0, 0); }
+  if (img.dataset.url === src) { lb.want = src; $('lightbox').classList.remove('loading'); } else if (lb.want !== src) {
+    // the page shown stays until the next one has arrived whole; meanwhile a spinner turns over it
+    lb.want = src;
+    $('lightbox').classList.add('loading');
+    loadPageImage(src).then((local) => {
+      if (lb.want !== src || lb.pager !== p) return;
+      setLightboxScale(1); lb.fitWidth = 0;
+      img.src = local; img.dataset.url = src;
+      lbScroll().scrollTo(0, 0);
+      $('lightbox').classList.remove('loading');
+    }).catch(() => {
+      if (lb.want !== src || lb.pager !== p) return;
+      lb.want = null;
+      $('lightbox').classList.remove('loading');
+      toast('לא ניתן היה לטעון את תמונת העמוד. נסו שוב.');
+    });
+  }
   const note = hlNote(lb.entry, p);
   const where = sides && !p.busy ? `${whereLabel(p)} · ${sides[lb.side].side === 'right' ? 'עמוד ימין' : 'עמוד שמאל'}` : whereLabel(p);
   $('lb-where').textContent = note ? `${where} · ${note}` : where;
-  $('lb-prev').disabled = p.busy || (atFirst(p) && (!sides || lb.side === 0));
-  $('lb-next').disabled = p.busy || (atLast(p) && (!sides || lb.side === sides.length - 1));
+  $('lb-prev').disabled = p.busy || (!canTurn(p, -1) && (!sides || lb.side === 0));
+  $('lb-next').disabled = p.busy || (!canTurn(p, 1) && (!sides || lb.side === sides.length - 1));
+  $('lb-home').hidden = p.at === p.opened && (!sides || lb.side === 0);
 }
 
 /**
@@ -457,7 +551,7 @@ function openLightbox(pager, alt, entry = null) {
   lb.side = 0; lb.spec = currentPage(pager).spec; lb.enter = 0;
   hideZoomBar(); hideAcronymPop();
   $('lightbox-img').alt = alt;
-  $('lightbox-img').removeAttribute('src');
+  $('lightbox-img').removeAttribute('src'); delete $('lightbox-img').dataset.url; lb.want = null;
   $('lightbox-nav').hidden = !pager.pages[0].spec; // older answers have no page link to turn from
   $('lightbox').hidden = false;
   paintLightbox();
@@ -473,6 +567,11 @@ function turnLightbox(dir) {
 }
 window.addEventListener('resize', () => { if (!$('lightbox').hidden && lb.pager) paintLightbox(); }); // e.g. the phone was turned
 $('lb-prev').addEventListener('click', () => turnLightbox(-1));
+$('lb-home').addEventListener('click', () => {
+  const p = lb.pager;
+  if (!p || p.busy) return;
+  if (p.at === p.opened) { lb.side = 0; paintLightbox(); } else goOpened(p);
+});
 $('lb-next').addEventListener('click', () => turnLightbox(1));
 { // one finger on the page: to the right = next page (Hebrew book), to the left = previous; two fingers: zoom
   const area = $('lightbox');
@@ -514,7 +613,8 @@ function closeLightbox(fromHistory = false) {
   if ($('lightbox').hidden) return false;
   $('lightbox').hidden = true;
   setLightboxScale(1);
-  $('lightbox-img').removeAttribute('src');
+  $('lightbox-img').removeAttribute('src'); delete $('lightbox-img').dataset.url; lb.want = null;
+  $('lightbox').classList.remove('loading');
   lb.pager = null; lb.entry = null;
   if (!isNativeApp && !fromHistory && history.state?.lightbox) history.back();
   return true;
@@ -651,16 +751,17 @@ async function shareAnswer(entry) {
 }
 
 // ---------- favourites: the star in the answer's row opens the tags under it ----------
-/** The star button; a tap opens or closes the tags panel (it never removes the chosen tags). */
+/** The star button; a tap opens or closes the tags panel (it never removes chosen tags). With no tag chosen, a tap on a lit star removes it. */
 function favStar(entry, onToggle) {
   const star = el('button', { type: 'button', className: `star${entry.fav ? ' on' : ''}`, textContent: entry.fav ? '★' : '☆' });
-  star.title = entry.tagsOpen ? 'הסתרת התגיות' : entry.fav ? 'התגיות שנבחרו' : 'שמירה במועדפים';
+  star.title = !entry.fav ? 'שמירה במועדפים' : !entry.fav.tags.length ? 'הסרה מהמועדפים' : entry.tagsOpen ? 'הסתרת התגיות' : 'התגיות שנבחרו';
   star.setAttribute('aria-label', star.title);
   star.setAttribute('aria-expanded', String(!!entry.tagsOpen));
   star.addEventListener('click', (e) => {
     e.preventDefault(); e.stopPropagation(); // inside a <summary>: do not open / close the details
-    if (!entry.fav) { entry.fav = { tags: [] }; favChanged(entry); }
-    entry.tagsOpen = !entry.tagsOpen;
+    if (!entry.fav) { entry.fav = { tags: [] }; entry.tagsOpen = true; favChanged(entry); }
+    else if (!entry.fav.tags.length) { delete entry.fav; delete entry.tagsOpen; favChanged(entry); } // starred with no tag chosen: the star comes off
+    else entry.tagsOpen = !entry.tagsOpen;
     save();
     onToggle();
   });
@@ -727,10 +828,13 @@ function pageTextSection(entry, pager) {
   const prev = el('button', { type: 'button', className: 'nav-btn', textContent: '→', title: 'העמוד הקודם' });
   const next = el('button', { type: 'button', className: 'nav-btn', textContent: '←', title: 'העמוד הבא' });
   const where = el('span', { className: 'where' });
+  const home = el('button', { type: 'button', className: 'home-btn', textContent: '↩ חזרה לעמוד שנפתח' });
+  home.addEventListener('click', () => goOpened(pager));
   const body = el('div', { className: 'letter-body page-text reading' });
   const box = el('details', { className: 'letters fold', open: !!entry.textOpen },
-    el('summary', {}, el('span', { className: 'sum-label', textContent: entry.a.sides ? '📜 הטקסט שבכפולה' : '📜 הטקסט שבעמוד' })),
+    el('summary', {}, el('span', { className: 'sum-label', textContent: entry.a.sides ? '📜 טקסט האיגרות' : '📜 הטקסט שבעמוד' }), langSelect(entry)),
     el('div', { className: 'pager' }, prev, where, next), // RTL: first = right
+    home,
     body);
   box.addEventListener('toggle', () => { entry.textOpen = box.open; save(); });
 
@@ -747,8 +851,9 @@ function pageTextSection(entry, pager) {
 
   const nav = () => {
     where.textContent = whereLabel(pager);
-    prev.disabled = pager.busy || atFirst(pager);
-    next.disabled = pager.busy || atLast(pager);
+    prev.disabled = pager.busy || !canTurn(pager, -1);
+    next.disabled = pager.busy || !canTurn(pager, 1);
+    home.hidden = pager.at === pager.opened;
   };
   const paint = () => {
     const page = currentPage(pager);
@@ -1172,7 +1277,7 @@ async function translateEntry(entry, language) {
 }
 
 /**
- * "תרגם": a button in the answer's row that opens the list of languages. Choosing one translates an
+ * "תרגם": a button in the row of the letters' text that opens the list of languages. Choosing one translates an
  * existing analysis (or sets the language of the analysis to come); the current language is ticked.
  * The list is the app's own menu: a native <select> inside a <summary> opened on Android, but its
  * choice did not always come back.
@@ -1260,6 +1365,29 @@ function analysisSection(entry) {
     return el('div', { className: 'hl-note', textContent: `🖍 הקטעים שעליהם מושתת ההסבר מסומנים במרקר על תמונת העמוד ובטקסט שבעמוד${partial}.${more}` });
   };
 
+  // the passages the explanation chose from the page, whole; a long list is cut short and can be expanded
+  const picked = () => {
+    const page = pagerOf(entry).pages[pagerOf(entry).opened];
+    const texts = (a.highlights || []).flatMap((h) => {
+      const l = (page?.letters || []).find((x) => x.id === h.id);
+      return l ? pairsOf(h.r).map(([from, to]) => String(l.pageText || '').slice(from, to).replace(/\s+/g, ' ').trim()) : [];
+    }).filter(Boolean);
+    if (!texts.length) return null;
+    const list = el('div', { className: 'picked-list' }, ...texts.map((t) => el('div', { className: 'quote', textContent: t })));
+    const wrap = el('div', { className: 'picked' }, el('div', { className: 'picked-title', textContent: '🖍 הקטעים שנבחרו מהעמוד' }), list);
+    if (texts.join(' ').length > 320) {
+      const more = el('button', { type: 'button', className: 'link-btn picked-more' });
+      const paint = () => {
+        list.classList.toggle('clamp', !entry.pickedOpen);
+        more.textContent = entry.pickedOpen ? '▴ צמצום' : '▾ הצגת כל הקטעים';
+      };
+      more.addEventListener('click', () => { entry.pickedOpen = !entry.pickedOpen; save(); paint(); });
+      paint();
+      wrap.append(more);
+    }
+    return wrap;
+  };
+
   // follow-up questions about the analysis – inside the analysis, so minimizing it hides them too
   const qa = entry.followups || [];
   const thread = el('div', { className: 'followups' },
@@ -1302,6 +1430,7 @@ function analysisSection(entry) {
   const sub = el('details', { className: 'ana-part fold', open: !!entry.analysisOpen },
     el('summary', {}, el('span', { className: 'sum-label', textContent: '✨ כיצד המענה מתייחס למכתב' })),
     a.keyQuote && el('div', { className: 'quote', textContent: a.keyQuote }),
+    picked(),
     pageParagraph(a.explanation, `E:${entry.id}`, spec),
     marksNote(),
     translation,
@@ -1312,42 +1441,63 @@ function analysisSection(entry) {
   return box;
 }
 
-const shownUrls = new Set(); // marked page images that were already loaded once
 function answerBubble(entry) {
   const a = entry.a;
   const pager = pagerOf(entry);
-  const img = el('img', { className: 'page-img', alt: `${a.sides ? 'שני עמודים פונים' : 'עמוד'} מאגרות קודש, ${a.volumeHeading}`, loading: 'lazy' });
+  const img = el('img', { className: 'page-img', alt: `${a.sides ? 'שני עמודים פונים' : 'עמוד'} מאגרות קודש, ${a.volumeHeading}` });
   img.addEventListener('click', () => openLightbox(pager, img.alt, entry));
-  img.addEventListener('error', () => pageWrap.replaceWith(el('div', { className: 'note', textContent: 'תמונת העמוד אינה זמינה עוד (נשמרת בשרת לזמן מוגבל). האגרות עצמן שמורות כאן למטה.' })));
   const pageWhere = el('div', { className: 'page-where' });
+  const whereText = el('span');
+  const whereHome = el('button', { type: 'button', className: 'home-btn', textContent: '↩ חזרה לעמוד שנפתח' });
+  whereHome.addEventListener('click', () => goOpened(pager));
+  pageWhere.append(whereText, whereHome);
   const text = pageTextSection(entry, pager);
-  const where = () => [pager.at === pager.opened ? '' : `📖 ${whereLabel(pager)}`, hlNote(entry, pager)].filter(Boolean).join(' · ');
-  const pageWrap = el('div', { className: 'page-wrap' }, img, el('span', { className: 'page-wait', textContent: '🖍 מסמנים בעמוד את הקטעים שעליהם נשען ההסבר…' }));
+  const paintWhere = () => {
+    whereText.textContent = [pager.at === pager.opened ? '' : `📖 ${whereLabel(pager)}`, hlNote(entry, pager)].filter(Boolean).join(' · ');
+    whereHome.hidden = pager.at === pager.opened;
+    pageWhere.hidden = !whereText.textContent && whereHome.hidden;
+  };
+  const wait = el('span', { className: 'page-wait' });
+  const pageWrap = el('div', { className: `page-wrap empty${a.sides ? ' spread' : ''}` }, img, el('span', { className: 'page-spin' }), wait);
   let swap = 0;
+  // The image is fetched in the background and shown only when it is whole; until then the page that
+  // was shown stays (or an empty page, the first time) under a loading animation.
   const paintPage = () => {
     const page = currentPage(pager);
     const url = pageImageUrl(entry, page);
     const plain = url.split('?')[0];
-    if (url === plain || shownUrls.has(url) || img.getAttribute('src') === url) { swap += 1; pageWrap.classList.remove('loading'); img.src = url; } else {
-      // the marked image takes a moment to draw: the page stays, with an animation over it, and is replaced when ready
-      if (!img.getAttribute('src')) img.src = plain;
-      const mine = ++swap;
-      pageWrap.classList.add('loading');
-      const pre = new Image();
-      pre.onload = pre.onerror = () => { shownUrls.add(url); if (mine !== swap) return; img.src = url; pageWrap.classList.remove('loading'); };
-      pre.src = url;
-    }
-    pageWhere.textContent = where();
+    paintWhere();
     text.paint();
+    if (img.dataset.url === url) { swap += 1; pageWrap.classList.remove('loading', 'marking'); return; }
+    const mine = ++swap;
+    const show = (local, u) => { img.src = local; img.dataset.url = u; pageWrap.classList.remove('empty'); };
+    const marked = url !== plain;
+    wait.textContent = marked ? '🖍 מסמנים בעמוד את הקטעים שעליהם נשען ההסבר…' : 'טוען את העמוד…';
+    pageWrap.classList.add('loading');
+    pageWrap.classList.toggle('marking', marked && !pageImgs.has(url));
+    // the marked image takes a moment to draw: the plain page is shown meanwhile, if it gets here first
+    if (marked && !pageImgs.has(url) && img.dataset.url !== plain) {
+      loadPageImage(plain).then((local) => { if (mine === swap && pageWrap.classList.contains('loading')) show(local, plain); }).catch(() => {});
+    }
+    loadPageImage(url).then((local) => {
+      if (mine !== swap) return;
+      show(local, url);
+      pageWrap.classList.remove('loading', 'marking');
+    }).catch(() => {
+      if (mine !== swap) return;
+      pageWrap.classList.remove('loading', 'marking');
+      if (img.dataset.url) toast('לא ניתן היה לטעון את תמונת העמוד. נסו שוב.');
+      else pageWrap.replaceWith(el('div', { className: 'note', textContent: 'תמונת העמוד אינה זמינה כעת. האגרות עצמן שמורות כאן למטה.' }));
+    });
   };
   pager.onChange = paintPage;
-  pager.onNav = () => { pageWhere.textContent = where(); text.nav(); };
+  pager.onNav = () => { paintWhere(); text.nav(); };
   paintPage();
   prefetchAround(pager); // the pages before and after are ready before the user turns to them
 
   const wrap = el('div', { className: 'fav-wrap' }, favPanel(entry));
   // the row: its label, "תרגם", the star – and the chevron at the left end (like every other row)
-  const summary = el('summary', {}, el('span', { className: 'more-label sum-label', textContent: `${a.explanation ? 'הסבר והטקסט' : 'ניתוח והטקסט'} ${a.sides ? 'שבכפולה' : 'שבעמוד'}` }), langSelect(entry));
+  const summary = el('summary', {}, el('span', { className: 'more-label sum-label', textContent: `${a.explanation ? 'הסבר' : 'ניתוח'} ${a.sides ? 'וטקסט האיגרות' : 'והטקסט שבעמוד'}` }));
   const paintStar = () => { summary.querySelector('.star')?.remove(); summary.append(favStar(entry, () => { paintStar(); wrap.replaceChildren(favPanel(entry)); })); };
   paintStar();
   const more = el('details', { className: 'more fold' },
@@ -1370,7 +1520,7 @@ function answerBubble(entry) {
     pageWhere,
     pageWrap,
     more,
-    time(entry.ts));
+    el('div', { className: 'ans-foot' }, readMark(entry), time(entry.ts)));
   placeTags();
   return bubble;
 }
@@ -1569,6 +1719,9 @@ function paintAccount() {
   $('account-in').hidden = !user;
   $('account-out').hidden = !!user;
   if (user) $('account-name').textContent = `${user.displayName || ''} ${user.email ? `(${user.email})` : ''}`.trim();
+  // the settings screen shows who is signed in
+  $('settings-user').textContent = user ? `מחובר: ${user.displayName || user.email || ''}` : 'לא מחובר לחשבון Google';
+  $('settings-account').textContent = user ? 'ניהול החשבון' : 'התחברות עם Google';
 }
 function openAccount() { paintAccount(); $('account').showModal(); }
 $('sign-in').addEventListener('click', async () => {
@@ -2118,8 +2271,21 @@ function voicePlayer(entry) {
     play);
 }
 
+/** Deletes the recording of a voice letter; its text stays (a sent letter becomes an ordinary written one). */
+function dropRecording(entry) {
+  if (!confirm('למחוק את ההקלטה? הטקסט של המכתב יישאר.')) return;
+  media.del(audKey(entry));
+  if (mediaUrls.has(audKey(entry))) { URL.revokeObjectURL(mediaUrls.get(audKey(entry))); mediaUrls.delete(audKey(entry)); }
+  players.get(entry.id)?.pause(); players.delete(entry.id);
+  delete entry.voice;
+  if (entry.draft) entry.audioGone = true; // still a draft to approve: only the player goes
+  else delete entry.kind;
+  if (entry.a) syncEntry(entry); else save();
+  render();
+  toast('ההקלטה נמחקה. הטקסט נשאר.');
+}
 function voiceBody(entry) {
-  const parts = [voicePlayer(entry)];
+  const parts = entry.audioGone ? [] : [voicePlayer(entry)];
   if (!entry.draft) { parts.push(el('p', { className: 'voice-text', textContent: entry.q })); return parts; }
   if (entry.transcribing) {
     parts.push(progressLine(entry, [[0, 'שולחים את ההקלטה…'], [3, 'ממירים את הדיבור לטקסט…'], [20, 'עוד רגע – השרת מתעורר…']]),
@@ -2135,8 +2301,13 @@ function voiceBody(entry) {
     ta.dataset.fid = `draft:${entry.id}`;
     ta.setAttribute('aria-label', 'הטקסט שזוהה בהקלטה');
     ta.addEventListener('input', () => { entry.q = ta.value; save(); });
-    parts.push(el('div', { className: 'draft-tag', textContent: 'זה הטקסט שזוהה בהקלטה. אפשר לתקן אותו, ואז לשלוח לרבי או למחוק.' }), ta,
-      draftActions(entry, '✓ שליחה לרבי', () => sendDraft(entry)));
+    const actions = draftActions(entry, '✓ שליחה לרבי', () => sendDraft(entry));
+    if (!entry.audioGone) {
+      const only = el('button', { type: 'button', textContent: '🎤✕ מחיקת ההקלטה בלבד', title: 'ההקלטה תימחק והטקסט יישאר' });
+      only.addEventListener('click', () => dropRecording(entry));
+      actions.append(only);
+    }
+    parts.push(el('div', { className: 'draft-tag', textContent: entry.audioGone ? 'ההקלטה נמחקה. אפשר לתקן את הטקסט, ואז לשלוח לרבי או למחוק.' : 'זה הטקסט שזוהה בהקלטה. אפשר לתקן אותו, ואז לשלוח לרבי או למחוק.' }), ta, actions);
   }
   return parts;
 }
@@ -2404,12 +2575,13 @@ function questionBubble(entry, conv) {
       const btn = (text, title, fn) => { const b = el('button', { type: 'button', textContent: text, title }); b.addEventListener('click', () => { if (!selecting()) fn(); }); row.append(b); };
       if (mine && folding) btn('✎ שורת סיכום', 'עריכת השורה שמוצגת כשהמכתב מכווץ', () => editSummary(entry));
       if (mine) btn(entry.qLocked ? '🔓 ביטול נעילה' : '🔒 נעילה', 'נעילת טקסט המכתב במכשיר זה – פתיחה בטביעת אצבע', () => toggleLetterLock(entry));
+      if (mine && entry.kind === 'voice' && !entry.draft) btn('🎤✕ מחיקת ההקלטה', 'ההקלטה תימחק והטקסט של המכתב יישאר', () => dropRecording(entry));
       body.push(row);
     }
   }
   const node = el('div', { className: `msg ${mine ? 'me' : 'them other'}${entry.kind && open ? ` ${entry.kind}-msg` : ''}` }, tools,
     !mine && el('div', { className: 'sender', textContent: `✉️ מכתב של ${who}` }),
-    ...body, !(entry.kind === 'voice' && open) && time(entry.ts));
+    ...body, !(entry.kind === 'voice' && open && !entry.audioGone) && time(entry.ts));
   if (isShared(conv)) swipeToReply(node, { kind: 'entry', id: entry.id, name: who, text: entry.qLocked ? 'מכתב נעול' : entry.q.slice(0, 80) });
   return selectable(node, 'e', entry.id);
 }
@@ -2433,11 +2605,23 @@ function bookAnimation() {
   return box;
 }
 
+/** Read / unread, inside the chat: a sealed blue envelope until the answer was opened, an open grey one after. */
+function readMark(entry) {
+  const unread = isUnread(entry);
+  const m = el('span', { className: `read-mark${unread ? ' unread' : ''}`, title: unread ? 'מענה שלא נקרא' : 'נקרא' });
+  m.setAttribute('role', 'img');
+  m.setAttribute('aria-label', m.title);
+  m.innerHTML = unread
+    ? '<svg viewBox="0 0 24 24" width="20" height="20"><rect x="3" y="6" width="18" height="13" rx="2" fill="currentColor"/><path d="M4 8l8 6 8-6" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    : '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M3 10.5 12 4l9 6.5V19a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 19z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M3.5 11l8.5 5.5 8.5-5.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  return m;
+}
+
 function entryNodes(entry, conv = convById(entry.conv)) {
   const nodes = [questionBubble(entry, conv)];
   if (entry.a && entry.collapsed) {
     const chip = el('button', { type: 'button', className: `msg them collapsed-a${isUnread(entry) ? ' unread' : ''}` },
-      el('span', { className: 'ca-icon', textContent: isUnread(entry) ? '●' : '✉️' }),
+      readMark(entry),
       el('span', { className: 'ca-title', textContent: `${entry.a.title}${entry.fav ? ' ★' : ''}` }),
       el('span', { className: 'ca-open chev', textContent: '▾' }));
     chip.title = isUnread(entry) ? 'מענה חדש – לחצו לקריאה' : 'הרחבת המענה';
@@ -2504,7 +2688,7 @@ function setRead(entry, read = true) {
 function collapseEntry(entry) {
   entry.collapsed = true;
   delete entry.qOpen;
-  for (const k of ['showMore', 'analysisOpen', 'translationOpen', 'followupsOpen', 'textOpen', 'tagsOpen', 'analysisClosed', 'followupsClosed']) delete entry[k];
+  for (const k of ['showMore', 'analysisOpen', 'translationOpen', 'followupsOpen', 'textOpen', 'tagsOpen', 'pickedOpen', 'analysisClosed', 'followupsClosed']) delete entry[k];
 }
 function expandEntry(entry) {
   entry.collapsed = false;
@@ -2578,8 +2762,59 @@ function setUiSize(v) {
 }
 setUiSize(uiSize);
 for (const b of document.querySelectorAll('.seg-btn')) b.addEventListener('click', () => setUiSize(b.dataset.ui));
+$('settings-account').addEventListener('click', openAccount);
+
+// ---------- chats with no activity move to the archive by themselves (after the time chosen in the settings) ----------
+const AUTO_ARCHIVE_DEFAULT = 2; // days; 0 = never
+let autoArchiveDays = AUTO_ARCHIVE_DEFAULT;
+try { const v = localStorage.getItem('mlr-auto-archive'); if (v !== null && Number.isFinite(Number(v))) autoArchiveDays = Math.max(0, Number(v)); } catch { /* ignore */ }
+$('auto-archive').addEventListener('change', (e) => {
+  autoArchiveDays = Math.max(0, Number(e.target.value) || 0);
+  try { localStorage.setItem('mlr-auto-archive', String(autoArchiveDays)); } catch { /* ignore */ }
+  if (autoArchive()) render();
+});
+const daysText = (d) => (d === 1 ? 'יום' : d === 2 ? 'יומיים' : d === 7 ? 'שבוע' : d === 30 ? 'חודש' : `${d} ימים`);
+/**
+ * Moves chats nobody touched for the chosen time to the archive, and leaves a notice on the home screen.
+ * A chat that is open, waits for an answer, holds a draft or an unread answer, or is locked stays where it is;
+ * one the user took out of the archive counts its time from then.
+ */
+function autoArchive() {
+  if (!autoArchiveDays) return 0;
+  const limit = Date.now() - autoArchiveDays * 864e5;
+  let n = 0;
+  for (const c of state.convs) {
+    if (c.archived || c.locked || (view.name === 'chat' && view.id === c.id)) continue;
+    if (Math.max(lastTs(c), c.keepTs || 0) > limit) continue;
+    if (entriesOf(c.id).some((e) => e.pending || e.draft || e.preparing || isUnread(e)) || unreadCount(c) || c.markedUnread) continue;
+    c.archived = true; c.autoArchived = Date.now();
+    n += 1;
+  }
+  if (n) {
+    state.archNotice = { n: (state.archNotice?.n || 0) + n, days: autoArchiveDays, ts: Date.now() };
+    save();
+  }
+  return n;
+}
+/** The notice left after chats were moved: stays on the home screen until closed. */
+function archiveNotice() {
+  const note = state.archNotice;
+  if (!note?.n) return null;
+  const show = el('button', { type: 'button', className: 'an-show', textContent: 'הצגת הארכיון' });
+  show.addEventListener('click', () => { delete state.archNotice; save(); go({ name: 'archive' }); });
+  const close = el('button', { type: 'button', className: 'an-close', textContent: '✕', title: 'סגירת ההודעה' });
+  close.setAttribute('aria-label', 'סגירת ההודעה');
+  close.addEventListener('click', () => { delete state.archNotice; save(); render(); });
+  const what = note.n === 1 ? 'שיחה אחת הועברה' : `${note.n} שיחות הועברו`;
+  return el('div', { className: 'arch-notice' },
+    el('span', { className: 'an-text', textContent: `🗄 ${what} לארכיון – לא הייתה ${note.n === 1 ? 'בה' : 'בהן'} פעילות ${daysText(note.days)} ויותר. אפשר לשנות את הזמן בהגדרות.` }),
+    show, close);
+}
+
 /** The settings dialog: on the web only the text size; in the Android app also the server and updates. */
 function openSettings() {
+  paintAccount();
+  $('auto-archive').value = String(autoArchiveDays);
   if (nativeSettings) { nativeSettings(); return; }
   $('update-section').hidden = true;
   $('server-section').hidden = true;
@@ -2608,7 +2843,6 @@ function convMenuItems(conv) {
 }
 function homeMenuItems() {
   return [
-    { label: user ? `👤 ${user.displayName || user.email}` : '👤 התחברות עם Google', onClick: openAccount },
     { label: isNativeApp ? '⚙ הגדרות ועדכונים' : '⚙ הגדרות', onClick: openSettings },
   ];
 }
@@ -2636,7 +2870,11 @@ async function renameConv(conv) {
 }
 function toggleArchive(convs) {
   const archive = !convs.every((c) => c.archived);
-  for (const c of convs) c.archived = archive;
+  for (const c of convs) {
+    c.archived = archive;
+    delete c.autoArchived;
+    if (archive) delete c.keepTs; else c.keepTs = Date.now(); // taken out by hand: not moved back before its time passes again
+  }
   clearSelection(); save();
   if (view.name === 'chat') go({ name: 'list' }); else render();
   toast(archive ? (convs.length === 1 ? '🗄 הועבר לארכיון' : `🗄 ${convs.length} שיחות הועברו לארכיון`) : '📤 הוצא מהארכיון');
@@ -2859,6 +3097,8 @@ function renderConvList(which) {
 
   const box = el('div', { className: 'conv-list' });
   if (which === 'list' && !search && !searchDate) {
+    const notice = archiveNotice();
+    if (notice) box.append(notice);
     const lockedCount = state.convs.filter((c) => c.locked).length;
     const archivedCount = state.convs.filter((c) => c.archived && !c.locked).length;
     if (lockedCount) {
@@ -2972,7 +3212,7 @@ function render({ scroll = false } = {}) {
   $('title-text').textContent = conv ? conv.title : titles[view.name];
   $('status').textContent = conv
     ? (isShared(conv) ? `👥 ${conv.members.length} משתתפים · ` : '') + `${entriesOf(conv.id).length} מכתבים`
-    : user ? `מחובר: ${user.displayName || user.email}` : 'מענה מתוך אגרות הקודש';
+    : 'מענה מתוך אגרות הקודש';
   $('back').hidden = view.name === 'list';
   document.body.dataset.view = view.name;
   if (selecting()) { // a selection belongs to the view it was made in
@@ -3077,6 +3317,7 @@ async function submit(text) {
     conv.title = conv.autoTitle = text.split(/\s+/).slice(0, 5).join(' ').slice(0, 40); // until the AI names the chat by its subject
     if (conv.cloud) cloud.renameConv(conv.id, conv.title).catch(() => {});
   }
+  if (conv.archived && conv.autoArchived) { delete conv.archived; delete conv.autoArchived; } // written in again: back among the chats
   const entry = { id: newId(), conv: conv.id, q: text, ts: Date.now(), pending: true, lang: replyLang || undefined };
   summarizeEntry(entry);
   if (replyTo) { entry.replyTo = replyTo; setReply(null); }
@@ -3189,7 +3430,7 @@ input.addEventListener('input', () => { growInput(); paintOpeners(); paintSend()
 input.addEventListener('focus', () => { paintOpeners(); setTimeout(() => { growInput(); scrollDown(); }, 300); }); // after the keyboard opens
 input.addEventListener('blur', () => { $('openers').hidden = true; });
 
-// ---------- quick opening for a letter: offered as chips when the empty letter box gets focus ----------
+// ---------- phrases for the letter, offered as chips above the letter box: an opening first, then by the stage of the writing ----------
 const DEFAULT_OPENING = 'לכבוד הרבי מלך המשיח שליט"א';
 const normOpening = (s) => s.replace(/[״"'\u05f3\u05f4]/g, '').replace(/\s+/g, ' ').replace(/[,:;!\s]+$/, '').trim();
 // the openings this user writes most often: the first line of previous letters (two lines when the first is only ב"ה)
@@ -3209,24 +3450,79 @@ function commonOpenings() {
   return [...counts.values()].filter((c) => c.n >= 2 && normOpening(c.text) !== normOpening(DEFAULT_OPENING))
     .sort((a, b) => b.n - a.n).slice(0, 2).map((c) => c.text);
 }
+// Phrases for a respectful letter, by where the writing stands: the opening, the request, more requests, the closing.
+const PHRASES = {
+  start: ['אבקש את ברכת הרבי ל', 'אבקש את עצת הרבי בענין ', 'ברצוני לבשר בשורה טובה: ', 'אבקש ברכה לרפואה שלמה ל', 'אבקש ברכה להצלחה ב'],
+  middle: ['כמו כן אבקש ברכה ל', 'קיבלתי על עצמי החלטה טובה: ', 'אבקש הסכמה וברכה ל', 'אודה לרבי על ההדרכה בענין זה.'],
+  end: ['בתודה מראש, ובציפייה לגאולה האמיתית והשלימה', 'יחי אדוננו מורנו ורבינו מלך המשיח לעולם ועד', 'שמי ושם אמי: ', 'מקום המגורים: '],
+};
+// what this user writes again and again: the first words of sentences inside past letters, and their closing lines
+let ownPhrases = null;
+function commonPhrases() {
+  if (ownPhrases && ownPhrases.count === state.entries.length) return ownPhrases;
+  const mid = new Map(), end = new Map();
+  const bump = (map, text) => { const key = normOpening(text); if (!key) return; const c = map.get(key) || { text, n: 0 }; c.n += 1; map.set(key, c); };
+  for (const e of state.entries) {
+    if (e.qLocked || e.kind === 'photo') continue;
+    const lines = String(e.q || '').split('\n').map((l) => l.trim()).filter(Boolean);
+    if (lines.length < 3) continue;
+    const last = lines.at(-1);
+    if (last.length <= 60) bump(end, last);
+    for (const line of lines.slice(1, -1)) {
+      for (const sentence of line.split(/(?<=[.!?:])\s+/)) {
+        const words = sentence.trim().split(/\s+/);
+        if (words.length >= 5) bump(mid, `${words.slice(0, 3).join(' ')} `);
+      }
+    }
+  }
+  const top = (map) => [...map.values()].filter((c) => c.n >= 2).sort((x, y) => y.n - x.n).slice(0, 2).map((c) => c.text);
+  ownPhrases = { count: state.entries.length, middle: top(mid), end: top(end) };
+  return ownPhrases;
+}
+let openersOff = false; // the ✕ of the row: hidden until the letter box is emptied
 function paintOpeners() {
   const bar = $('openers');
   const conv = view.name === 'chat' ? convById(view.id) : null;
-  const show = conv && toRebbe && isOwner(conv) && document.activeElement === input && !input.value.trim();
+  const value = input.value;
+  const body = value.trim();
+  if (!body) openersOff = false;
+  const show = conv && toRebbe && isOwner(conv) && document.activeElement === input && !openersOff && !rec.active;
   bar.hidden = !show;
   if (!show) return;
-  bar.replaceChildren(...[...commonOpenings(), DEFAULT_OPENING].map((text) => {
-    const chip = el('button', { type: 'button', className: 'opener', textContent: text.replace(/\n/g, ' · '), title: 'הוספת הפתיחה למכתב' });
+  // the stage: nothing yet → an opening; a line or two → the request; then more requests, and the closing
+  const stage = !body ? 0 : body.length < 70 ? 1 : body.length < 300 ? 2 : 3;
+  const own = stage >= 1 ? commonPhrases() : null;
+  const options = stage === 0 ? [...commonOpenings(), DEFAULT_OPENING]
+    : stage === 1 ? [...own.middle, ...PHRASES.start]
+      : stage === 2 ? [...own.middle, ...PHRASES.middle, ...own.end, ...PHRASES.end]
+        : [...own.end, ...PHRASES.end, ...own.middle, ...PHRASES.middle];
+  const has = normOpening(value);
+  const seen = new Set();
+  const chips = options.filter((t) => { const k = normOpening(t); if (!k || seen.has(k) || (stage && has.includes(k))) return false; seen.add(k); return true; }).map((text) => {
+    const chip = el('button', { type: 'button', className: 'opener', textContent: text.replace(/\n/g, ' · ').trim() + (/\s$/.test(text) || /[לב]$/.test(text) ? '…' : ''), title: 'הוספה למכתב' });
     chip.addEventListener('pointerdown', (e) => e.preventDefault()); // keep the keyboard and the focus on the letter box
     chip.addEventListener('click', () => {
-      input.value = `${text}\n${input.value.replace(/^\s+/, '')}`;
+      if (stage === 0) input.value = `${text}\n${input.value.replace(/^\s+/, '')}`;
+      else { // at the end of what was written: a new line for a new sentence, a space inside one
+        const before = input.value.replace(/[ \t]+$/, '');
+        const sep = !before || before.endsWith('\n') ? '' : /[.!?:,;]$/.test(before) || PHRASES.end.includes(text) || (own?.end || []).includes(text) ? '\n' : ' ';
+        input.value = `${before}${sep}${text}`;
+      }
       input.focus();
       input.setSelectionRange(input.value.length, input.value.length);
-      growInput();
-      bar.hidden = true;
+      growInput(); paintSend(); paintOpeners();
     });
     return chip;
-  }));
+  });
+  if (stage) {
+    const off = el('button', { type: 'button', className: 'opener off', textContent: '✕', title: 'הסתרת ההצעות' });
+    off.setAttribute('aria-label', 'הסתרת ההצעות');
+    off.addEventListener('pointerdown', (e) => e.preventDefault());
+    off.addEventListener('click', () => { openersOff = true; bar.hidden = true; });
+    chips.push(off);
+  }
+  if (bar.dataset.stage !== String(stage)) { bar.scrollLeft = 0; bar.dataset.stage = String(stage); }
+  bar.replaceChildren(...chips);
 }
 if (window.visualViewport) {
   // browsers that do not resize the page for the keyboard: keep the composer above it
@@ -3251,8 +3547,14 @@ if (pendingJoin) joinNow();
 { // opened from a notification: /?conv=<id>
   const id = new URLSearchParams(location.search).get('conv');
   if (id) history.replaceState(null, '', '/');
+  autoArchive();
   if (id && convById(id)) go({ name: 'chat', id }); else render();
+  if (state.archNotice?.n && Date.now() - state.archNotice.ts < 5000) toast('🗄 שיחות ללא פעילות הועברו לארכיון', () => go({ name: 'archive' }));
 }
+// also while the app stays open: when it comes back to the front, and once an hour
+const autoArchiveNow = () => { if (autoArchive() && ['list', 'archive'].includes(view.name) && !selecting() && !menuOpen()) { render(); toast('🗄 שיחות ללא פעילות הועברו לארכיון', () => go({ name: 'archive' })); } };
+document.addEventListener('visibilitychange', () => { if (!document.hidden) autoArchiveNow(); });
+setInterval(autoArchiveNow, 3600e3);
 for (const e of state.entries.filter((x) => x.pending && !x.a)) requestAnswer(e); // the app was closed while waiting
 if (isNativeApp) setupNativeApp();
 if (!isNativeApp && 'serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
