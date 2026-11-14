@@ -85,6 +85,25 @@
           </div>
           <p class="note">גודל הטקסט של המכתב וההסבר נקבע בנפרד – בצביטה על הטקסט.</p>
         </fieldset>
+        <fieldset class="ui-size">
+          <legend>העברה אוטומטית לארכיון</legend>
+          <label class="row-label">שיחות ללא פעילות עוברות לארכיון אחרי
+            <select id="auto-archive">
+              <option value="0">אף פעם</option>
+              <option value="1">יום</option>
+              <option value="2">יומיים</option>
+              <option value="3">3 ימים</option>
+              <option value="7">שבוע</option>
+              <option value="30">חודש</option>
+            </select>
+          </label>
+          <p class="note">שיחה שיש בה מענה שלא נקרא, או שממתינה למענה, נשארת במקומה. אחרי העברה תופיע הודעה בדף הבית.</p>
+        </fieldset>
+        <fieldset class="ui-size">
+          <legend>חשבון</legend>
+          <p id="settings-user" class="settings-user">לא מחובר לחשבון Google</p>
+          <button type="button" id="settings-account">התחברות עם Google</button>
+        </fieldset>
         <div id="update-section">
           <hr>
           <div class="version-row">
@@ -117,9 +136,10 @@
     <div id="lightbox" class="lightbox" hidden>
       <button type="button" id="lightbox-close" aria-label="סגירה">✕</button>
       <div class="lightbox-scroll"><img id="lightbox-img" alt=""></div>
+      <span class="lightbox-spin" aria-hidden="true"></span>
       <div class="lightbox-nav" id="lightbox-nav">
         <button type="button" id="lb-prev" title="העמוד הקודם" aria-label="העמוד הקודם">→</button>
-        <span id="lb-where"></span>
+        <span class="lb-mid"><span id="lb-where"></span><button type="button" id="lb-home" title="חזרה לעמוד שנפתח" hidden>↩ לעמוד שנפתח</button></span>
         <button type="button" id="lb-next" title="העמוד הבא" aria-label="העמוד הבא">←</button>
       </div>
       <button type="button" id="lightbox-close-bottom" class="lightbox-close-bottom">✕ סגירה</button>
