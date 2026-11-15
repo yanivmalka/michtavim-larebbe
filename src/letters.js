@@ -361,10 +361,24 @@ export async function translateAnalysis({ language, explanation, translation, ke
   return { replyLanguage: language, explanation: keep(0), translation: keep(1), keyQuote: keep(2), followups: answers.map((_, i) => keep(3 + i)) };
 }
 
+// the target language by name, not only by its code: a light model took "he" for the Hebrew letters of Yiddish
+const LANG_NAMES = { he: 'עברית (Hebrew) – מאידיש לעברית', en: 'English (אנגלית)', ru: 'Русский (רוסית)', fr: 'Français (צרפתית)', es: 'Español (ספרדית)' };
+const wordsOf = (t) => String(t || '').replace(/[\u0591-\u05c7]/g, '').match(/[\p{L}]+/gu) || [];
+/** Did the model really translate `src` to `language` (and not hand the text back)? */
+function translated(src, out, language) {
+  if (!out.trim()) return false;
+  if (language === 'he' && isYiddish(out)) return false;
+  const a = wordsOf(src), b = new Set(wordsOf(out));
+  if (a.length < 8) return true;
+  return a.filter((w) => b.has(w)).length / a.length < 0.6; // most words the same: the original came back
+}
+
 /**
  * Translates the letters of the page to `language` (on request, from the "תרגם" list). To Hebrew only the letters
  * that are not written in Hebrew are translated. `ids` limits it to those letters (the ones not translated yet).
- * Returns { language, letters: [{ id, number, text }], original: [ids already in that language] }.
+ * A letter the model hands back untranslated (still Yiddish, or the same words) is asked for once more; if it
+ * fails again it is reported in `failed` and not stored as a translation.
+ * Returns { language, letters: [{ id, number, text }], original: [ids already in that language], failed: [ids] }.
  */
 export async function translateLetters({ spec, language, ids }, deps = {}) {
   if (!LANG.test(String(language || ''))) throw new Error('LANGUAGE_BAD');
@@ -372,10 +386,21 @@ export async function translateLetters({ spec, language, ids }, deps = {}) {
   const wanted = Array.isArray(ids) && ids.length ? new Set(ids.map(Number)) : null;
   const original = language === 'he' ? page.letters.filter((l) => !isYiddish(l.pageText)).map((l) => l.id) : [];
   const todo = page.letters.filter((l) => !original.includes(l.id) && (!wanted || wanted.has(l.id))).slice(0, 12);
-  if (!todo.length) return { language, letters: [], original };
-  const out = await (deps.translateLetters || translateLetterTexts)({ language, items: todo.map((l) => clip(l.pageText, 12000)) });
-  if (!Array.isArray(out) || out.length !== todo.length) throw new Error('AI_EMPTY');
-  return { language, letters: todo.map((l, i) => ({ id: l.id, number: l.number, text: stripForeignScript(String(out[i] || '')).trim() })).filter((l) => l.text), original };
+  if (!todo.length) return { language, letters: [], original, failed: [] };
+  const run = deps.translateLetters || translateLetterTexts;
+  const target = LANG_NAMES[language] || language;
+  const ask = async (list) => {
+    const out = await run({ language: target, items: list.map((l) => clip(l.pageText, 12000)) });
+    if (!Array.isArray(out) || out.length !== list.length) throw new Error('AI_EMPTY');
+    return list.map((l, i) => ({ id: l.id, number: l.number, text: stripForeignScript(String(out[i] || '')).trim() }));
+  };
+  const done = new Map();
+  let left = todo;
+  for (let attempt = 0; attempt < 2 && left.length; attempt += 1) {
+    for (const r of await ask(left)) if (translated(left.find((l) => l.id === r.id).pageText, r.text, language)) done.set(r.id, r);
+    left = left.filter((l) => !done.has(l.id));
+  }
+  return { language, letters: todo.filter((l) => done.has(l.id)).map((l) => done.get(l.id)), original, failed: left.map((l) => l.id) };
 }
 
 /**

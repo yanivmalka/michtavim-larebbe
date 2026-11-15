@@ -275,7 +275,7 @@ test('the letters of the page are translated on request; to Hebrew only the ones
   const deps = (letters) => ({
     volumes: bookVolumes,
     fetchLetter: async (id) => ({ id, text: 'x', ...letters[id] }),
-    translateLetters: async ({ language, items }) => { seen.push(language); return items.map((t) => `[${language}] ${t.slice(0, 10)}`); },
+    translateLetters: async ({ language, items }) => { seen.push(language); return items.map((t) => `[${language.slice(0, 2)}] תרגום מלא של הקטע הזה לשפה אחרת לגמרי`); },
   });
   const he = await translateLetters({ spec, language: 'he' }, deps(fakeLetters));
   assert.deepEqual(he.letters, [], 'a Hebrew letter is not translated to Hebrew');
@@ -283,8 +283,21 @@ test('the letters of the page are translated on request; to Hebrew only the ones
   assert.equal(seen.length, 0);
   const yi = await translateLetters({ spec, language: 'he' }, deps(yiddish));
   assert.deepEqual(yi.letters.map((l) => [l.id, l.number]), [[12, 'ב']]);
-  assert.match(yi.letters[0].text, /^\[he\] /);
+  assert.match(yi.letters[0].text, /^\[עב\] /);
   const en = await translateLetters({ spec, language: 'en', ids: [12] }, deps(fakeLetters));
   assert.equal(en.letters.length, 1, 'to another language every letter is translated');
   await assert.rejects(translateLetters({ spec, language: 'english' }, deps(fakeLetters)), /LANGUAGE_BAD/);
+  assert.match(seen.at(-1), /English/, 'the language is named, not only its code');
+  // the model hands the Yiddish back: asked once more, then reported as failed – not stored as a translation
+  let calls = 0;
+  const lazy = { ...deps(yiddish), translateLetters: async ({ items }) => { calls += 1; return items; } };
+  const back = await translateLetters({ spec, language: 'he' }, lazy);
+  assert.equal(calls, 2);
+  assert.deepEqual(back.letters, []);
+  assert.deepEqual(back.failed, [12]);
+  // a second try that works is kept
+  let n = 0;
+  const second = { ...deps(yiddish), translateLetters: async ({ items }) => (++n === 1 ? items : items.map(() => 'קיבלתי את מכתבכם ושמחתי לשמוע שאתם בריאים ושלמים')) };
+  const ok = await translateLetters({ spec, language: 'he' }, second);
+  assert.deepEqual(ok.letters.map((l) => l.id), [12]);
 });
