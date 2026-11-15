@@ -347,7 +347,6 @@ details.more > summary { font-size: .85rem; color: var(--accent); padding: 4px 0
 
 /* ---------- accounts, sharing and chat ---------- */
 #account-btn.on { background: rgba(255,255,255,.22); border-radius: 50%; }
-.sync-hint { display: block; margin: 0 auto 20px; text-align: center; font-size: .85rem; }
 .members { font-size: .85rem; color: var(--muted); }
 .msg.other { border-start-end-radius: 8px; border-start-start-radius: 0; }
 .sender { font-size: .78rem; font-weight: 600; color: #1a7f5a; margin-bottom: 2px; }
@@ -560,3 +559,6 @@ details.ana-part details.ana-part { margin-inline-start: 4px; }
 .zoom-rail.mini { padding: 3px; gap: 0; width: auto; opacity: .85; }
 .zoom-rail.mini > :not(.zr-open) { display: none; }
 .zoom-rail.mini .zr-open { display: grid; place-items: center; }
+
+/* reading aloud */
+.speak-btn.on { color: #b3261e; font-weight: 600; }
