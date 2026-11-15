@@ -1,6 +1,6 @@
 import express from 'express';
 import {
-  answerLetter, getPageImage, getPagePdf, getLetterPdf, getNeighborLetter, getTurnedPage, analyze, askFollowUp, translateAnalysis, acronyms, answerPhoto, transcribe, summarize, aramaic,
+  answerLetter, getPageImage, getPagePdf, getLetterPdf, getNeighborLetter, getTurnedPage, analyze, askFollowUp, translateAnalysis, translateLetters, acronyms, answerPhoto, transcribe, summarize, aramaic,
 } from './letters.js';
 import { userMessage } from './errors.js';
 import { whatsappRouter } from './whatsapp/webhook.js';
@@ -76,6 +76,7 @@ export function createApp(deps = {}) {
   app.post('/api/analysis', aiRoute((b, d) => analyze(b, d)));
   app.post('/api/analysis/followup', aiRoute((b, d) => askFollowUp(b, d)));
   app.post('/api/analysis/translate', aiRoute((b, d) => translateAnalysis(b, d)));
+  app.post('/api/letters/translate', aiRoute((b, d) => translateLetters(b, d)));
   app.post('/api/acronyms', aiRoute((b, d) => acronyms(b, d)));
   // a photo of a printed page → that page from the library; a voice recording → the text of the letter
   app.post('/api/photo', aiRoute((b) => answerPhoto(b, { ...deps.pages, ...deps.photo })));

@@ -265,3 +265,26 @@ test('WhatsApp reply text includes source, translation and explanation', () => {
   assert.match(text, /tr/);
   assert.match(text, /ex/);
 });
+
+test('the letters of the page are translated on request; to Hebrew only the ones not written in Hebrew', async () => {
+  const { encodeSpec } = await import('../src/igrot/openBook.js');
+  const { translateLetters } = await import('../src/letters.js');
+  const spec = encodeSpec({ v: 0, i: 1, n: 1, s: 0 }); // letter ב alone
+  const yiddish = { ...fakeLetters, 12: { letterHeading: 'ב', blocks: [{ kind: 'text', text: 'איך האב ערהאלטן אייער בריוו און עס איז מיר געווען א פארגעניגן צו הערן אז איר זענט געזונט' }], viewerUrl: 'u12' } };
+  const seen = [];
+  const deps = (letters) => ({
+    volumes: bookVolumes,
+    fetchLetter: async (id) => ({ id, text: 'x', ...letters[id] }),
+    translateLetters: async ({ language, items }) => { seen.push(language); return items.map((t) => `[${language}] ${t.slice(0, 10)}`); },
+  });
+  const he = await translateLetters({ spec, language: 'he' }, deps(fakeLetters));
+  assert.deepEqual(he.letters, [], 'a Hebrew letter is not translated to Hebrew');
+  assert.deepEqual(he.original, [12]);
+  assert.equal(seen.length, 0);
+  const yi = await translateLetters({ spec, language: 'he' }, deps(yiddish));
+  assert.deepEqual(yi.letters.map((l) => [l.id, l.number]), [[12, 'ב']]);
+  assert.match(yi.letters[0].text, /^\[he\] /);
+  const en = await translateLetters({ spec, language: 'en', ids: [12] }, deps(fakeLetters));
+  assert.equal(en.letters.length, 1, 'to another language every letter is translated');
+  await assert.rejects(translateLetters({ spec, language: 'english' }, deps(fakeLetters)), /LANGUAGE_BAD/);
+});

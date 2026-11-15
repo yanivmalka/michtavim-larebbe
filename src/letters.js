@@ -6,7 +6,9 @@ import { findLetter, findVolume } from './igrot/letterNumbers.js';
 import { fetchLetter } from './igrot/chabadlibrary.js';
 import { layout, pngsToPdf, drawHighlights, spreadSide } from './render/bookPage.js';
 import { findQuote, stripForeignScript, parseHighlights } from './highlights.js';
-import { analyzePage, followUp, translateTexts, expandAcronyms, readPagePhoto, transcribeAudio, summarizeLetter, translateAramaic } from './ai/index.js';
+import { analyzePage, followUp, translateTexts, translateLetterTexts, expandAcronyms, readPagePhoto, transcribeAudio, summarizeLetter } from './ai/index.js';
+import { explainAramaic } from './aramaicLexicon.js';
+import { isYiddish } from '../public/lang-detect.js';
 
 /** Small LRU of rendered page images (they can always be drawn again). */
 const pageCache = {
@@ -360,6 +362,23 @@ export async function translateAnalysis({ language, explanation, translation, ke
 }
 
 /**
+ * Translates the letters of the page to `language` (on request, from the "תרגם" list). To Hebrew only the letters
+ * that are not written in Hebrew are translated. `ids` limits it to those letters (the ones not translated yet).
+ * Returns { language, letters: [{ id, number, text }], original: [ids already in that language] }.
+ */
+export async function translateLetters({ spec, language, ids }, deps = {}) {
+  if (!LANG.test(String(language || ''))) throw new Error('LANGUAGE_BAD');
+  const page = await pageForAi(spec, deps);
+  const wanted = Array.isArray(ids) && ids.length ? new Set(ids.map(Number)) : null;
+  const original = language === 'he' ? page.letters.filter((l) => !isYiddish(l.pageText)).map((l) => l.id) : [];
+  const todo = page.letters.filter((l) => !original.includes(l.id) && (!wanted || wanted.has(l.id))).slice(0, 12);
+  if (!todo.length) return { language, letters: [], original };
+  const out = await (deps.translateLetters || translateLetterTexts)({ language, items: todo.map((l) => clip(l.pageText, 12000)) });
+  if (!Array.isArray(out) || out.length !== todo.length) throw new Error('AI_EMPTY');
+  return { language, letters: todo.map((l, i) => ({ id: l.id, number: l.number, text: stripForeignScript(String(out[i] || '')).trim() })).filter((l) => l.text), original };
+}
+
+/**
  * Expands abbreviations that the dictionary in the app does not know, in context: the sentence they
  * were tapped in (`sentence`, sent by the app), or else the whole page.
  */
@@ -381,17 +400,22 @@ export async function summarize({ letter }, deps = {}) {
   return { title: oneLine(out.title, 40), line: oneLine(out.line, 80) };
 }
 
-/** Aramaic → the language the text is read in: the phrase around the tapped word, as a sentence and word by word. */
+/**
+ * Aramaic → the language the text is read in: the phrase around the tapped word, explained word by word from
+ * dictionaries (ours, then Jastrow through Sefaria) – not by the AI, which guesses.
+ */
 export async function aramaic({ sentence, word, language }, deps = {}) {
   const s = String(sentence || '').trim();
   const w = String(word || '').trim();
   if (s.length < 2 || !w) throw new Error('QUESTION_EMPTY');
   const lang = LANG.test(String(language || '')) ? language : 'he';
-  const out = await (deps.aramaic || translateAramaic)({ sentence: clip(s, 1500), word: clip(w, 300), language: lang });
+  const out = await explainAramaic({ sentence: clip(s, 1500), word: clip(w, 300), language: lang }, deps.lexicon || {});
   return {
-    isAramaic: !!out.isAramaic,
+    isAramaic: out.isAramaic,
     phrase: clip(out.phrase, 600),
-    translation: stripForeignScript(clip(out.translation, 1200)),
-    words: (out.words || []).slice(0, 60).map((x) => ({ word: clip(x.word, 40), meaning: stripForeignScript(clip(x.meaning, 120)) })),
+    translation: clip(out.translation, 1200),
+    words: out.words.slice(0, 60).map((x) => ({ word: clip(x.word, 40), meaning: clip(x.meaning, 240), source: x.source })),
+    sources: out.sources,
+    offline: out.offline,
   };
 }

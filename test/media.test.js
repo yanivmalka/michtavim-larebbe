@@ -84,9 +84,35 @@ test('a letter gets a chat name and a one-line summary; Aramaic is translated', 
   const s = await summarize({ letter: 'אבקש ברכה לרפואה שלמה' }, { summarize: async () => ({ title: '"ברכה לרפואה"\n', line: 'בקשת ברכה   לרפואה שלמה' }) });
   assert.deepEqual(s, { title: 'ברכה לרפואה', line: 'בקשת ברכה לרפואה שלמה' });
   await assert.rejects(summarize({ letter: '' }, {}), /LETTER_EMPTY/);
+  // from dictionaries, not the AI: ours first, then Jastrow (Sefaria) for the words ours does not have
+  const asked = [];
   const a = await aramaic({ sentence: 'וכמאמר לית אתר פנוי מיניה', word: 'לית', language: 'xx-bad' }, {
-    aramaic: async ({ language }) => ({ isAramaic: true, phrase: 'לית אתר פנוי מיניה', translation: `אין מקום פנוי ממנו (${language})`, words: [{ word: 'לית', meaning: 'אין' }] }),
+    lexicon: { lookup: async (w) => { asked.push(w); return w === 'פנוי' ? { headword: 'פְּנוּי', meaning: 'empty, vacant' } : null; } },
   });
-  assert.equal(a.translation, 'אין מקום פנוי ממנו (he)');
-  assert.deepEqual(a.words, [{ word: 'לית', meaning: 'אין' }]);
+  assert.equal(a.isAramaic, true);
+  assert.equal(a.phrase, 'לית אתר פנוי מיניה');
+  assert.deepEqual(a.words.map((x) => [x.word, x.meaning, x.source]), [['לית', 'אין', 'dict'], ['אתר', 'מקום', 'dict'], ['פנוי', 'empty, vacant', 'jastrow'], ['מיניה', 'ממנו', 'dict']]);
+  assert.deepEqual(asked, ['פנוי']);
+  assert.equal(a.translation, ''); // not every word is in our dictionary: no literal rendering
+  const b = await aramaic({ sentence: 'ותא חזי דעלמא', word: 'חזי', language: 'he' }, { lexicon: { lookup: async () => { throw new Error('offline'); } } });
+  assert.equal(b.translation, 'ובוא ראה של העולם');
+  // the online dictionary not answering does not fail the request
+  const c = await aramaic({ sentence: 'שלום רב', word: 'שלום', language: 'he' }, { lexicon: { lookup: async () => { throw new Error('offline'); } } });
+  assert.equal(c.isAramaic, false);
+  assert.equal(c.offline, true);
+});
+
+test('Jastrow entries from Sefaria are read into a short meaning', async () => {
+  const { lookupJastrow } = await import('../src/aramaicLexicon.js');
+  const fake = async (url) => {
+    assert.match(url, /^https:\/\/www\.sefaria\.org\/api\/words\//);
+    return {
+      ok: true,
+      json: async () => [
+        { headword: 'עוֹלָם', parent_lexicon: 'BDB Augmented Strong', content: { senses: [{ definition: 'long duration' }] } },
+        { headword: 'עָלְמָא', parent_lexicon: 'Jastrow Dictionary', content: { senses: [{ definition: '<b>world</b>, &amp; age', senses: [{ definition: 'eternity' }] }] } },
+      ],
+    };
+  };
+  assert.deepEqual(await lookupJastrow('עלמא-test', fake), { headword: 'עלמא', meaning: 'world, & age; eternity' });
 });

@@ -17,6 +17,8 @@ export const SCRIPT_RULE = 'כתוב אך ורק באותיות של שפת הי
 
 /** Translating an existing analysis to another language, and expanding abbreviations – small, shared prompts. */
 export const TRANSLATE_SYSTEM = `אתה מתרגם. תקבל רשימת קטעי טקסט (הסבר ותרגום של עמוד מ"אגרות קודש" של הרבי מליובאוויטש) וקוד שפה. תרגם כל קטע לשפה המבוקשת בנאמנות ובלשון מכובדת, ושמור על מבנה הפסקאות והכותרות ("אגרת <מספר>"). ${SCRIPT_RULE} החזר JSON בלבד: { "items": [ ...הקטעים המתורגמים באותו סדר... ] }, באותו מספר קטעים בדיוק.`;
+/** Translating the letters of the page themselves (on request, from the "תרגם" list). */
+export const LETTERS_TRANSLATE_SYSTEM = `אתה מתרגם. תקבל רשימת קטעים – כל קטע הוא אגרת (או חלק מאגרת, כפי שהוא מופיע בעמוד) מתוך "אגרות קודש" של הרבי מליובאוויטש – וקוד שפה. תרגם כל קטע במלואו לשפה המבוקשת, בנאמנות למקור ובלשון מכובדת. אל תוסיף כותרות, הסברים או הערות, ואל תשמיט דבר. קטע שמתחיל או נגמר באמצע משפט – תרגם אותו כפי שהוא. כשהיעד עברית: פסוקים, מאמרי חז"ל ומובאות בלשון הקודש – השאר כלשונם. ${SCRIPT_RULE} החזר JSON בלבד: { "items": [ ...הקטעים המתורגמים באותו סדר... ] }, באותו מספר קטעים בדיוק.`;
 export const translateSchema = {
   type: 'object',
   additionalProperties: false,
@@ -133,13 +135,13 @@ const jsonOf = (response) => {
 };
 
 /** Claude: translates `items` (strings) to `language` (ISO 639-1), keeping their order. */
-export async function translateClaude({ language, items }) {
+export async function translateClaude({ language, items, system = TRANSLATE_SYSTEM }) {
   if (!hasCredentials()) throw new Error('AI_NOT_CONFIGURED');
   const response = await getClient().beta.messages.create({
     model: config.claude.model, max_tokens: 16000,
     betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default',
     output_config: { effort: 'low', format: { type: 'json_schema', schema: translateSchema } },
-    system: TRANSLATE_SYSTEM,
+    system,
     messages: [{ role: 'user', content: `שפת היעד: ${language}\n\n${JSON.stringify({ items })}` }],
   });
   return TranslateSchema.parse(jsonOf(response)).items;
@@ -215,35 +217,6 @@ export const summarySchema = {
   properties: { title: { type: 'string' }, line: { type: 'string' } },
 };
 export const SummarySchema = z.object({ title: z.string(), line: z.string() });
-
-/** Aramaic in the letters (Zohar, Gemara, Tanya quotes): the phrase around a word, translated, and word by word. */
-export const ARAMAIC_SYSTEM = `לפניך משפט מתוך "אגרות קודש" של הרבי מליובאוויטש, ומילה (או קטע) שהקורא סימן בו. מצא את הרצף הארמי המלא שהמילה שייכת אליו (ציטוט מהזוהר, מהגמרא, מהתרגום וכדומה) ותרגם אותו לשפת היעד.
-החזר JSON בלבד:
-- isAramaic: false אם המילה והרצף שסביבה אינם ארמית (ואז שאר השדות ריקים).
-- phrase: הרצף הארמי כפי שהוא במשפט.
-- translation: תרגום הרצף כמשפט אחד, נאמן וקריא.
-- words: לכל מילה ברצף, לפי הסדר – המילה ופירושה הקצר בשפת היעד.
-${SCRIPT_RULE}`;
-export const aramaicSchema = {
-  type: 'object',
-  additionalProperties: false,
-  required: ['isAramaic', 'phrase', 'translation', 'words'],
-  properties: {
-    isAramaic: { type: 'boolean' },
-    phrase: { type: 'string' },
-    translation: { type: 'string' },
-    words: {
-      type: 'array',
-      items: { type: 'object', additionalProperties: false, required: ['word', 'meaning'], properties: { word: { type: 'string' }, meaning: { type: 'string' } } },
-    },
-  },
-};
-export const AramaicSchema = z.object({
-  isAramaic: z.boolean(),
-  phrase: z.string().default(''),
-  translation: z.string().default(''),
-  words: z.array(z.object({ word: z.string(), meaning: z.string() })).default([]),
-});
 
 /** Claude: a small JSON answer to a small prompt. */
 export async function smallJsonClaude({ system, text, schema }) {

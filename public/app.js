@@ -1,4 +1,6 @@
 import { expand as expandAcronym, isAcronym } from './rashei-teivot.js';
+import { looksAramaic, bareWord } from './aramaic.js';
+import { isYiddish } from './lang-detect.js';
 
 const $ = (id) => document.getElementById(id);
 const chat = $('chat'), form = $('composer'), input = $('input'), send = $('send');
@@ -129,6 +131,18 @@ const lastTs = (c) => Math.max(c.created || 0, c.lastTs || 0, entriesOf(c.id).at
 
 const time = (ts) => el('span', { className: 'time', textContent: new Date(ts).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) });
 const scrollDown = () => chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
+
+// The round expand / collapse chevron: one triangle that turns (rotates) between its two positions. The bubbles
+// are drawn again after a toggle, so the chevron that was just toggled (by its key) plays the turn on arrival.
+let chevTurn = { key: '', at: 0 };
+const turnChev = (key) => { chevTurn = { key, at: Date.now() }; };
+function chevron(up, key, { tag = 'button', className = '', title = '' } = {}) {
+  const turned = key && chevTurn.key === key && Date.now() - chevTurn.at < 900;
+  const n = el(tag, { className: ['chev', className, up && 'up', turned && 'turned'].filter(Boolean).join(' '), textContent: '▼' });
+  if (tag === 'button') n.type = 'button';
+  if (title) { n.title = title; n.setAttribute('aria-label', title); }
+  return n;
+}
 
 // ---------- highlighter ----------
 function mergeRanges(ranges) {
@@ -1043,26 +1057,12 @@ function placePop(p, found) {
 }
 
 // ---- Aramaic (quotes from the Zohar, the Gemara…): a tap shows the phrase translated, and word by word ----
-const ARAMAIC_WORDS = new Set(`דא הא האי הני הנך מאי מאן כד היכי הכי אמאי אטו דהא איהו איהי אינון אנן לית אית ליה להו בהו ביה מיניה דיליה קמי קמיה קא קאמר
-תנא תניא חזי נמי סגי טפי עלמא עלמין מלכא קדישא רחמנא אורייתא שכינתא עילאה תתאה זעירא יומא ליליא ארעא שמיא נהורא חשוכא סטרא אחרא כולא כולהו חדא תרי תרין תלת
-בריך דכתיב כתיב אתמר איתמר אזיל הוה הוו להוי מילתא פתגמא גברא נשמתא רוחא נפשא גופא ליבא עובדא דרגא רזא רזין עתיקא אנפין אתר פום אורחא קושטא
-שלמא רעוא רעותא דחילו רחימו חדוה חדוותא אתערותא דלעילא דלתתא לעילא לתתא מלגאו מלבר גו בגו כגוונא אלין אילין עביד אתא נפק נפיק
-יתיב קאי קיימא שריא סליק נחית אשתכח איתא איכא ליכא ידעינן שמעינן אמינא בעי בעא תיובתא קשיא מסתברא איפכא לאו ברא ברתא אבוה אחוי`.split(/\s+/));
-const NOT_ARAMAIC = new Set('דוגמא דא"ח קופסא כורסא מלתא'.split(' '));
-const bareWord = (w) => w.normalize('NFC').replace(/[\u0591-\u05c7]/g, '').replace(/^["'(\[]+|["').,;:!?\]]+$/g, '');
-function looksAramaic(word) {
-  const w = bareWord(word);
-  if (!/^[א-ת]{2,}$/.test(w) || NOT_ARAMAIC.has(w)) return false;
-  const core = w.replace(/^[ודבלכ]{1,2}(?=[א-ת]{3,})/, '');
-  return ARAMAIC_WORDS.has(w) || ARAMAIC_WORDS.has(core) || /^ד[א-ת]{2,}א$/.test(w) || (w.length >= 4 && /תא$/.test(w)) || (w.length >= 5 && /(נא|יהו|ייהו)$/.test(w));
-}
 const aramaicCache = new Map(); // sentence | word | language → the translation
 function showAramaicPop(p, found, phrase = found.word) {
   const pop = $('rt-pop');
   const lang = replyLang || 'he';
   const sentence = sentenceAround(found.text, found.start, found.end);
   const key = `${sentence}|${phrase}|${lang}`;
-  let wordsOpen = false;
   pop.textContent = '';
   pop.classList.remove('fade');
   const close = el('button', { type: 'button', className: 'rt-x', textContent: '✕', title: 'סגירה' });
@@ -1074,19 +1074,19 @@ function showAramaicPop(p, found, phrase = found.word) {
     const r = aramaicCache.get(key);
     head.replaceChildren(el('b', { textContent: r?.phrase || bareWord(phrase) }), el('span', { className: 'rt-count', textContent: 'ארמית' }), close);
     body.textContent = ''; foot.textContent = '';
-    if (!r) body.append(el('div', { className: 'wait-line' }, el('span', { className: 'spinner' }), 'מתרגמים מארמית…'));
+    if (!r) body.append(el('div', { className: 'wait-line' }, el('span', { className: 'spinner' }), 'מחפשים במילון…'));
     else if (r.error) body.append(el('span', { className: 'rt-none', textContent: r.error }));
-    else if (!r.isAramaic) body.append(el('span', { className: 'rt-none', textContent: 'לא זוהתה כאן ארמית.' }));
+    else if (!r.isAramaic) body.append(el('span', { className: 'rt-none', textContent: r.offline ? 'המילה אינה במילון שבאפליקציה, והמילון המקוון אינו זמין כעת.' : 'לא נמצא פירוש במילון.' }));
     else {
-      body.append(el('div', { className: 'rt-text', textContent: r.translation }));
-      if (wordsOpen) for (const w of r.words) body.append(el('div', { className: 'rt-line' }, el('b', { textContent: w.word }), ` – ${w.meaning}`));
-      if (r.words.length) {
-        const b = el('button', { type: 'button', className: 'rt-btn', textContent: wordsOpen ? 'הסתרת פירוש המילים' : 'פירוש כל מילה' });
-        b.addEventListener('click', () => { wordsOpen = !wordsOpen; paint(); placePop(p, found); });
-        foot.append(b);
+      // word by word, from the dictionaries; a literal rendering only when every word was in ours
+      if (r.translation) body.append(el('div', { className: 'rt-text', textContent: `מילה במילה: ${r.translation}` }));
+      for (const w of r.words) {
+        body.append(el('div', { className: 'rt-line' }, el('b', { textContent: w.word }), ' – ',
+          w.meaning ? el('span', { dir: w.source === 'jastrow' ? 'ltr' : 'rtl', textContent: w.meaning }) : el('span', { className: 'rt-none', textContent: 'לא נמצא במילון' })));
       }
     }
-    foot.append(el('span', { className: 'rt-note', textContent: 'על דרך אפשר' }));
+    const src = { dict: 'המילון הארמי שבאפליקציה', jastrow: 'מילון יאסטרוב (Sefaria, באנגלית)' };
+    if (r?.sources?.length) foot.append(el('span', { className: 'rt-note', textContent: `מקור: ${r.sources.map((x) => src[x] || x).join(' · ')}` }));
   };
   paint();
   pop.append(head, body, foot);
@@ -1259,12 +1259,15 @@ async function translateEntry(entry, language) {
   const a = entry.a;
   if (!a?.explanation || entry.translating) return;
   entry.translating = language;
+  // the page translation written with the analysis stays, under its own language (the letters are translated apart)
+  if (a.translation) { a.trAll ??= {}; a.trAll[a.analysisLanguage || 'he'] ??= a.translation; }
   render();
   try {
     const r = await postJson('/api/analysis/translate', {
-      language, explanation: a.explanation, translation: a.translation || '', keyQuote: a.keyQuote || '', followups: entry.followups || [],
+      language, explanation: a.explanation, translation: '', keyQuote: a.keyQuote || '', followups: entry.followups || [],
     }, 120000);
-    Object.assign(a, { explanation: r.explanation || a.explanation, translation: r.translation, keyQuote: r.keyQuote, analysisLanguage: language });
+    Object.assign(a, { explanation: r.explanation || a.explanation, keyQuote: r.keyQuote, analysisLanguage: language });
+    delete a.translation;
     (entry.followups || []).forEach((f, i) => { if (r.followups?.[i]) f.a = r.followups[i]; });
     toast(`הניתוח תורגם ל${langName(language)}`);
   } catch (e) {
@@ -1276,33 +1279,147 @@ async function translateEntry(entry, language) {
   }
 }
 
+// ---------- translating the letters of the page: on request, kept with the answer, one language at a time ----------
+// a.tr = { <lang>: { <letter id>: text } } – the letters translated one by one; a.trAll = { <lang>: text } – a
+// translation of the whole page (written with the analysis). To Hebrew only the letters not in Hebrew are translated.
+const trLetters = (a) => (a.letters || []).filter((l) => l.id != null && String(l.pageText || '').trim());
+function trWhole(a, lang) {
+  if (a.trAll?.[lang]) return a.trAll[lang];
+  return a.translation && (a.analysisLanguage || 'he') === lang ? a.translation : '';
+}
+/** How much of the page there is in `lang`: { done, total, missing: [letter ids], translated: count }. */
+function trStatus(a, lang) {
+  const letters = trLetters(a);
+  const mine = a.tr?.[lang] || {};
+  const whole = !!trWhole(a, lang);
+  const missing = [];
+  let translated = 0;
+  for (const l of letters) {
+    if (mine[l.id]) translated += 1;
+    else if (!(lang === 'he' && !isYiddish(l.pageText)) && !whole) missing.push(l.id);
+  }
+  return { total: letters.length, done: letters.length - missing.length, missing, translated: translated + (whole ? 1 : 0) };
+}
+const trLangs = (a) => LANGS.map(([v]) => v).filter((v) => v && trStatus(a, v).translated);
+
+/** Translates the letters of the opened page that are not in `language` yet, and keeps the translation. */
+async function translatePage(entry, language) {
+  const a = entry.a;
+  const st = trStatus(a, language);
+  const spec = specOf(a.imagePath);
+  entry.trLang = language;
+  entry.showMore = true; entry.translationOpen = true;
+  if (!st.missing.length) {
+    save(); render();
+    if (!st.translated) toast(language === 'he' ? 'כל האיגרות בעמוד כתובות בעברית – אין מה לתרגם.' : `האיגרות כבר כתובות ב${langName(language)}.`);
+    return;
+  }
+  if (!spec) { toast('לא ניתן לתרגם תשובות ישנות.'); return; }
+  entry.trBusy = language;
+  render();
+  try {
+    const r = await postJson('/api/letters/translate', { spec, language, ids: st.missing }, 120000);
+    a.tr ??= {};
+    a.tr[language] = { ...(a.tr[language] || {}) };
+    for (const l of r.letters || []) if (l.text) a.tr[language][l.id] = l.text;
+    toast(`האיגרות תורגמו ל${langName(language)}`);
+  } catch (e) {
+    alert(`התרגום נכשל: ${e.message}`);
+  } finally {
+    delete entry.trBusy;
+    syncEntry(entry);
+    render();
+  }
+}
+
 /**
- * "תרגם": a button in the row of the letters' text that opens the list of languages. Choosing one translates an
- * existing analysis (or sets the language of the analysis to come); the current language is ticked.
+ * "תרגם": a button in the row of the letters' text that opens the list of languages. Choosing one translates the
+ * letters of the page (only what is missing; to Hebrew only the letters not in Hebrew) and keeps the translation,
+ * and an analysis that was already written is translated to it too. Languages the page is already in are ticked
+ * (✓), partly (some letters still in Yiddish) with "חלקית".
  * The list is the app's own menu: a native <select> inside a <summary> opened on Android, but its
  * choice did not always come back.
  */
 function langSelect(entry) {
   const a = entry.a;
-  const btn = el('button', { type: 'button', className: 'lang-select', textContent: '🌐 תרגם', title: 'תרגום המענה לשפה אחרת' });
-  btn.setAttribute('aria-label', 'תרגום המענה לשפה אחרת');
+  const owner = isOwner(convById(entry.conv));
+  const btn = el('button', { type: 'button', className: 'lang-select', textContent: '🌐 תרגם', title: 'תרגום האיגרות לשפה אחרת' });
+  btn.setAttribute('aria-label', 'תרגום האיגרות לשפה אחרת');
   btn.setAttribute('aria-haspopup', 'menu');
   const choose = (v) => {
-    a.replyLanguage = v || null;
+    if (!v) { // the language of the analysis to come: as the letter is written
+      a.replyLanguage = null; setReplyLang('');
+      syncEntry(entry); render();
+      toast(a.explanation ? 'ניתוחים חדשים ייכתבו בשפת המכתב.' : 'הניתוח ייכתב בשפת המכתב.');
+      return;
+    }
+    a.replyLanguage = v;
     setReplyLang(v);
-    if (a.explanation && v && v !== (a.analysisLanguage || '')) { translateEntry(entry, v); return; }
-    syncEntry(entry); render();
-    if (!a.explanation) toast(`הניתוח ייכתב ב${v ? langName(v) : 'שפת המכתב'}. לחצו על "✨ הסבר, תרגום וניתוח העמוד".`);
-    else toast(v ? `הניתוח כבר כתוב ב${langName(v)}.` : 'ניתוחים חדשים ייכתבו בשפת המכתב.');
+    const st = trStatus(a, v);
+    if (st.missing.length && !owner) { entry.trLang = v; save(); render(); toast('רק כותב המכתב יכול לבקש תרגום.'); return; }
+    translatePage(entry, v).then(() => {
+      if (owner && a.explanation && v !== (a.analysisLanguage || '')) translateEntry(entry, v);
+    });
   };
   btn.addEventListener('click', (e) => {
     e.preventDefault(); e.stopPropagation(); // inside a <summary>: do not open / close
     if (selecting()) return;
-    if (entry.translating) { toast(`מתרגם כעת ל${langName(entry.translating)}…`); return; }
-    const current = a.explanation ? (a.analysisLanguage || '') : (a.replyLanguage || replyLang || '');
-    showMenu(btn, LANGS.map(([v, label]) => ({ label: `${v === current ? '✓ ' : ''}${label}`, onClick: () => choose(v) })));
+    const busy = entry.trBusy || entry.translating;
+    if (busy) { toast(`מתרגם כעת ל${langName(busy)}…`); return; }
+    showMenu(btn, LANGS.map(([v, label]) => {
+      if (!v) return { label: `${!a.replyLanguage && !replyLang ? '• ' : ''}${label} (לניתוח)`, onClick: () => choose(v) };
+      const st = trStatus(a, v);
+      const mark = !st.total ? '' : !st.missing.length ? '✓ ' : st.done ? '✓ ' : '';
+      const part = st.total && st.missing.length && st.done ? ' (חלקית)' : '';
+      return { label: `${mark}${label}${part}`, onClick: () => choose(v) };
+    }));
   });
   return el('span', { className: 'lang-wrap' }, btn);
+}
+
+/** The translation of the letters – its own group, outside the analysis. */
+function translationSection(entry) {
+  const a = entry.a;
+  const langs = trLangs(a);
+  if (!langs.length && !entry.trBusy) return null;
+  const lang = entry.trBusy || (langs.includes(entry.trLang) ? entry.trLang : langs.includes(a.analysisLanguage) ? a.analysisLanguage : langs[0]);
+  const spec = specOf(a.imagePath);
+  const mine = a.tr?.[lang] || {};
+  const whole = trWhole(a, lang);
+  const yiddish = lang === 'he' && trLetters(a).some((l) => isYiddish(l.pageText));
+  const box = el('details', { className: 'tr-part fold', open: !!entry.translationOpen },
+    el('summary', {}, el('span', { className: 'sum-label', textContent: `📖 תרגום ${yiddish ? 'מאידיש ' : 'האיגרות '}ל${langName(lang)}` })));
+  box.addEventListener('toggle', () => { entry.translationOpen = box.open; save(); });
+  if (langs.length > 1) { // the languages the page was translated to: one tap shows another
+    box.append(el('div', { className: 'tr-langs' }, ...langs.map((v) => {
+      const b = el('button', { type: 'button', className: `chip${v === lang ? ' on' : ''}`, textContent: langName(v) });
+      b.addEventListener('click', () => { entry.trLang = v; save(); render(); });
+      return b;
+    })));
+  }
+  box.append(el('div', { className: 'ai-warn', textContent: '⚠️ תרגום ממוחשב (AI) – עלולות להיות בו טעויות. הנוסח המחייב הוא לשון האגרת עצמה.' }));
+  if (entry.trBusy) box.append(el('div', { className: 'wait-line' }, el('span', { className: 'spinner' }), `מתרגמים את האיגרות ל${langName(entry.trBusy)}…`));
+  const letters = trLetters(a).filter((l) => mine[l.id]);
+  for (const l of letters) {
+    box.append(el('div', { className: 'letter' },
+      el('div', { className: 'letter-num', textContent: `אגרת ${l.number}` }),
+      pageParagraph(mine[l.id], `TR:${entry.id}:${lang}:${l.id}`, spec)));
+  }
+  if (!letters.length && whole) box.append(pageParagraph(whole, `T:${entry.id}`, spec));
+  const kept = lang === 'he' ? trLetters(a).filter((l) => !mine[l.id] && !isYiddish(l.pageText)) : [];
+  if (kept.length && !whole) box.append(el('div', { className: 'note', textContent: `${kept.length > 1 ? 'האיגרות' : 'האגרת'} ${kept.map((l) => l.number).join(', ')} כתובות בעברית ואינן מתורגמות.` }));
+  if (isOwner(convById(entry.conv)) && (letters.length || whole) && !entry.trBusy) {
+    const del = el('button', { type: 'button', className: 'del-btn', textContent: `🗑 מחיקת התרגום ל${langName(lang)}` });
+    del.addEventListener('click', () => {
+      if (!confirm(`למחוק את התרגום ל${langName(lang)}? אפשר יהיה לתרגם שוב.`)) return;
+      if (a.tr) delete a.tr[lang];
+      if (a.trAll) delete a.trAll[lang];
+      if (trWhole(a, lang)) delete a.translation;
+      syncEntry(entry); render();
+    });
+    box.append(el('div', { className: 'del-row' }, del));
+  }
+  return box;
 }
 
 function analysisSection(entry) {
@@ -1344,8 +1461,9 @@ function analysisSection(entry) {
   // the analysis (collapsible), with a delete button at its end so a new one can be asked for
   const clear = el('button', { type: 'button', className: 'del-btn', textContent: '🗑 מחיקת הניתוח' });
   clear.addEventListener('click', () => {
-    if (!confirm('למחוק את ההסבר, התרגום ושאלות ההמשך? אפשר יהיה לבקש ניתוח חדש.')) return;
-    for (const k of ['explanation', 'translation', 'keyQuote', 'sourceLanguage', 'analysisLanguage', 'provider', 'highlights', 'sourcesFound', 'sourcesTotal']) delete a[k];
+    if (!confirm('למחוק את ההסבר ושאלות ההמשך? אפשר יהיה לבקש ניתוח חדש. (התרגום נשאר.)')) return;
+    if (a.translation) { a.trAll ??= {}; a.trAll[a.analysisLanguage || 'he'] ??= a.translation; delete a.translation; }
+    for (const k of ['explanation', 'keyQuote', 'sourceLanguage', 'analysisLanguage', 'provider', 'highlights', 'sourcesFound', 'sourcesTotal']) delete a[k];
     a.explained = false;
     delete entry.followups;
     syncEntry(entry);
@@ -1423,17 +1541,12 @@ function analysisSection(entry) {
     fu.append(el('div', { className: 'fu-row' }, field, ask), status);
   }
 
-  const translation = a.translation && el('details', { className: 'ana-part fold', open: !!entry.translationOpen },
-    el('summary', {}, el('span', { className: 'sum-label', textContent: a.sourceLanguage === 'yiddish' ? '📖 תרגום מאידיש' : '📖 תרגום' })),
-    pageParagraph(a.translation, `T:${entry.id}`, spec));
-  if (translation) translation.addEventListener('toggle', () => { entry.translationOpen = translation.open; save(); });
   const sub = el('details', { className: 'ana-part fold', open: !!entry.analysisOpen },
     el('summary', {}, el('span', { className: 'sum-label', textContent: '✨ כיצד המענה מתייחס למכתב' })),
     a.keyQuote && el('div', { className: 'quote', textContent: a.keyQuote }),
     picked(),
     pageParagraph(a.explanation, `E:${entry.id}`, spec),
     marksNote(),
-    translation,
     (canAsk && spec) || qa.length ? fu : null,
     canAsk && el('div', { className: 'del-row' }, clear));
   sub.addEventListener('toggle', () => { entry.analysisOpen = sub.open; save(); });
@@ -1504,6 +1617,7 @@ function answerBubble(entry) {
     summary,
     analysisSection(entry),
     text.box,
+    translationSection(entry),
     el('div', { className: 'note', textContent: `${a.sides
       ? `המכתב הונח בין שני עמודים פונים של הספר. הטקסט המקוון של אגרות הקודש מחולק כאן לפי עמודי הספר המודפס, אך העיצוב אינו זהה לו${a.footnotes ? '' : ' והערות השוליים אינן מוצגות'}.`
       : 'העמוד מורכב מהטקסט המקוון של אגרות הקודש, ועימודו אינו זהה לעימוד הספר המודפס.'} ההסבר הוא הצעה להבנה בלבד ואינו פסק הלכה; לשאלות מעשיות – יש להתייעץ עם רב. סימון טקסט פותח כלים: הדגשה, גודל טקסט, PDF ושיתוף.` }));
@@ -1512,11 +1626,10 @@ function answerBubble(entry) {
   const placeTags = () => { if (more.open) summary.after(wrap); else more.after(wrap); };
   more.addEventListener('toggle', () => { entry.showMore = more.open; save(); placeTags(); });
 
-  const fold = el('button', { type: 'button', className: 'chev', textContent: '▴', title: 'מזעור המענה' });
-  fold.setAttribute('aria-label', 'מזעור המענה');
-  fold.addEventListener('click', () => { collapseEntry(entry); save(); render(); });
+  const fold = chevron(true, `a:${entry.id}`, { title: 'מזעור המענה' });
+  fold.addEventListener('click', () => { turnChev(`a:${entry.id}`); collapseEntry(entry); save(); render(); });
   const bubble = el('div', { className: 'msg them' },
-    el('div', { className: 'ans-head' }, el('h3', { textContent: `✉️ אגרות קודש · ${a.volumeHeading}` }), fold),
+    el('div', { className: 'ans-head' }, el('h3', { textContent: `✉️ ${a.title || `אגרות קודש · ${a.volumeHeading}`}` }), fold),
     pageWhere,
     pageWrap,
     more,
@@ -2143,12 +2256,24 @@ function choosePhotoAgain(anchor) {
   ]);
 }
 
-/** Full-screen view of the photo; a tap closes it. */
-function showPhoto(src) {
-  const box = el('div', { className: 'photo-view' }, el('img', { src, alt: 'הצילום' }));
-  box.addEventListener('click', () => box.remove());
-  document.body.append(box);
+/** Full-screen view of the photo; ✕ (or a tap, or "back") closes it. */
+let photoView = null;
+function closePhoto() {
+  if (!photoView) return false;
+  photoView.remove();
+  photoView = null;
+  return true;
 }
+function showPhoto(src) {
+  closePhoto();
+  const x = el('button', { type: 'button', className: 'photo-close', textContent: '✕', title: 'סגירה' });
+  x.setAttribute('aria-label', 'סגירת הצילום');
+  photoView = el('div', { className: 'photo-view' }, el('img', { src, alt: 'הצילום' }), x);
+  photoView.addEventListener('click', closePhoto);
+  document.body.append(photoView);
+  x.focus();
+}
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && closePhoto()) e.preventDefault(); });
 
 // ---- approving or deleting a draft ----
 function draftActions(entry, okLabel, onOk) {
@@ -2469,7 +2594,7 @@ send.addEventListener('contextmenu', (e) => e.preventDefault());
 // a recording that was being converted when the app closed: convert it again
 setTimeout(() => { for (const e of state.entries) if (e.transcribing) transcribeEntry(e); }, 0);
 // a translation that was cut off when the app closed is not running any more: the language can be chosen again
-for (const e of state.entries) delete e.translating;
+for (const e of state.entries) { delete e.translating; delete e.trBusy; }
 
 /** The round button: a microphone while the letter box is empty, the send arrow once there is text (a small microphone then sits in the pill), ✓ while recording. */
 function paintSend() {
@@ -2497,8 +2622,7 @@ async function openLetter(entry) {
     if (!await authenticate('פתיחת המכתב הנעול')) return;
     unlockedQ.add(entry.id);
   }
-  entry.qOpen = true;
-  if (entry.a) { entry.collapsed = false; setRead(entry); } // the letter and its answer open together
+  entry.qOpen = true; // only the letter: its answer stays as it was (minimized), the user opens it when wanted
   save(); render();
 }
 async function toggleLetterLock(entry) {
@@ -2548,9 +2672,9 @@ function questionBubble(entry, conv) {
   // otherwise it sits at the corner of the bubble
   if (folding ? open : !!entry.a) {
     const down = !folding && entry.collapsed;
-    const b = el('button', { type: 'button', className: 'chev', textContent: down ? '▾' : '▴', title: down ? 'הרחבת המענה' : 'מזעור המכתב והמענה' });
-    b.setAttribute('aria-label', b.title);
+    const b = chevron(!down, folding ? `q:${entry.id}` : `a:${entry.id}`, { title: down ? 'הרחבת המענה' : folding ? 'מזעור המכתב והמענה' : 'מזעור המענה' });
     b.addEventListener('click', () => {
+      turnChev(folding ? `q:${entry.id}` : `a:${entry.id}`);
       if (down) { expandEntry(entry); return; }
       delete entry.qOpen;
       if (entry.qLocked) unlockedQ.delete(entry.id);
@@ -2562,11 +2686,11 @@ function questionBubble(entry, conv) {
   let body;
   if (!open) { // one short line; a tap opens the letter
     const sealed = qSealed(entry);
-    const line = el('button', { type: 'button', className: 'q-sum', title: sealed ? 'פתיחה בטביעת אצבע' : 'הצגת המכתב והמענה' },
+    const line = el('button', { type: 'button', className: 'q-sum', title: sealed ? 'פתיחה בטביעת אצבע' : 'הצגת המכתב' },
       el('span', { className: 'q-sum-icon', textContent: sealed ? '🔒' : entry.kind === 'voice' ? '🎤' : entry.kind === 'photo' ? '📷' : '✉️' }),
       el('span', { className: 'q-sum-text', textContent: sealed ? 'מכתב נעול – לחצו לפתיחה' : sumOf(entry) }),
-      el('span', { className: 'chev', textContent: '▾' }));
-    line.addEventListener('click', () => { if (!selecting()) openLetter(entry); });
+      chevron(false, `q:${entry.id}`, { tag: 'span' }));
+    line.addEventListener('click', () => { if (!selecting()) { turnChev(`q:${entry.id}`); openLetter(entry); } });
     body = [line];
   } else {
     body = entry.kind === 'photo' ? photoBody(entry) : entry.kind === 'voice' ? voiceBody(entry) : [el('p', { textContent: entry.q })];
@@ -2623,9 +2747,9 @@ function entryNodes(entry, conv = convById(entry.conv)) {
     const chip = el('button', { type: 'button', className: `msg them collapsed-a${isUnread(entry) ? ' unread' : ''}` },
       readMark(entry),
       el('span', { className: 'ca-title', textContent: `${entry.a.title}${entry.fav ? ' ★' : ''}` }),
-      el('span', { className: 'ca-open chev', textContent: '▾' }));
+      chevron(false, `a:${entry.id}`, { tag: 'span', className: 'ca-open' }));
     chip.title = isUnread(entry) ? 'מענה חדש – לחצו לקריאה' : 'הרחבת המענה';
-    chip.addEventListener('click', () => expandEntry(entry));
+    chip.addEventListener('click', () => { turnChev(`a:${entry.id}`); expandEntry(entry); });
     selectable(chip, 'e', entry.id);
     if (entry.fav?.tags.length) { // the chosen tags stay in sight, under the minimized row
       const line = el('button', { type: 'button', className: 'fav-line', textContent: `★ ${entry.fav.tags.join(' · ')}`, title: 'הרחבת המענה והתגיות' });
@@ -3046,7 +3170,7 @@ function entryParts(e) {
     ...(e.qLocked ? [] : [['', e.q], ['', e.note], ['', e.sum]]), // a locked letter is not found by its text
     ['✉️', [a.title, a.volumeHeading, ...(a.letters || []).flatMap((l) => [l.number, l.pageText])].filter(Boolean).join(' · ')],
     ['💡', a.explanation],
-    ['🌐', a.translation],
+    ['🌐', [a.translation, ...Object.values(a.trAll || {}), ...Object.values(a.tr || {}).flatMap((m) => Object.values(m || {}))].filter(Boolean).join(' · ')],
     ['❝', a.keyQuote],
     ...(e.followups || []).flatMap((f) => [['❓', f.q], ['💬', f.a]]),
   ].filter(([, t]) => t);
@@ -3591,6 +3715,7 @@ async function setupNativeApp() {
   // Android back button: close what is open before leaving the app
   AppInfo.addListener('backButton', () => {
     if (closeLightbox()) return;
+    if (closePhoto()) return;
     if (dialog.open) { dialog.close(); return; }
     if (menuOpen()) { closeMenu(); return; }
     if ($('move-dialog').open) { $('move-dialog').close(); return; }
