@@ -28,6 +28,29 @@ const el = (tag, props = {}, ...children) => {
   return node;
 };
 
+/**
+ * Asks for a line of text in the app's own dialog, with `value` already in the box (Android's prompt() inside the
+ * app shows an empty box: Capacitor ignores the default value). Resolves to the text, or null when cancelled.
+ */
+function askText(message, value = '', { multiline = false, maxLength = 200 } = {}) {
+  return new Promise((resolve) => {
+    const field = el(multiline ? 'textarea' : 'input', { className: 'ask-field', value, maxLength, rows: 3 });
+    const ok = el('button', { type: 'submit', value: 'ok', textContent: 'אישור', className: 'primary' });
+    const cancel = el('button', { type: 'button', textContent: 'ביטול' });
+    const form = el('form', { method: 'dialog' }, el('label', { className: 'ask-label', textContent: message }), field,
+      el('div', { className: 'dialog-actions' }, cancel, ok));
+    const dlg = el('dialog', { className: 'settings ask-dialog' }, form);
+    let answer = null;
+    form.addEventListener('submit', () => { answer = field.value; });
+    cancel.addEventListener('click', () => dlg.close());
+    dlg.addEventListener('close', () => { dlg.remove(); resolve(answer); });
+    document.body.append(dlg);
+    dlg.showModal();
+    field.focus();
+    field.select();
+  });
+}
+
 // ---------- short sounds: recording started / ended, an answer arrived ----------
 let actx = null;
 function tone(freqs, dur = 0.1, gap = 0.11, vol = 0.14) {
@@ -138,7 +161,7 @@ let chevTurn = { key: '', at: 0 };
 const turnChev = (key) => { chevTurn = { key, at: Date.now() }; };
 function chevron(up, key, { tag = 'button', className = '', title = '' } = {}) {
   const turned = key && chevTurn.key === key && Date.now() - chevTurn.at < 900;
-  const n = el(tag, { className: ['chev', className, up && 'up', turned && 'turned'].filter(Boolean).join(' '), textContent: '▼' });
+  const n = el(tag, { className: ['chev', className, up && 'up', turned && 'turned'].filter(Boolean).join(' ') });
   if (tag === 'button') n.type = 'button';
   if (title) { n.title = title; n.setAttribute('aria-label', title); }
   return n;
@@ -397,14 +420,6 @@ function pageImageUrl(entry, page, side = '') {
   const query = [hl && `hl=${encodeURIComponent(hl)}`, side && `side=${side}`].filter(Boolean).join('&'); // side: one page of a spread
   return `${API}${page.imagePath}${query ? `?${query}` : ''}`;
 }
-/** When another page is shown than the one with the explanation's marks: says where they are. */
-function hlNote(entry, pager) {
-  const hs = entry?.a?.highlights || [];
-  if (!hs.length || hs.some((h) => h.spec === currentPage(pager).spec)) return '';
-  const at = pager.pages.findIndex((p) => hs.some((h) => h.spec === p.spec));
-  const where = at < 0 ? 'בעמוד אחר' : at === pager.opened ? 'בעמוד שנפתח' : at < pager.at ? 'בעמוד קודם' : 'בעמוד הבא';
-  return `🖍 הסימונים של ההסבר ${where}`;
-}
 function whereLabel(p) {
   const offset = p.at - p.opened;
   if (p.busy) return 'טוען…';
@@ -527,9 +542,7 @@ function paintLightbox() {
       toast('לא ניתן היה לטעון את תמונת העמוד. נסו שוב.');
     });
   }
-  const note = hlNote(lb.entry, p);
-  const where = sides && !p.busy ? `${whereLabel(p)} · ${sides[lb.side].side === 'right' ? 'עמוד ימין' : 'עמוד שמאל'}` : whereLabel(p);
-  $('lb-where').textContent = note ? `${where} · ${note}` : where;
+  $('lb-where').textContent = sides && !p.busy ? `${whereLabel(p)} · ${sides[lb.side].side === 'right' ? 'עמוד ימין' : 'עמוד שמאל'}` : whereLabel(p);
   $('lb-prev').disabled = p.busy || (!canTurn(p, -1) && (!sides || lb.side === 0));
   $('lb-next').disabled = p.busy || (!canTurn(p, 1) && (!sides || lb.side === sides.length - 1));
   $('lb-home').hidden = p.at === p.opened && (!sides || lb.side === 0);
@@ -808,13 +821,19 @@ function favPanel(entry) {
       chip.setAttribute('aria-pressed', String(on));
       chip.addEventListener('click', () => {
         entry.fav.tags = on ? chosen.filter((t) => t !== tag) : [...chosen, tag];
+        if (!entry.fav.tags.length) { // the last tag taken off: the star comes off too
+          delete entry.fav; delete entry.tagsOpen;
+          favChanged(entry); render();
+          toast('הוסר מהמועדפים');
+          return;
+        }
         favChanged(entry); paint();
       });
       row.append(chip);
     }
     const add = el('button', { type: 'button', className: 'chip', textContent: '+ תיאור משלך' });
-    add.addEventListener('click', () => {
-      const tag = (prompt('תיאור משלך:') || '').trim().slice(0, 20);
+    add.addEventListener('click', async () => {
+      const tag = ((await askText('תיאור משלך:', '', { maxLength: 20 })) || '').trim().slice(0, 20);
       if (tag && !entry.fav.tags.includes(tag)) { entry.fav.tags.push(tag); favChanged(entry); paint(); }
     });
     const remove = el('button', { type: 'button', className: 'chip remove', textContent: '☆ הסרה מהמועדפים' });
@@ -824,7 +843,18 @@ function favPanel(entry) {
       favChanged(entry); render();
     });
     row.append(add, remove);
-    box.append(row);
+    // more chips out of sight to the side: a fading edge with an arrow on that side, until the row is scrolled to its end
+    const wrap = el('div', { className: 'chip-scroll' }, row,
+      el('span', { className: 'more-edge start' }, el('b', { dir: 'ltr', textContent: '›' })), el('span', { className: 'more-edge end' }, el('b', { dir: 'ltr', textContent: '‹' })));
+    const edges = () => {
+      const max = row.scrollWidth - row.clientWidth;
+      const x = Math.abs(row.scrollLeft); // RTL: scrollLeft runs from 0 to -max
+      wrap.classList.toggle('more-end', max > 4 && x < max - 4);
+      wrap.classList.toggle('more-start', max > 4 && x > 4);
+    };
+    row.addEventListener('scroll', edges, { passive: true });
+    box.append(wrap);
+    requestAnimationFrame(edges);
   };
   paint();
   return box;
@@ -1188,8 +1218,8 @@ function showAcronymPop(p, found) {
     // the user's own reading of this abbreviation: kept on this device, shown first
     const mineB = el('button', { type: 'button', className: 'rt-btn', textContent: '＋', title: own().length ? 'עריכת הפירוש שלי' : 'הוספת פירוש משלי' });
     mineB.setAttribute('aria-label', mineB.title);
-    mineB.addEventListener('click', () => {
-      const v = prompt(`הפירוש שלך ל־${rtKey} (ריק = הסרת הפירוש שלך):`, own()[0] || '');
+    mineB.addEventListener('click', async () => {
+      const v = await askText(`הפירוש שלך ל־${rtKey} (ריק = הסרת הפירוש שלך):`, own()[0] || '', { maxLength: 120 });
       if (v === null) return;
       const before = own();
       state.abbr ??= {};
@@ -1475,10 +1505,7 @@ function analysisSection(entry) {
     if (!a.highlights) return null;
     const found = a.sourcesFound || 0, total = a.sourcesTotal || 0;
     if (!a.highlights.length) return total ? el('div', { className: 'hl-note', textContent: '🖍 הקטעים שההסבר מבוסס עליהם לא אותרו בעמוד.' }) : null;
-    const page = pagerOf(entry).pages[pagerOf(entry).opened];
-    const ids = new Set(a.highlights.map((h) => h.id));
-    const beyond = (page?.letters || []).filter((l) => ids.has(l.id)).flatMap((l) => [!l.startsOnPage && 'בעמוד הקודם', !l.endsOnPage && 'בעמוד הבא']).filter(Boolean);
-    const more = beyond.length ? ` האגרת המסומנת ממשיכה ${[...new Set(beyond)].join(' ו')} – ההסבר מתייחס רק למה שבעמוד שנפתח.` : '';
+    const more = '';
     const partial = found < total ? ` (${found} מתוך ${total} קטעים אותרו)` : '';
     return el('div', { className: 'hl-note', textContent: `🖍 הקטעים שעליהם מושתת ההסבר מסומנים במרקר על תמונת העמוד ובטקסט שבעמוד${partial}.${more}` });
   };
@@ -1554,6 +1581,8 @@ function analysisSection(entry) {
   return box;
 }
 
+const pageViews = new Map(); // entry id → { z: zoom of the page in the chat, spec shown, x / y: where it was scrolled }
+const ZOOM_MAX = 4;
 function answerBubble(entry) {
   const a = entry.a;
   const pager = pagerOf(entry);
@@ -1566,12 +1595,71 @@ function answerBubble(entry) {
   pageWhere.append(whereText, whereHome);
   const text = pageTextSection(entry, pager);
   const paintWhere = () => {
-    whereText.textContent = [pager.at === pager.opened ? '' : `📖 ${whereLabel(pager)}`, hlNote(entry, pager)].filter(Boolean).join(' · ');
+    whereText.textContent = pager.at === pager.opened ? '' : `📖 ${whereLabel(pager)}`;
     whereHome.hidden = pager.at === pager.opened;
     pageWhere.hidden = !whereText.textContent && whereHome.hidden;
   };
   const wait = el('span', { className: 'page-wait' });
-  const pageWrap = el('div', { className: `page-wrap empty${a.sides ? ' spread' : ''}` }, img, el('span', { className: 'page-spin' }), wait);
+  // The page in the chat: one image of the two facing pages, larger than the bubble, opened on the chosen page with
+  // the middle line in sight; a push sideways moves to the other page, a pinch or the rail (+ / −) zooms.
+  const pv = pageViews.get(entry.id) || { z: a.sides && narrowScreen() ? 1.8 : 1, spec: null, x: 0, y: 0 };
+  pageViews.set(entry.id, pv);
+  const scroller = el('div', { className: 'page-scroll' }, img);
+  const pageWrap = el('div', { className: `page-wrap empty${a.sides ? ' spread' : ''}` }, scroller, el('span', { className: 'page-spin' }), wait);
+  const ratio = () => (currentPage(pager).sides || a.sides ? 2200 : 1100) / 1560;
+  const thumb = el('span', { className: 'zr-thumb' });
+  const track = el('span', { className: 'zr-track' }, thumb);
+  const zoomTo = (z, cx = 0.5, cy = 0.5) => {
+    const fx = (scroller.scrollLeft + scroller.clientWidth * cx) / (scroller.scrollWidth || 1);
+    const fy = (scroller.scrollTop + scroller.clientHeight * cy) / (scroller.scrollHeight || 1);
+    pv.z = Math.min(ZOOM_MAX, Math.max(1, z));
+    img.style.width = `${pv.z * 100}%`;
+    scroller.style.aspectRatio = pageWrap.classList.contains('empty') ? String(ratio() / pv.z) : '';
+    scroller.scrollLeft = fx * scroller.scrollWidth - scroller.clientWidth * cx;
+    scroller.scrollTop = fy * scroller.scrollHeight - scroller.clientHeight * cy;
+    thumb.style.bottom = `${((pv.z - 1) / (ZOOM_MAX - 1)) * 100}%`;
+  };
+  /** The page of the spread to show first: going back the left-hand one, otherwise the right-hand one (if it has text). */
+  const placeSide = () => {
+    const page = currentPage(pager);
+    const sides = (page.sides || []).map((x) => x.side);
+    let want = pager.at < pager.opened ? 'left' : 'right';
+    if (sides.length && !sides.includes(want)) [want] = sides;
+    scroller.scrollLeft = want === 'right' ? scroller.scrollWidth : 0; // the other page's edge and the middle line stay in sight
+    scroller.scrollTop = 0;
+  };
+  img.addEventListener('load', () => {
+    zoomTo(pv.z);
+    if (pv.spec !== currentPage(pager).spec) { pv.spec = currentPage(pager).spec; placeSide(); } else { scroller.scrollLeft = pv.x; scroller.scrollTop = pv.y; }
+  });
+  scroller.addEventListener('scroll', () => { pv.x = scroller.scrollLeft; pv.y = scroller.scrollTop; }, { passive: true });
+  { // two fingers on the page zoom it, around the point between them
+    let pin = null;
+    const dist = (e) => Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    scroller.addEventListener('touchstart', (e) => { pin = e.touches.length === 2 ? { d: dist(e), z: pv.z } : null; }, { passive: true });
+    scroller.addEventListener('touchmove', (e) => {
+      if (!pin || e.touches.length !== 2) return;
+      e.preventDefault();
+      const r = scroller.getBoundingClientRect();
+      const cx = ((e.touches[0].clientX + e.touches[1].clientX) / 2 - r.left) / r.width;
+      const cy = ((e.touches[0].clientY + e.touches[1].clientY) / 2 - r.top) / r.height;
+      zoomTo(pin.z * (dist(e) / pin.d), cx, cy);
+    }, { passive: false });
+    for (const ev of ['touchend', 'touchcancel']) scroller.addEventListener(ev, (e) => { if (e.touches.length < 2) pin = null; }, { passive: true });
+  }
+  { // the rail: + on top, − at the bottom, a dotted track between them (drag or tap on it)
+    const plus = el('button', { type: 'button', className: 'zr-btn', textContent: '+', title: 'הגדלה' });
+    const minus = el('button', { type: 'button', className: 'zr-btn', textContent: '−', title: 'הקטנה' });
+    plus.addEventListener('click', (e) => { e.stopPropagation(); zoomTo(pv.z * 1.25); });
+    minus.addEventListener('click', (e) => { e.stopPropagation(); zoomTo(pv.z / 1.25); });
+    const fromY = (e) => { const r = track.getBoundingClientRect(); zoomTo(1 + (1 - Math.min(1, Math.max(0, (e.clientY - r.top) / r.height))) * (ZOOM_MAX - 1)); };
+    track.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); track.setPointerCapture(e.pointerId); fromY(e); });
+    track.addEventListener('pointermove', (e) => { if (track.hasPointerCapture(e.pointerId)) fromY(e); });
+    const rail = el('div', { className: 'zoom-rail', title: 'הגדלה והקטנה של העמוד' }, plus, track, minus);
+    rail.addEventListener('click', (e) => e.stopPropagation());
+    pageWrap.append(rail);
+  }
+  zoomTo(pv.z);
   let swap = 0;
   // The image is fetched in the background and shown only when it is whole; until then the page that
   // was shown stays (or an empty page, the first time) under a loading animation.
@@ -1583,7 +1671,7 @@ function answerBubble(entry) {
     text.paint();
     if (img.dataset.url === url) { swap += 1; pageWrap.classList.remove('loading', 'marking'); return; }
     const mine = ++swap;
-    const show = (local, u) => { img.src = local; img.dataset.url = u; pageWrap.classList.remove('empty'); };
+    const show = (local, u) => { img.src = local; img.dataset.url = u; pageWrap.classList.remove('empty'); scroller.style.aspectRatio = ''; };
     const marked = url !== plain;
     wait.textContent = marked ? '🖍 מסמנים בעמוד את הקטעים שעליהם נשען ההסבר…' : 'טוען את העמוד…';
     pageWrap.classList.add('loading');
@@ -2614,9 +2702,12 @@ function paintSend() {
 const unlockedQ = new Set(); // locked letters that were opened in this session
 const letterOf = (e) => (e.kind === 'photo' ? (String(e.note || '').trim() || e.q) : e.q);
 const shortLine = (t, n = 8) => { const w = String(t || '').trim().split(/\s+/); return w.length > n ? `${w.slice(0, n).join(' ')}…` : w.join(' '); };
-const sumOf = (e) => e.sum || shortLine(e.kind === 'photo' && !String(e.note || '').trim() ? e.q.replace(`${PHOTO_Q} – `, '') : letterOf(e));
+const sumOf = (e) => e.sum || shortLine(e.kind === 'photo' && !String(e.note || '').trim() ? e.q.replace(`${PHOTO_Q} – `, '') : letterOf(e), 20);
 const qSealed = (e) => !!e.qLocked && !unlockedQ.has(e.id);
-const folds = (e) => !e.draft && !(e.kind === 'photo' && e.pending) && (!!e.kind || !!e.qLocked || String(e.q || '').length > 70);
+const isLong = (e) => !!e.kind || String(e.q || '').length > 70;
+const folds = (e) => !e.draft && !(e.kind === 'photo' && e.pending);
+/** The folded letter's text (two lines at most): a short letter itself, a long one its summary line. */
+const foldText = (e) => (!isLong(e) && !e.sumEdited ? String(e.q || '').trim() : sumOf(e));
 async function openLetter(entry) {
   if (qSealed(entry)) {
     if (!await authenticate('פתיחת המכתב הנעול')) return;
@@ -2636,8 +2727,8 @@ async function toggleLetterLock(entry) {
   }
   save(); render();
 }
-function editSummary(entry) {
-  const v = prompt('שורה קצרה שתוצג כשהמכתב מכווץ (ריק = ניסוח אוטומטי):', sumOf(entry));
+async function editSummary(entry) {
+  const v = await askText('השורה שמוצגת כשהמכתב מכווץ (ריק = ניסוח אוטומטי):', sumOf(entry), { multiline: true, maxLength: 80 });
   if (v === null) return;
   if (v.trim()) { entry.sum = v.trim().slice(0, 80); entry.sumEdited = true; } else { delete entry.sum; delete entry.sumEdited; }
   if (entry.a) syncEntry(entry); else save();
@@ -2688,7 +2779,7 @@ function questionBubble(entry, conv) {
     const sealed = qSealed(entry);
     const line = el('button', { type: 'button', className: 'q-sum', title: sealed ? 'פתיחה בטביעת אצבע' : 'הצגת המכתב' },
       el('span', { className: 'q-sum-icon', textContent: sealed ? '🔒' : entry.kind === 'voice' ? '🎤' : entry.kind === 'photo' ? '📷' : '✉️' }),
-      el('span', { className: 'q-sum-text', textContent: sealed ? 'מכתב נעול – לחצו לפתיחה' : sumOf(entry) }),
+      el('span', { className: 'q-sum-text', textContent: sealed ? 'מכתב נעול – לחצו לפתיחה' : foldText(entry) }),
       chevron(false, `q:${entry.id}`, { tag: 'span' }));
     line.addEventListener('click', () => { if (!selecting()) { turnChev(`q:${entry.id}`); openLetter(entry); } });
     body = [line];
@@ -2697,7 +2788,7 @@ function questionBubble(entry, conv) {
     if (folding || (!entry.draft && mine && !entry.kind)) {
       const row = el('div', { className: 'q-row' });
       const btn = (text, title, fn) => { const b = el('button', { type: 'button', textContent: text, title }); b.addEventListener('click', () => { if (!selecting()) fn(); }); row.append(b); };
-      if (mine && folding) btn('✎ שורת סיכום', 'עריכת השורה שמוצגת כשהמכתב מכווץ', () => editSummary(entry));
+      if (mine && isLong(entry)) btn('✎ שורת סיכום', 'עריכת השורה שמוצגת כשהמכתב מכווץ', () => editSummary(entry));
       if (mine) btn(entry.qLocked ? '🔓 ביטול נעילה' : '🔒 נעילה', 'נעילת טקסט המכתב במכשיר זה – פתיחה בטביעת אצבע', () => toggleLetterLock(entry));
       if (mine && entry.kind === 'voice' && !entry.draft) btn('🎤✕ מחיקת ההקלטה', 'ההקלטה תימחק והטקסט של המכתב יישאר', () => dropRecording(entry));
       body.push(row);
@@ -2705,7 +2796,7 @@ function questionBubble(entry, conv) {
   }
   const node = el('div', { className: `msg ${mine ? 'me' : 'them other'}${entry.kind && open ? ` ${entry.kind}-msg` : ''}` }, tools,
     !mine && el('div', { className: 'sender', textContent: `✉️ מכתב של ${who}` }),
-    ...body, !(entry.kind === 'voice' && open && !entry.audioGone) && time(entry.ts));
+    ...body, !(entry.kind === 'voice' && open && !entry.audioGone) && el('div', { className: 'q-foot' }, entry.a && readMark(entry), time(entry.ts)));
   if (isShared(conv)) swipeToReply(node, { kind: 'entry', id: entry.id, name: who, text: entry.qLocked ? 'מכתב נעול' : entry.q.slice(0, 80) });
   return selectable(node, 'e', entry.id);
 }
@@ -2987,7 +3078,7 @@ function paintCollapseAll(conv) {
 }
 
 async function renameConv(conv) {
-  const t = prompt('שם השיחה:', conv.title);
+  const t = await askText('שם השיחה:', conv.title, { maxLength: 50 });
   if (!t || !t.trim()) return;
   conv.title = t.trim().slice(0, 50); save(); render();
   if (conv.cloud) await cloud.renameConv(conv.id, conv.title).catch(() => alert('שינוי השם לא נשמר בחשבון.'));
@@ -3049,7 +3140,7 @@ async function copyConvLink(conv) {
   try {
     const link = await conversationLink(conv);
     if (!link) return;
-    if (await copyText(link)) toast('🔗 הקישור לשיחה הועתק'); else prompt('העתיקו את הקישור:', link);
+    if (await copyText(link)) toast('🔗 הקישור לשיחה הועתק'); else await askText('העתיקו את הקישור:', link, { maxLength: 2000 });
   } catch (e) { alert(e.message); }
 }
 
