@@ -820,13 +820,8 @@ function favPanel(entry) {
       const chip = el('button', { type: 'button', className: `chip${on ? ' on' : ''}`, textContent: tag });
       chip.setAttribute('aria-pressed', String(on));
       chip.addEventListener('click', () => {
+        // the last tag taken off: the bar stays open; the star comes off when the bar is closed (star / answer minimized)
         entry.fav.tags = on ? chosen.filter((t) => t !== tag) : [...chosen, tag];
-        if (!entry.fav.tags.length) { // the last tag taken off: the star comes off too
-          delete entry.fav; delete entry.tagsOpen;
-          favChanged(entry); render();
-          toast('הוסר מהמועדפים');
-          return;
-        }
         favChanged(entry); paint();
       });
       row.append(chip);
@@ -843,9 +838,8 @@ function favPanel(entry) {
       favChanged(entry); render();
     });
     row.append(add, remove);
-    // more chips out of sight to the side: a fading edge with an arrow on that side, until the row is scrolled to its end
-    const wrap = el('div', { className: 'chip-scroll' }, row,
-      el('span', { className: 'more-edge start' }, el('b', { dir: 'ltr', textContent: '›' })), el('span', { className: 'more-edge end' }, el('b', { dir: 'ltr', textContent: '‹' })));
+    // more chips out of sight to the side: the chips fade out on that side (nothing over them – a tap reaches the chip)
+    const wrap = el('div', { className: 'chip-scroll' }, row); // more chips out of sight: the row fades out on that side
     const edges = () => {
       const max = row.scrollWidth - row.clientWidth;
       const x = Math.abs(row.scrollLeft); // RTL: scrollLeft runs from 0 to -max
@@ -1317,19 +1311,44 @@ function trWhole(a, lang) {
   if (a.trAll?.[lang]) return a.trAll[lang];
   return a.translation && (a.analysisLanguage || 'he') === lang ? a.translation : '';
 }
+/** Languages written left to right: their text is aligned to the left. */
+const dirOf = (lang) => (lang && lang !== 'he' && lang !== 'yi' ? 'ltr' : 'rtl');
+const numKey = (n) => String(n || '').replace(/["'׳״\s]/g, '');
+/**
+ * A translation of the whole page (written with the analysis) cut into its letters by the "אגרת <number>" headings
+ * in it – { <letter id>: text } for the letters it could be matched to (the translation is shown letter by letter).
+ */
+function splitWhole(a, lang) {
+  const text = trWhole(a, lang);
+  if (!text) return {};
+  const letters = trLetters(a);
+  const out = {};
+  const parts = text.split(/^[ \t]*(?:אגרת|איגרת|letter|письмо|lettre|carta)\s+([^\n:]{1,20}?)\s*:?[ \t]*$/imu);
+  for (let i = 1; i + 1 < parts.length; i += 2) {
+    const l = letters.find((x) => numKey(x.number) === numKey(parts[i]));
+    if (l && parts[i + 1].trim()) out[l.id] = parts[i + 1].trim();
+  }
+  if (!Object.keys(out).length && parts.length === 1) { // no headings: one letter to translate on the page takes it all
+    const need = letters.filter((l) => lang !== 'he' || isYiddish(l.pageText));
+    if (need.length === 1) out[need[0].id] = text.trim();
+  }
+  return out;
+}
+/** The page's translation to `lang`, letter by letter: { <letter id>: text }. */
+const trMap = (a, lang) => ({ ...splitWhole(a, lang), ...(a.tr?.[lang] || {}) });
 /** How much of the page there is in `lang`: { done, total, missing: [letter ids], translated: count }. */
 function trStatus(a, lang) {
   const letters = trLetters(a);
-  const mine = a.tr?.[lang] || {};
-  const whole = !!trWhole(a, lang);
+  const mine = trMap(a, lang);
   const missing = [];
   let translated = 0;
   for (const l of letters) {
     if (mine[l.id]) translated += 1;
-    else if (!(lang === 'he' && !isYiddish(l.pageText)) && !whole) missing.push(l.id);
+    else if (!(lang === 'he' && !isYiddish(l.pageText))) missing.push(l.id);
   }
-  return { total: letters.length, done: letters.length - missing.length, missing, translated: translated + (whole ? 1 : 0) };
+  return { total: letters.length, done: letters.length - missing.length, missing, translated };
 }
+const trFailed = new Map(); // entry id → { lang, numbers }: letters the AI handed back untranslated (this session only)
 const trLangs = (a) => LANGS.map(([v]) => v).filter((v) => v && trStatus(a, v).translated);
 
 /** Translates the letters of the opened page that are not in `language` yet, and keeps the translation. */
@@ -1352,7 +1371,10 @@ async function translatePage(entry, language) {
     a.tr ??= {};
     a.tr[language] = { ...(a.tr[language] || {}) };
     for (const l of r.letters || []) if (l.text) a.tr[language][l.id] = l.text;
-    toast(`האיגרות תורגמו ל${langName(language)}`);
+    const failed = trLetters(a).filter((l) => (r.failed || []).includes(l.id)).map((l) => l.number);
+    if (failed.length) trFailed.set(entry.id, { lang: language, numbers: failed }); else trFailed.delete(entry.id);
+    if (failed.length) toast(`${failed.length > 1 ? 'האיגרות' : 'האגרת'} ${failed.join(', ')} לא תורגמו – נסו שוב מ"🌐 תרגם".`);
+    else toast(`האיגרות תורגמו ל${langName(language)}`);
   } catch (e) {
     alert(`התרגום נכשל: ${e.message}`);
   } finally {
@@ -1414,8 +1436,7 @@ function translationSection(entry) {
   if (!langs.length && !entry.trBusy) return null;
   const lang = entry.trBusy || (langs.includes(entry.trLang) ? entry.trLang : langs.includes(a.analysisLanguage) ? a.analysisLanguage : langs[0]);
   const spec = specOf(a.imagePath);
-  const mine = a.tr?.[lang] || {};
-  const whole = trWhole(a, lang);
+  const mine = trMap(a, lang);
   const yiddish = lang === 'he' && trLetters(a).some((l) => isYiddish(l.pageText));
   const box = el('details', { className: 'tr-part fold', open: !!entry.translationOpen },
     el('summary', {}, el('span', { className: 'sum-label', textContent: `📖 תרגום ${yiddish ? 'מאידיש ' : 'האיגרות '}ל${langName(lang)}` })));
@@ -1429,16 +1450,27 @@ function translationSection(entry) {
   }
   box.append(el('div', { className: 'ai-warn', textContent: '⚠️ תרגום ממוחשב (AI) – עלולות להיות בו טעויות. הנוסח המחייב הוא לשון האגרת עצמה.' }));
   if (entry.trBusy) box.append(el('div', { className: 'wait-line' }, el('span', { className: 'spinner' }), `מתרגמים את האיגרות ל${langName(entry.trBusy)}…`));
+  const failed = trFailed.get(entry.id);
+  if (failed?.lang === lang && !entry.trBusy) box.append(el('div', { className: 'note', textContent: `⚠️ ${failed.numbers.length > 1 ? 'האיגרות' : 'האגרת'} ${failed.numbers.join(', ')} לא תורגמו הפעם. אפשר לנסות שוב מ"🌐 תרגם".` }));
+  // letter by letter, each under its number like the letters' text, with its original a tap away
   const letters = trLetters(a).filter((l) => mine[l.id]);
   for (const l of letters) {
+    const orig = el('div', { className: 'tr-orig', hidden: true });
+    const show = el('button', { type: 'button', className: 'link-btn', textContent: '📜 הנוסח המקורי' });
+    show.addEventListener('click', () => {
+      orig.hidden = !orig.hidden;
+      show.textContent = orig.hidden ? '📜 הנוסח המקורי' : '📜 הסתרת הנוסח המקורי';
+      if (!orig.hidden && !orig.childNodes.length) orig.append(pageParagraph(l.pageText, `P:${spec}:${l.id}`, spec, aiRangesOf(entry, spec, l.id)));
+    });
+    const body = pageParagraph(mine[l.id], `TR:${entry.id}:${lang}:${l.id}`, spec);
+    body.dir = dirOf(lang);
     box.append(el('div', { className: 'letter' },
       el('div', { className: 'letter-num', textContent: `אגרת ${l.number}` }),
-      pageParagraph(mine[l.id], `TR:${entry.id}:${lang}:${l.id}`, spec)));
+      body, el('div', { className: 'links' }, show), orig));
   }
-  if (!letters.length && whole) box.append(pageParagraph(whole, `T:${entry.id}`, spec));
   const kept = lang === 'he' ? trLetters(a).filter((l) => !mine[l.id] && !isYiddish(l.pageText)) : [];
-  if (kept.length && !whole) box.append(el('div', { className: 'note', textContent: `${kept.length > 1 ? 'האיגרות' : 'האגרת'} ${kept.map((l) => l.number).join(', ')} כתובות בעברית ואינן מתורגמות.` }));
-  if (isOwner(convById(entry.conv)) && (letters.length || whole) && !entry.trBusy) {
+  if (kept.length) box.append(el('div', { className: 'note', textContent: `${kept.length > 1 ? 'האיגרות' : 'האגרת'} ${kept.map((l) => l.number).join(', ')} כתובות בעברית ואינן מתורגמות.` }));
+  if (isOwner(convById(entry.conv)) && letters.length && !entry.trBusy) {
     const del = el('button', { type: 'button', className: 'del-btn', textContent: `🗑 מחיקת התרגום ל${langName(lang)}` });
     del.addEventListener('click', () => {
       if (!confirm(`למחוק את התרגום ל${langName(lang)}? אפשר יהיה לתרגם שוב.`)) return;
@@ -1538,7 +1570,7 @@ function analysisSection(entry) {
   const thread = el('div', { className: 'followups' },
     ...qa.flatMap((f, i) => [
       el('div', { className: 'fq', textContent: f.q }),
-      el('div', { className: 'fa' }, pageParagraph(f.a, `F:${entry.id}:${i}`, spec)),
+      el('div', { className: 'fa', dir: dirOf(a.analysisLanguage) }, pageParagraph(f.a, `F:${entry.id}:${i}`, spec)),
     ]));
   const fu = el('details', { className: 'ana-part fold', open: !!entry.followupsOpen },
     el('summary', {}, el('span', { className: 'sum-label', textContent: `💬 שאלות המשך${qa.length ? ` (${qa.length})` : ''}` })),
@@ -1570,9 +1602,9 @@ function analysisSection(entry) {
 
   const sub = el('details', { className: 'ana-part fold', open: !!entry.analysisOpen },
     el('summary', {}, el('span', { className: 'sum-label', textContent: '✨ כיצד המענה מתייחס למכתב' })),
-    a.keyQuote && el('div', { className: 'quote', textContent: a.keyQuote }),
+    a.keyQuote && el('div', { className: 'quote', dir: 'auto', textContent: a.keyQuote }),
     picked(),
-    pageParagraph(a.explanation, `E:${entry.id}`, spec),
+    Object.assign(pageParagraph(a.explanation, `E:${entry.id}`, spec), { dir: dirOf(a.analysisLanguage) }),
     marksNote(),
     (canAsk && spec) || qa.length ? fu : null,
     canAsk && el('div', { className: 'del-row' }, clear));
@@ -2909,6 +2941,7 @@ function setRead(entry, read = true) {
 }
 /** Minimizes an answer – and every section inside it, so it opens again the way it was first shown. */
 function collapseEntry(entry) {
+  if (entry.fav && !entry.fav.tags.length && entry.tagsOpen) { delete entry.fav; favChanged(entry); } // starred, no tag chosen, bar closed
   entry.collapsed = true;
   delete entry.qOpen;
   for (const k of ['showMore', 'analysisOpen', 'translationOpen', 'followupsOpen', 'textOpen', 'tagsOpen', 'pickedOpen', 'analysisClosed', 'followupsClosed']) delete entry[k];
@@ -3854,6 +3887,7 @@ async function setupNativeApp() {
     if (phase === 'done' && latest) paintUpdate('available', `גרסה חדשה זמינה: ${latest.versionName} (מותקנת: ${current.version || current.build}).`);
     dialog.showModal();
     paintUpdate();
+    if (phase === 'idle') check(); // in the background as the dialog opens: "בודק…" and then the result
   };
   nativeSettings = openSettings;
   dialog.addEventListener('close', () => paintUpdate());
@@ -3874,7 +3908,7 @@ async function setupNativeApp() {
         paintUpdate('idle', `האפליקציה מעודכנת (${current.version}).`);
       }
     } catch {
-      if (!quiet) paintUpdate('idle', 'לא ניתן היה לבדוק עדכונים. בדקו את החיבור ואת כתובת השרת.');
+      if (!quiet) paintUpdate('idle', 'הבדיקה לא הושלמה (אין חיבור לשרת). אפשר לנסות שוב.');
     }
   }
 

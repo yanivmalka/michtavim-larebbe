@@ -529,13 +529,11 @@ details.ana-part details.ana-part { margin-inline-start: 4px; }
 .q-foot .time { margin-top: 0; }
 /* the tags row: a fading edge with an arrow on the side where more chips are out of sight */
 .chip-scroll { position: relative; }
-.chip-scroll .more-edge { position: absolute; top: 4px; bottom: 8px; width: 44px; display: none; align-items: center; pointer-events: none;
-  font-size: 1.1rem; font-weight: 700; color: #fff; }
-.chip-scroll .more-edge.end { left: 0; justify-content: flex-start; background: linear-gradient(to right, var(--them) 55%, transparent); }
-.chip-scroll .more-edge.start { right: 0; justify-content: flex-end; background: linear-gradient(to left, var(--them) 55%, transparent); }
-.chip-scroll .more-edge > b { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%;
-  background: var(--accent); color: #fff; font-size: .95rem; line-height: 1; }
-.chip-scroll.more-end .more-edge.end, .chip-scroll.more-start .more-edge.start { display: flex; }
+.chip-scroll.more-end .chip-row { -webkit-mask-image: linear-gradient(to right, transparent 0, #000 44px); mask-image: linear-gradient(to right, transparent 0, #000 44px); }
+.chip-scroll.more-start .chip-row { -webkit-mask-image: linear-gradient(to left, transparent 0, #000 44px); mask-image: linear-gradient(to left, transparent 0, #000 44px); }
+.chip-scroll.more-start.more-end .chip-row { -webkit-mask-image: linear-gradient(to right, transparent 0, #000 44px, #000 calc(100% - 44px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, #000 44px, #000 calc(100% - 44px), transparent 100%); }
+.tr-orig { margin-top: 4px; padding-inline-start: 8px; border-inline-start: 2px solid var(--border); }
 /* a line of text asked in the app's own dialog */
 .ask-dialog .ask-label { display: block; margin-bottom: 8px; }
 .ask-dialog .ask-field { width: 100%; padding: 8px; font: inherit; border: 1px solid var(--border); border-radius: 6px; background: var(--input); color: var(--text); resize: vertical; }
