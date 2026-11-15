@@ -1,7 +1,7 @@
 // Chooses the AI provider: AI_PROVIDER=gemini|claude, or whichever has a key (Gemini first).
 import {
-  explainAnswer, followUpClaude, translateClaude, acronymsClaude, readPhotoClaude, claudeAvailable, smallJsonClaude,
-  SUMMARY_SYSTEM, summarySchema, SummarySchema, ARAMAIC_SYSTEM, aramaicSchema, AramaicSchema,
+  explainAnswer, followUpClaude, translateClaude, LETTERS_TRANSLATE_SYSTEM, acronymsClaude, readPhotoClaude, claudeAvailable, smallJsonClaude,
+  SUMMARY_SYSTEM, summarySchema, SummarySchema,
 } from './explain.js';
 import {
   explainWithGemini, followUpWithGemini, translateWithGemini, acronymsWithGemini, readPhotoWithGemini, transcribeWithGemini, geminiAvailable, generateJson,
@@ -35,6 +35,13 @@ export async function translateTexts(input) {
 }
 const translateWith = (p, input) => (p === 'gemini' ? translateWithGemini(input) : translateClaude(input));
 
+/** Translates letters of the page (one string each) to another language, keeping their order. */
+export async function translateLetterTexts({ language, items }) {
+  const p = provider();
+  if (!p) throw new Error('AI_NOT_CONFIGURED');
+  return translateWith(p, { language, items, system: LETTERS_TRANSLATE_SYSTEM });
+}
+
 /** Expands abbreviations (ראשי תיבות) in the context of the page. */
 export async function expandAcronyms(input) {
   const p = provider();
@@ -66,10 +73,3 @@ export async function summarizeLetter({ letter }) {
   return SummarySchema.parse(await smallJson({ system: SUMMARY_SYSTEM, schema: summarySchema, text: `המכתב:\n"""\n${letter}\n"""` }));
 }
 
-/** The Aramaic phrase around `word` in `sentence`, translated to `language`. */
-export async function translateAramaic({ sentence, word, language }) {
-  return AramaicSchema.parse(await smallJson({
-    system: ARAMAIC_SYSTEM, schema: aramaicSchema,
-    text: `שפת היעד: ${language}\n\nהמשפט:\n"""\n${sentence}\n"""\n\nהמילה שסומנה: ${JSON.stringify(word)}`,
-  }));
-}

@@ -667,7 +667,7 @@ export function gematria(word) {
 
 /**
  * Possible expansions of `word` – from the dictionary (with Hebrew prefixes such as ו/ב/ל stripped),
- * then as a number or a year. Returns { stem, prefix, options } or null if nothing is known.
+ * then as a year. Returns { stem, prefix, options } or null if nothing is known.
  */
 export function expand(word) {
   const w = normalize(word).replace(/^["'.,;:(\[]+/, '').replace(/[.,;:!?)\]]+$/, '').replace(/"$/, '');
@@ -696,17 +696,12 @@ export function expand(word) {
       options.push(`${stem}ה`, `${stem}ו`);
     }
   }
-  // numbers and years: ב' = 2, י"ב = 12, תשי"ג = שנת 5713
+  // years: תשי"ג = שנת 5713. A gematria value is not a reading of an abbreviation, so it is not offered.
   const core = w.replace(/^ה'/, '');
   const n = gematria(core);
-  if (n != null && /^[א-ת]'$/.test(core)) options.push(`${n}`);
-  if (n != null && /"/.test(core) && letters.length >= 2 && (!hit || letters.length <= 2)) {
-    if (n >= 600 && n < 1000 && !hit) {
-      const year = 5000 + n;
-      options.push(`שנת ${w} – ${year} לבריאת העולם (${year - 3761}–${year - 3760})`);
-    } else if (n <= 400) {
-      options.push(`${n} (בגימטריה)`);
-    }
+  if (!hit && n != null && /"/.test(core) && letters.length >= 2 && n >= 600 && n < 1000) {
+    const year = 5000 + n;
+    options.push(`שנת ${w} – ${year} לבריאת העולם (${year - 3761}–${year - 3760})`);
   }
   return options.length ? { stem: prefix ? w.slice(prefix.length) : w, prefix, options: [...new Set(options)] } : null;
 }

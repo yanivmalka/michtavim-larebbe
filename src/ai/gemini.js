@@ -89,8 +89,8 @@ export async function generateJson({ system, text, schema: responseSchema, tempe
 }
 
 /** Translates `items` (strings) to `language` (ISO 639-1), keeping their order. */
-export async function translateWithGemini({ language, items }) {
-  const out = await generateJson({ system: TRANSLATE_SYSTEM, text: `שפת היעד: ${language}\n\n${JSON.stringify({ items })}`, schema: translateSchema });
+export async function translateWithGemini({ language, items, system = TRANSLATE_SYSTEM }) {
+  const out = await generateJson({ system, text: `שפת היעד: ${language}\n\n${JSON.stringify({ items })}`, schema: translateSchema });
   return TranslateSchema.parse(out).items;
 }
 
