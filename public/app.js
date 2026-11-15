@@ -1655,8 +1655,15 @@ function answerBubble(entry) {
     const fromY = (e) => { const r = track.getBoundingClientRect(); zoomTo(1 + (1 - Math.min(1, Math.max(0, (e.clientY - r.top) / r.height))) * (ZOOM_MAX - 1)); };
     track.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); track.setPointerCapture(e.pointerId); fromY(e); });
     track.addEventListener('pointermove', (e) => { if (track.hasPointerCapture(e.pointerId)) fromY(e); });
-    const rail = el('div', { className: 'zoom-rail', title: 'הגדלה והקטנה של העמוד' }, plus, track, minus);
+    // shrinks to a magnifier as soon as the page is moved (it would hide the text); a tap on it opens the rail again
+    const open = el('button', { type: 'button', className: 'zr-open', textContent: '🔍', title: 'הגדלה והקטנה' });
+    open.addEventListener('click', (e) => { e.stopPropagation(); pv.mini = false; rail.classList.remove('mini'); });
+    const rail = el('div', { className: `zoom-rail${pv.mini ? ' mini' : ''}`, title: 'הגדלה והקטנה של העמוד' }, plus, track, minus, open);
     rail.addEventListener('click', (e) => e.stopPropagation());
+    const shrink = () => { if (!pv.mini) { pv.mini = true; rail.classList.add('mini'); } };
+    scroller.addEventListener('touchstart', shrink, { passive: true });
+    scroller.addEventListener('pointerdown', (e) => { if (e.pointerType === 'mouse') shrink(); });
+    scroller.addEventListener('wheel', shrink, { passive: true });
     pageWrap.append(rail);
   }
   zoomTo(pv.z);
@@ -2688,6 +2695,7 @@ for (const e of state.entries) { delete e.translating; delete e.trBusy; }
 function paintSend() {
   const mic = !rec.active && toRebbe && !input.value.trim();
   const kind = rec.active ? (rec.locked ? 'check' : 'holding') : mic ? 'mic' : 'arrow';
+  $('pill').classList.toggle('has-text', !!input.value.trim()); // the pill's buttons then sit in a row under the text
   $('dictate').hidden = !(kind === 'arrow' && toRebbe); // there is text: the round button sends, and a small microphone adds a recording to it
   if (send.dataset.kind === kind) return;
   send.dataset.kind = kind;

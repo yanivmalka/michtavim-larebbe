@@ -75,6 +75,10 @@ details summary { cursor: pointer; color: var(--muted); font-size: .85rem; margi
 /* proportions like a messaging app: a tall pill and a round button of the same height */
 .pill { flex: 1; min-width: 0; display: flex; align-items: flex-end; border-radius: 27px; background: var(--input); padding-inline-end: 6px; }
 .pill[hidden] { display: none; }
+/* once there is text, the pill's buttons move to a row under it, so the text keeps the whole width */
+.pill.has-text { flex-wrap: wrap; justify-content: flex-end; padding-bottom: 2px; }
+.pill.has-text textarea { flex-basis: 100%; padding-inline-end: 20px; padding-bottom: 4px; }
+.pill.has-text .pill-btn { height: 40px; }
 .composer textarea { flex: 1; min-width: 0; resize: none; border: 0; border-radius: 27px; padding: 14px 20px; padding-inline-end: 4px; line-height: 1.45; min-height: 54px;
   font: inherit; font-size: 1.05rem; background: transparent; color: var(--text); max-height: min(35dvh, 220px); overflow-y: auto; outline: none; }
 .pill-btn { flex: none; width: 42px; height: 54px; border: 0; background: none; color: var(--muted); cursor: pointer; display: grid; place-items: center; padding: 0; font-size: 1.2rem; }
@@ -213,22 +217,22 @@ body.marker-mode .hl { outline: 2px dashed #e0c040; outline-offset: 3px; border-
 .msg.me { position: relative; padding-top: 6px; }
 .q-tools { display: flex; gap: 2px; justify-content: flex-end; margin: -2px -4px 2px; }
 /* every expand / collapse control: the same round chevron, always at the left end of its row */
-/* one equilateral triangle, drawn around its own centre, that turns 60° between "closed" (a vertex down) and "open"
-   (the next vertex up) – like a screw: opening turns it counter-clockwise, closing clockwise */
-:root { --chev-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 42 42'%3E%3Cpolygon points='21,30.5 12.8,16.25 29.2,16.25' fill='%231f3a5f' stroke='%231f3a5f' stroke-width='2.5' stroke-linejoin='round'/%3E%3C/svg%3E"); }
-@media (prefers-color-scheme: dark) { :root { --chev-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 42 42'%3E%3Cpolygon points='21,30.5 12.8,16.25 29.2,16.25' fill='%237fb2e5' stroke='%237fb2e5' stroke-width='2.5' stroke-linejoin='round'/%3E%3C/svg%3E"); } }
-.chev, .fold > summary::after { flex: none; display: inline-block; width: 42px; height: 42px; border-radius: 50%; border: 0; padding: 0;
-  background: rgba(0,0,0,.07) var(--chev-img) center / 42px 42px no-repeat; cursor: pointer; font-size: 0; color: transparent;
-  transition: transform .4s ease, background-color .2s; }
-.chev:hover, .fold > summary:hover::after { background-color: rgba(0,0,0,.12); }
+/* the expand / collapse control: a thin chevron (a "V") in a light circle that turns half a circle – down when closed,
+   up when open (the usual modern control) */
+:root { --chev-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpolyline points='12.5,16.5 20,24 27.5,16.5' fill='none' stroke='%231f3a5f' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+@media (prefers-color-scheme: dark) { :root { --chev-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpolyline points='12.5,16.5 20,24 27.5,16.5' fill='none' stroke='%237fb2e5' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); } }
+.chev, .fold > summary::after { flex: none; display: inline-block; width: 40px; height: 40px; border-radius: 50%; border: 0; padding: 0;
+  background: rgba(0,0,0,.06) var(--chev-img) center / 40px 40px no-repeat; cursor: pointer; font-size: 0; color: transparent;
+  transition: transform .3s ease, background-color .2s; }
+.chev:hover, .fold > summary:hover::after { background-color: rgba(0,0,0,.11); }
 .fold > summary { display: flex; align-items: center; justify-content: space-between; gap: 8px; list-style: none; cursor: pointer; }
 .fold > summary::-webkit-details-marker { display: none; }
 .fold > summary::after { content: ''; }
-.fold[open] > summary::after, .chev.up { transform: rotate(-60deg); }
-.chev.turned.up { animation: chev-open .4s ease; }
-.chev.turned:not(.up) { animation: chev-close .4s ease; }
-@keyframes chev-open { from { transform: rotate(0deg); } to { transform: rotate(-60deg); } }
-@keyframes chev-close { from { transform: rotate(-60deg); } to { transform: rotate(0deg); } }
+.fold[open] > summary::after, .chev.up { transform: rotate(180deg); }
+.chev.turned.up { animation: chev-open .3s ease; }
+.chev.turned:not(.up) { animation: chev-close .3s ease; }
+@keyframes chev-open { from { transform: rotate(0deg); } to { transform: rotate(180deg); } }
+@keyframes chev-close { from { transform: rotate(180deg); } to { transform: rotate(0deg); } }
 @media (prefers-reduced-motion: reduce) { .chev, .fold > summary::after { transition: none; animation: none !important; } }
 .fold > summary .sum-label { flex: 1; min-width: 0; }
 .ans-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -552,3 +556,9 @@ details.ana-part details.ana-part { margin-inline-start: 4px; }
 .zr-track::before { content: ''; position: absolute; left: 50%; top: 2px; bottom: 2px; border-left: 2px dashed rgba(31,58,95,.55); transform: translateX(-1px); }
 .zr-thumb { position: absolute; left: 50%; width: 14px; height: 14px; margin: 0 0 -7px -7px; border-radius: 50%; background: #1f3a5f;
   box-shadow: 0 0 0 2px #fff; transition: bottom .12s; }
+
+/* the rail shrinks to a magnifier once the page is moved, so it does not hide the text; a tap opens it again */
+.zr-open { display: none; width: 30px; height: 30px; border: 0; border-radius: 50%; background: transparent; padding: 0; cursor: pointer; font-size: 1rem; }
+.zoom-rail.mini { padding: 3px; gap: 0; width: auto; opacity: .85; }
+.zoom-rail.mini > :not(.zr-open) { display: none; }
+.zoom-rail.mini .zr-open { display: grid; place-items: center; }
