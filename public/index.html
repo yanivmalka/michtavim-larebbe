@@ -10,8 +10,29 @@
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="stylesheet" href="styles.css">
+  <link rel="modulepreload" href="rashei-teivot.js">
+  <link rel="modulepreload" href="aramaic.js">
+  <link rel="modulepreload" href="lang-detect.js">
+  <link rel="modulepreload" href="js/dom.js">
+  <link rel="modulepreload" href="js/sounds.js">
+  <link rel="modulepreload" href="js/util.js">
+  <link rel="modulepreload" href="js/store.js">
+  <link rel="modulepreload" href="js/pageImages.js">
+  <link rel="modulepreload" href="js/media.js">
+  <link rel="modulepreload" href="js/speech.js">
+  <!-- the opening screen: drawn before the styles and the app arrive, removed after the first screen is drawn -->
+  <style>
+    #splash { position: fixed; inset: 0; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 18px; background: #162b47; color: #fff; font: 600 1.35rem system-ui, sans-serif; transition: opacity .35s;
+      animation: splash-late 0s 12s forwards; }
+    #splash img { width: min(42vw, 180px); height: auto; border-radius: 22%; animation: splash-in .5s ease-out; }
+    #splash.out { opacity: 0; pointer-events: none; }
+    @keyframes splash-in { from { opacity: 0; transform: scale(.86); } }
+    @keyframes splash-late { to { visibility: hidden; } } /* the app did not start: do not cover the page for ever */
+  </style>
 </head>
 <body>
+  <div id="splash" aria-hidden="true"><img src="icon.svg" alt="" width="180" height="180"><span>מכתבים לרבי</span></div>
   <div class="app">
     <header class="bar">
       <button id="back" class="icon-btn back" title="חזרה" aria-label="חזרה" hidden>→</button>
@@ -99,6 +120,17 @@
           </label>
           <p class="note">שיחה שיש בה מענה שלא נקרא, או שממתינה למענה, נשארת במקומה. אחרי העברה תופיע הודעה בדף הבית.</p>
         </fieldset>
+        <fieldset class="ui-size" id="speech-section">
+          <legend>הקראה</legend>
+          <label class="row-label">מהירות ההקראה
+            <select id="speech-rate">
+              <option value="slow">איטית</option>
+              <option value="normal">רגילה</option>
+              <option value="fast">מהירה</option>
+            </select>
+          </label>
+          <p class="note">ההקראה נעשית בקול המותקן במכשיר. ראשי תיבות נקראים במלואם לפי המילון שבאפליקציה.</p>
+        </fieldset>
         <fieldset class="ui-size">
           <legend>חשבון</legend>
           <p id="settings-user" class="settings-user">לא מחובר לחשבון Google</p>
@@ -126,6 +158,7 @@
       <div class="hl-tools">
         <button type="button" id="hl-add" hidden>🖍 הדגשה</button>
         <button type="button" id="tool-aramaic" hidden title="תרגום הקטע המסומן מארמית">תרגום מארמית</button>
+        <button type="button" id="tool-speak" hidden title="הקראת הקטע המסומן">🔊 הקראה</button>
         <button type="button" id="tool-size" hidden title="גודל הטקסט (או צביטה על הטקסט)">Aa</button>
         <a id="tool-pdf" target="_blank" rel="noopener" hidden>📄 PDF</a>
         <button type="button" id="tool-share" hidden>↗ שיתוף</button>

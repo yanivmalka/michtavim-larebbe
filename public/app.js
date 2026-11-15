@@ -1,8 +1,14 @@
 import { expand as expandAcronym, isAcronym } from './rashei-teivot.js';
 import { looksAramaic, bareWord } from './aramaic.js';
 import { isYiddish } from './lang-detect.js';
+import { $, el, askText } from './js/dom.js';
+import { SOUND } from './js/sounds.js';
+import { newId, dayKey, dayLabel, normSearch, fmtDur } from './js/util.js';
+import { state, save, TAGS } from './js/store.js';
+import { loadPageImage, pageImgs } from './js/pageImages.js';
+import { media, imgKey, audKey, mediaUrl, mediaUrls } from './js/media.js';
+import { speakButton, toggleSpeak, stopSpeaking, canSpeak, speechRate, setSpeechRate } from './js/speech.js';
 
-const $ = (id) => document.getElementById(id);
 const chat = $('chat'), form = $('composer'), input = $('input'), send = $('send');
 const isNativeApp = !!window.Capacitor?.isNativePlatform?.();
 const SERVER_KEY = 'mlr-server';
@@ -22,124 +28,6 @@ function askServer() {
   return value !== null && setServer(value);
 }
 
-const el = (tag, props = {}, ...children) => {
-  const node = Object.assign(document.createElement(tag), props);
-  node.append(...children.flat().filter(Boolean));
-  return node;
-};
-
-/**
- * Asks for a line of text in the app's own dialog, with `value` already in the box (Android's prompt() inside the
- * app shows an empty box: Capacitor ignores the default value). Resolves to the text, or null when cancelled.
- */
-function askText(message, value = '', { multiline = false, maxLength = 200 } = {}) {
-  return new Promise((resolve) => {
-    const field = el(multiline ? 'textarea' : 'input', { className: 'ask-field', value, maxLength, rows: 3 });
-    const ok = el('button', { type: 'submit', value: 'ok', textContent: 'אישור', className: 'primary' });
-    const cancel = el('button', { type: 'button', textContent: 'ביטול' });
-    const form = el('form', { method: 'dialog' }, el('label', { className: 'ask-label', textContent: message }), field,
-      el('div', { className: 'dialog-actions' }, cancel, ok));
-    const dlg = el('dialog', { className: 'settings ask-dialog' }, form);
-    let answer = null;
-    form.addEventListener('submit', () => { answer = field.value; });
-    cancel.addEventListener('click', () => dlg.close());
-    dlg.addEventListener('close', () => { dlg.remove(); resolve(answer); });
-    document.body.append(dlg);
-    dlg.showModal();
-    field.focus();
-    field.select();
-  });
-}
-
-// ---------- short sounds: recording started / ended, an answer arrived ----------
-let actx = null;
-function tone(freqs, dur = 0.1, gap = 0.11, vol = 0.14) {
-  try {
-    actx ??= new (window.AudioContext || window.webkitAudioContext)();
-    if (actx.state === 'suspended') actx.resume();
-    freqs.forEach((f, i) => {
-      const o = actx.createOscillator();
-      const g = actx.createGain();
-      const t = actx.currentTime + i * gap;
-      o.type = 'sine'; o.frequency.value = f;
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.linearRampToValueAtTime(vol, t + 0.012);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      o.connect(g).connect(actx.destination);
-      o.start(t); o.stop(t + dur + 0.03);
-    });
-  } catch { /* no sound on this device */ }
-}
-const SOUND = {
-  recStart: () => tone([880]),
-  recStop: () => tone([587]),
-  recCancel: () => tone([330], 0.14),
-  answer: () => tone([784, 1047, 1319], 0.22, 0.13, 0.16),
-};
-
-// ---------- state (kept on this device only) ----------
-// convs:   conversations, like chats – { id, title, created, archived?, locked? }
-// entries: one per letter written – { id, conv, q, ts, a?, fav?: { tags: [] }, collapsed? }
-// marks:   highlighter ranges per text – { key: [[start, end], ...] }
-const STORE = 'mlr-state-v4';
-const MAX_ENTRIES = 150;
-const TAGS = ['מרגש', 'מדהים', 'מדויק', 'מחזק', 'מפתיע', 'ברכה'];
-const newId = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
-
-const dayKey = (ts) => {
-  const d = new Date(ts);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-};
-const dayLabel = (key) => {
-  if (key === dayKey(Date.now())) return 'היום';
-  if (key === dayKey(Date.now() - 864e5)) return 'אתמול';
-  const [y, m, d] = key.split('-').map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'numeric', year: 'numeric' });
-};
-
-function loadState() {
-  try {
-    const s = JSON.parse(localStorage.getItem(STORE));
-    if (s?.convs) {
-      s.entries = (s.entries || []).filter((e) => !e.preparing); // a photo that was still loading when the app closed
-      for (const e of s.entries) if (e.qLocked) delete e.qOpen;
-      return { marks: {}, abbr: {}, ...s };
-    }
-  } catch { /* fall through */ }
-  // migrate v3: day groups (with topic / archived) become conversations
-  const state = { convs: [], entries: [], marks: {} };
-  try {
-    const old = JSON.parse(localStorage.getItem('mlr-state-v3'));
-    if (old?.entries) {
-      state.marks = old.marks || {};
-      const byDay = new Map();
-      for (const e of old.entries) {
-        const k = dayKey(e.ts);
-        if (!byDay.has(k)) {
-          const meta = old.days?.[k] || {};
-          const conv = { id: newId(), title: meta.topic || dayLabel(k), created: e.ts, archived: !!meta.archived };
-          if (old.entries.some((x) => dayKey(x.ts) === k && x.locked)) conv.locked = true;
-          state.convs.push(conv);
-          byDay.set(k, conv.id);
-        }
-        const { locked, ...rest } = e;
-        state.entries.push({ ...rest, conv: byDay.get(k) });
-      }
-    }
-  } catch { /* ignore */ }
-  return state;
-}
-const state = loadState();
-
-function save() {
-  // keep favourites forever; trim the oldest of the rest
-  const extra = state.entries.filter((e) => !e.fav).length - MAX_ENTRIES;
-  if (extra > 0) {
-    let drop = extra;
-    state.entries = state.entries.filter((e) => e.fav || drop-- <= 0);
-  }
-  try { localStorage.setItem(STORE, JSON.stringify(state)); } catch { /* storage full or blocked */ }
-}
 
 // the language the explanation is written in ('' = the language of the letter); remembered on this device
 const LANGS = [['', 'שפת המכתב'], ['he', 'עברית'], ['en', 'English'], ['ru', 'Русский'], ['fr', 'Français'], ['es', 'Español']];
@@ -264,6 +152,7 @@ function paintTools(found, entry) {
   const page = entry && currentPage(pagerOf(entry));
   $('hl-add').hidden = !found;
   $('tool-aramaic').hidden = !found;
+  $('tool-speak').hidden = !found || !canSpeak();
   $('tool-size').hidden = !entry;
   $('tool-share').hidden = !entry;
   $('tool-pdf').hidden = !page?.pdfPath;
@@ -301,7 +190,7 @@ document.addEventListener('selectionchange', () => {
   clearTimeout(markTimer);
   if (markerMode && found) markTimer = setTimeout(() => { const f = selectedRange(); if (f) applyMark(f); }, 900);
 });
-for (const id of ['hl-add', 'hl-mode', 'tool-size', 'tool-pdf', 'tool-share', 'tool-aramaic']) $(id).addEventListener('pointerdown', (e) => e.preventDefault()); // keep the selection
+for (const id of ['hl-add', 'hl-mode', 'tool-size', 'tool-pdf', 'tool-share', 'tool-aramaic', 'tool-speak']) $(id).addEventListener('pointerdown', (e) => e.preventDefault()); // keep the selection
 $('hl-add').addEventListener('click', () => { const f = selectedRange() || lastRange; if (f) applyMark(f); lastRange = null; });
 $('hl-mode').addEventListener('click', () => {
   const on = !markerMode;
@@ -309,6 +198,10 @@ $('hl-mode').addEventListener('click', () => {
   if (on) toast('מצב מרקר: כל טקסט שתסמנו באגרת, בהסבר או בתרגום יודגש. לסיום – הכפתור הצהוב למעלה.');
 });
 $('tool-size').addEventListener('click', () => showZoomBar(true));
+$('tool-speak').addEventListener('click', () => { // the selected text, read aloud
+  const text = getSelection().toString().trim();
+  if (text) toggleSpeak(`sel:${text.length}:${text.slice(0, 40)}`, text).catch((e) => speechFailed(e.code));
+});
 $('tool-share').addEventListener('click', async () => {
   const entry = toolEntry;
   if (!entry) return;
@@ -360,51 +253,6 @@ function goOpened(p) {
   p.at = p.opened;
   if (lb.pager === p) { lb.side = 0; lb.enter = 0; lb.spec = null; }
   notifyPager(p);
-}
-
-// ---------- page images: fetched whole in the background, shown only when complete, and kept on the device ----------
-// The image of a page (also the one with the explanation's marks) is drawn by the server on demand. Once
-// fetched it is kept in the device's cache, so the next opening shows it at once instead of drawing it again.
-const PAGE_CACHE = 'mlr-pages-v1';
-const PAGE_CACHE_MAX = 80;
-const pageImgs = new Map(); // url → object URL (this session)
-const pageImgLoads = new Map(); // url → promise
-const pageStore = () => { try { return typeof caches !== 'undefined' ? caches.open(PAGE_CACHE) : Promise.resolve(null); } catch { return Promise.resolve(null); } };
-async function trimPageStore(store) {
-  const keys = await store.keys();
-  for (const k of keys.slice(0, Math.max(0, keys.length - PAGE_CACHE_MAX))) await store.delete(k);
-}
-/** Resolves, once the whole image is on the device, with a URL that shows it at once. */
-function loadPageImage(url) {
-  if (pageImgs.has(url)) return Promise.resolve(pageImgs.get(url));
-  if (pageImgLoads.has(url)) return pageImgLoads.get(url);
-  const job = (async () => {
-    let blob = null;
-    const store = await pageStore().catch(() => null);
-    try {
-      const hit = store && await store.match(url);
-      if (hit) blob = await hit.blob();
-    } catch { /* read it from the server */ }
-    if (!blob) {
-      let res;
-      try { res = await fetch(url); } catch { res = null; }
-      if (res && !res.ok) throw new Error(`HTTP ${res.status}`);
-      if (res) {
-        if (store) store.put(url, res.clone()).then(() => trimPageStore(store)).catch(() => {});
-        blob = await res.blob();
-      }
-    }
-    if (!blob) { // fetch is not possible here: let the browser load it, and wait until it has
-      await new Promise((resolve, reject) => { const im = new Image(); im.onload = resolve; im.onerror = () => reject(new Error('IMAGE')); im.src = url; });
-      return url;
-    }
-    const local = URL.createObjectURL(blob);
-    pageImgs.set(url, local);
-    return local;
-  })();
-  pageImgLoads.set(url, job);
-  job.catch(() => {}).finally(() => pageImgLoads.delete(url));
-  return job;
 }
 
 // the passages the explanation rests on: { spec, id, r: [start, end, …] } per letter, marked on the image and in the text
@@ -854,6 +702,16 @@ function favPanel(entry) {
   return box;
 }
 
+// ---------- reading aloud: a letter, its translation, the explanation, or the selected text ----------
+const SPEECH_ERRORS = {
+  NO_YIDDISH: 'האגרת כתובה באידיש, ובמכשיר אין קול הקראה לאידיש. אפשר לתרגם אותה ("🌐 תרגם") ולהקריא את התרגום.',
+  NO_VOICE: 'במכשיר לא מותקן קול הקראה לשפה הזו. מתקינים אותו בהגדרות המכשיר, תחת "המרת טקסט לדיבור".',
+  NO_TTS: 'הקראה אינה זמינה במכשיר הזה.',
+};
+const speechFailed = (code) => toast(SPEECH_ERRORS[code] || 'ההקראה נכשלה. נסו שוב.', null, 6000);
+/** "🔊 הקראה" for one text (nothing where the device cannot speak). */
+const speakBtn = (key, getText, lang) => (canSpeak() ? speakButton(key, getText, lang, speechFailed) : null);
+
 // ---------- the text of the page: the same page as in the image, previous / next page ----------
 /** A markable paragraph that also knows which page it belongs to (for expanding abbreviations). */
 function pageParagraph(text, key, spec, ai = []) {
@@ -905,7 +763,8 @@ function pageTextSection(entry, pager) {
         el('div', { className: 'links' },
           l.id != null && el('a', { href: `${API}/api/igrot/${l.id}.pdf`, target: '_blank', rel: 'noopener', textContent: '📄 PDF האגרת' }),
           l.viewerUrl && el('a', { href: l.viewerUrl, target: '_blank', rel: 'noopener', textContent: '🔗 במקור' }),
-          fullBtn),
+          fullBtn,
+          speakBtn(`P:${page.spec}:${l.id ?? l.number}`, () => l.pageText)),
         fullBox));
     }
     if (!page.letters?.length) body.append(el('div', { className: 'note', textContent: 'הטקסט של עמוד זה אינו זמין.' }));
@@ -1466,7 +1325,7 @@ function translationSection(entry) {
     body.dir = dirOf(lang);
     box.append(el('div', { className: 'letter' },
       el('div', { className: 'letter-num', textContent: `אגרת ${l.number}` }),
-      body, el('div', { className: 'links' }, show), orig));
+      body, el('div', { className: 'links' }, show, speakBtn(`TR:${entry.id}:${lang}:${l.id}`, () => mine[l.id], lang)), orig));
   }
   const kept = lang === 'he' ? trLetters(a).filter((l) => !mine[l.id] && !isYiddish(l.pageText)) : [];
   if (kept.length) box.append(el('div', { className: 'note', textContent: `${kept.length > 1 ? 'האיגרות' : 'האגרת'} ${kept.map((l) => l.number).join(', ')} כתובות בעברית ואינן מתורגמות.` }));
@@ -1605,6 +1464,7 @@ function analysisSection(entry) {
     a.keyQuote && el('div', { className: 'quote', dir: 'auto', textContent: a.keyQuote }),
     picked(),
     Object.assign(pageParagraph(a.explanation, `E:${entry.id}`, spec), { dir: dirOf(a.analysisLanguage) }),
+    el('div', { className: 'links' }, speakBtn(`E:${entry.id}`, () => a.explanation, a.analysisLanguage || undefined)),
     marksNote(),
     (canAsk && spec) || qa.length ? fu : null,
     canAsk && el('div', { className: 'del-row' }, clear));
@@ -2236,42 +2096,6 @@ async function moveEntries(ids, from, target) {
 // ---------- a photographed page and a letter by voice ----------
 // The photo and the recording stay on this device (IndexedDB); the cloud gets only a small thumbnail of the photo.
 // Both start as a draft in the chat: the user approves (sends) or deletes it.
-const media = (() => {
-  const mem = new Map(); // also a fallback where IndexedDB is blocked
-  let dbp = null;
-  const open = () => (dbp ??= new Promise((resolve, reject) => {
-    const r = indexedDB.open('mlr-media', 1);
-    r.onupgradeneeded = () => r.result.createObjectStore('m');
-    r.onsuccess = () => resolve(r.result);
-    r.onerror = () => reject(r.error);
-  }));
-  const run = async (mode, fn) => {
-    const db = await open();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction('m', mode);
-      const req = fn(tx.objectStore('m'));
-      tx.oncomplete = () => resolve(req.result);
-      tx.onerror = () => reject(tx.error);
-    });
-  };
-  return {
-    async put(k, blob) { mem.set(k, blob); await run('readwrite', (s) => s.put(blob, k)).catch((e) => console.warn('media', e)); },
-    async get(k) { return mem.get(k) || (await run('readonly', (s) => s.get(k)).catch(() => null)) || null; },
-    del(k) { mem.delete(k); return run('readwrite', (s) => s.delete(k)).catch(() => {}); },
-    keys: () => run('readonly', (s) => s.getAllKeys()).catch(() => []),
-  };
-})();
-const imgKey = (e) => `img:${e.id}`;
-const audKey = (e) => `aud:${e.id}`;
-const mediaUrls = new Map(); // key → object URL
-async function mediaUrl(key) {
-  if (mediaUrls.has(key)) return mediaUrls.get(key);
-  const blob = await media.get(key);
-  if (!blob) return null;
-  const url = URL.createObjectURL(blob);
-  mediaUrls.set(key, url);
-  return url;
-}
 function dropMedia(entry) {
   for (const k of [imgKey(entry), audKey(entry)]) {
     media.del(k);
@@ -2293,7 +2117,6 @@ function removeEntry(entry) {
 }
 
 const PHOTO_Q = 'צילום עמוד מאגרות קודש';
-const fmtDur = (s) => { const t = Math.max(0, Math.round(s || 0)); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`; };
 const ICONS = {
   mic: '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M12 14.5a3.5 3.5 0 0 0 3.5-3.5V5.5a3.5 3.5 0 0 0-7 0V11a3.5 3.5 0 0 0 3.5 3.5zm6-3.5a1 1 0 1 0-2 0 4 4 0 0 1-8 0 1 1 0 1 0-2 0 6 6 0 0 0 5 5.9V19H8.5a1 1 0 1 0 0 2h7a1 1 0 1 0 0-2H13v-2.1a6 6 0 0 0 5-5.9z"/></svg>',
   arrow: '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12 2-12 2z"/></svg>',
@@ -2960,6 +2783,7 @@ function go(next) {
     if (conv) { conv.readTs = Date.now(); delete conv.markedUnread; }
     save();
   }
+  if (next.name !== view.name || next.id !== view.id) stopSpeaking();
   if (next.name !== 'chat' || next.id !== view.id) tagFilter = '';
   view = next;
   search = ''; searchDate = ''; searchOpen = false;
@@ -3019,6 +2843,9 @@ function setUiSize(v) {
 setUiSize(uiSize);
 for (const b of document.querySelectorAll('.seg-btn')) b.addEventListener('click', () => setUiSize(b.dataset.ui));
 $('settings-account').addEventListener('click', openAccount);
+$('speech-section').hidden = !canSpeak();
+$('speech-rate').value = speechRate();
+$('speech-rate').addEventListener('change', (e) => setSpeechRate(e.target.value));
 
 // ---------- chats with no activity move to the archive by themselves (after the time chosen in the settings) ----------
 const AUTO_ARCHIVE_DEFAULT = 2; // days; 0 = never
@@ -3187,13 +3014,13 @@ async function copyConvLink(conv) {
 
 let toastTimer = null;
 let toastAction = null;
-function toast(text, action = null) {
+function toast(text, action = null, ms = action ? 6000 : 2200) {
   const t = $('toast');
   t.textContent = text; t.hidden = false;
   toastAction = action;
   t.classList.toggle('action', !!action);
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { t.hidden = true; toastAction = null; }, action ? 6000 : 2200);
+  toastTimer = setTimeout(() => { t.hidden = true; toastAction = null; }, ms);
 }
 $('toast').addEventListener('click', () => { const fn = toastAction; $('toast').hidden = true; toastAction = null; fn?.(); });
 
@@ -3291,9 +3118,6 @@ function specialRow(icon, label, count, fn) {
 }
 
 // ---------- search: titles, letters, the answer page's text, the analysis, translation and follow-ups, chat messages ----------
-/** Lower case, no niqqud / cantillation, no quote marks or geresh, single spaces – so "שליט\"א" finds שליטא and vowelled text matches plain. */
-const normSearch = (t) => String(t || '').toLowerCase()
-  .replace(/[\u0591-\u05C7]/g, '').replace(/["'`״׳“”„‘’]/g, '').replace(/\s+/g, ' ');
 
 /** The searchable parts of an entry, each with a label for the result line. */
 function entryParts(e) {
@@ -3374,11 +3198,6 @@ function renderConvList(which) {
   }
   if (which === 'list') {
     box.append(el('div', { className: 'list-hint', textContent: 'לחיצה ארוכה על שיחה בוחרת אותה: ארכיון, נעילה, מחיקה ועוד.' }));
-    if (!user) {
-      const b = el('button', { type: 'button', className: 'link-btn sync-hint', textContent: '👤 התחברות עם Google – לסנכרון בין מכשירים ולשיתוף שיחות' });
-      b.addEventListener('click', openAccount);
-      box.append(b);
-    }
   }
   return box;
 }
@@ -3813,6 +3632,10 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) auto
 setInterval(autoArchiveNow, 3600e3);
 for (const e of state.entries.filter((x) => x.pending && !x.a)) requestAnswer(e); // the app was closed while waiting
 if (isNativeApp) setupNativeApp();
+{ // the first screen is drawn: the opening icon fades out
+  const splash = $('splash');
+  if (splash) requestAnimationFrame(() => { splash.classList.add('out'); setTimeout(() => splash.remove(), 400); });
+}
 if (!isNativeApp && 'serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 
 // ---------- Android app: settings and updates ----------

@@ -44,6 +44,13 @@
         </provider>
     </application>
 
+    <!-- reading aloud: lets the app find the device's text-to-speech engine (Android 11+) -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
+
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
