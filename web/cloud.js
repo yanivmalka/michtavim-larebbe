@@ -29,8 +29,8 @@ export function initCloud(config) {
 }
 
 /** Emulator only: sign in as a made-up Google user. */
-export const signInForTests = (sub, name) => signInWithCredential(auth,
-  GoogleAuthProvider.credential(JSON.stringify({ sub, email: `${sub}@example.com`, email_verified: true, name })));
+export const signInForTests = (sub, name, picture) => signInWithCredential(auth,
+  GoogleAuthProvider.credential(JSON.stringify({ sub, email: `${sub}@example.com`, email_verified: true, name, picture })));
 
 export const onUser = (cb) => onAuthStateChanged(auth, cb);
 export const currentUser = () => auth?.currentUser || null;
@@ -147,6 +147,16 @@ export async function joinConv(id, token) {
   const m = me();
   await updateDoc(convRef(id), { members: arrayUnion(m.uid), [`memberInfo.${m.uid}`]: { name: m.name, photo: m.photo }, joinWith: token });
 }
+/** Owner: adds someone already known from another shared conversation, without sending a link.
+ *  The conversation shows up for them marked as new until they open it. */
+export async function addMember(convId, { uid, name, photo }) {
+  await updateDoc(convRef(convId), {
+    members: arrayUnion(uid),
+    [`memberInfo.${uid}`]: { name: name || 'משתתף', photo: photo || '', invitedBy: me().uid, invitedAt: Date.now() },
+  });
+}
+/** The invited participant opened the conversation: no longer "new". */
+export const markSeen = (convId) => updateDoc(convRef(convId), { [`memberInfo.${me().uid}.seen`]: true });
 export async function leaveConv(id) {
   await updateDoc(convRef(id), { members: arrayRemove(me().uid) });
 }

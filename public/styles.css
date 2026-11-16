@@ -562,3 +562,18 @@ details.ana-part details.ana-part { margin-inline-start: 4px; }
 
 /* reading aloud */
 .speak-btn.on { color: #b3261e; font-weight: 600; }
+
+/* profile pictures (Google account photo), direct share, chats shared with me */
+.face { flex: none; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; overflow: hidden;
+  background: var(--accent); color: #fff; font-weight: 600; }
+.face img, .conv-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 50%; }
+.face.small { width: 22px; height: 22px; font-size: .7rem; margin-inline-end: 6px; }
+.face.me { width: 32px; height: 32px; font-size: .9rem; margin-inline-end: 8px; vertical-align: middle; }
+.conv-avatar { overflow: visible; position: relative; }
+.sender { display: flex; align-items: center; }
+.menu-info.people { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.person { display: inline-flex; align-items: center; }
+.menu-item.with-face { display: flex; align-items: center; }
+.conv.new .conv-title { font-weight: 800; }
+.conv.new .conv-preview { color: var(--text); font-weight: 600; }
+.conv-new { flex: none; padding: 1px 8px; border-radius: 10px; background: #25a35a; color: #fff; font-size: .72rem; font-weight: 700; }
