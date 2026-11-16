@@ -2,7 +2,7 @@
 // The shell is served from the cache; every opening fetches a fresh copy of the whole shell in the background
 // and swaps it in together (never a mix of old and new files), so a new version shows on the next opening.
 // API calls always go to the network.
-const CACHE = 'mlr-v37';
+const CACHE = 'mlr-v38';
 const SHELL = ['/', '/index.html', '/styles.css', '/config.js', '/app.js', '/rashei-teivot.js', '/aramaic.js', '/lang-detect.js', '/firebase-config.js',
   '/js/dom.js', '/js/sounds.js', '/js/util.js', '/js/store.js', '/js/pageImages.js', '/js/media.js', '/js/speech.js',
   '/vendor/cloud.js', '/icon.svg', '/manifest.webmanifest'];

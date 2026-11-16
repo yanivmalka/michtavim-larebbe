@@ -54,6 +54,7 @@ boundaries – no content on intimate matters or matters of femininity.
 - **Gemini first** (user's request, free tier for development). Free-tier data may be used by Google – flagged to the user as a privacy concern for real users.
 - Shared chats: contacts see letters/answers and chat/reply, but **cannot write to the Rebbe**; only the owner asks the AI.
 - Locked chats are a privacy screen (not encryption).
+- **Colours that carry text are variables** (`public/styles.css` `:root`, Nov 2026): `--on-accent` (text on `--accent`: white in light, dark in the dark theme), `--ok` (green fill under white text), `--ok-text`, `--danger`, `--gold-text`, `--ring` (unread ring), and a lighter `--muted` inside the user's own bubble in the dark theme – every pair holds 4.5:1 in both themes (the dark theme had white on light blue at 2.2:1). New UI text uses these, not literal hex. The design system (tokens, components, brand book) is the artifact https://claude.ai/artifact/Geohon166ibgoBDpKbDBX7.
 
 ## Commands
 ```bash
