@@ -1772,7 +1772,10 @@ function watchAll() {
       const { updated, joinWith, ...fields } = d;
       const local = convById(d.id);
       if (local) Object.assign(local, fields, { cloud: true }); // keeps this device's archived / locked flags
-      else state.convs.push({ ...fields, cloud: true, readTs: Date.now() });
+      else {
+        state.convs.push({ ...fields, cloud: true, readTs: Date.now() });
+        if (isNew(fields)) toast(`📩 ${fields.memberInfo?.[fields.owner]?.name || 'איש קשר'} שיתף/ה איתך שיחה: ${fields.title}`);
+      }
       if (!convWatchers.has(d.id)) watchOne(d.id);
     }
     // conversations deleted, or that we left / were removed from
@@ -1821,6 +1824,9 @@ function paintAccount() {
   if (user) $('account-name').textContent = `${user.displayName || ''} ${user.email ? `(${user.email})` : ''}`.trim();
   // the settings screen shows who is signed in
   $('settings-user').textContent = user ? `מחובר: ${user.displayName || user.email || ''}` : 'לא מחובר לחשבון Google';
+  if (user?.photoURL) $('settings-user').prepend(face({ photo: user.photoURL, name: user.displayName }, 'face me'));
+  $('account-name').parentElement.querySelector('.face')?.remove();
+  if (user?.photoURL) $('account-name').before(face({ photo: user.photoURL, name: user.displayName }, 'face me'));
   $('settings-account').textContent = user ? 'ניהול החשבון' : 'התחברות עם Google';
 }
 function openAccount() { paintAccount(); $('account').showModal(); }
@@ -1927,6 +1933,45 @@ function swipeToReply(node, target) {
 }
 const replyQuote = (r) => r && el('div', { className: 'reply-quote' }, el('b', { textContent: r.name }), ` ${r.text}`);
 const nameOf = (conv, uid) => conv?.memberInfo?.[uid]?.name || 'משתתף';
+
+/** A round profile picture (the Google account photo), or the first letter of the name. */
+function face(info, className = 'face', fallback) {
+  const node = el('span', { className });
+  const letter = () => { node.textContent = fallback || (info?.name || '?').trim().charAt(0) || '?'; };
+  if (info?.photo) {
+    const img = el('img', { src: info.photo, alt: '', loading: 'lazy', referrerPolicy: 'no-referrer' });
+    img.addEventListener('error', () => { img.remove(); letter(); });
+    node.append(img);
+  } else letter();
+  return node;
+}
+/** The person shown on a shared chat: its owner, or (for the owner) the first participant. */
+const otherOf = (conv) => (conv.owner !== user?.uid ? conv.owner : (conv.members || []).find((u) => u !== user?.uid));
+/** Shared with me directly by its owner (no link) and not opened yet. */
+const isNew = (conv) => {
+  const mine = user && conv?.memberInfo?.[user.uid];
+  return !!(mine?.invitedBy && !mine.seen && conv.owner !== user.uid);
+};
+/** Everyone I share any chat with, except those already in `conv`. */
+function knownContacts(conv) {
+  const found = new Map();
+  for (const c of state.convs) {
+    for (const u of c.members || []) {
+      const info = c.memberInfo?.[u];
+      if (u === user?.uid || conv.members?.includes(u) || found.has(u) || !info) continue;
+      found.set(u, { uid: u, name: info.name, photo: info.photo });
+    }
+  }
+  return [...found.values()].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'he'));
+}
+/** Owner: shares the chat with a known contact at once – no link; it shows as new for them. */
+async function shareWithContact(conv, contact) {
+  if (!conv.cloud) { alert('השיחה עדיין מסתנכרנת לחשבון. נסו שוב בעוד רגע.'); return; }
+  try {
+    await cloud.addMember(conv.id, contact);
+    toast(`👥 השיחה שותפה עם ${contact.name || 'איש הקשר'}`);
+  } catch (e) { alert(`השיתוף נכשל: ${e?.message || e}`); }
+}
 
 // ---------- selection mode: long press on a letter, an answer, a message or a chat (like WhatsApp) ----------
 // A letter and its answer are one item: selecting either selects both.
@@ -2658,7 +2703,7 @@ function questionBubble(entry, conv) {
     }
   }
   const node = el('div', { className: `msg ${mine ? 'me' : 'them other'}${entry.kind && open ? ` ${entry.kind}-msg` : ''}` }, tools,
-    !mine && el('div', { className: 'sender', textContent: `✉️ מכתב של ${who}` }),
+    !mine && el('div', { className: 'sender' }, face(conv.memberInfo?.[conv.owner], 'face small'), `✉️ מכתב של ${who}`),
     ...body, !(entry.kind === 'voice' && open && !entry.audioGone) && el('div', { className: 'q-foot' }, entry.a && readMark(entry), time(entry.ts)));
   if (isShared(conv)) swipeToReply(node, { kind: 'entry', id: entry.id, name: who, text: entry.qLocked ? 'מכתב נעול' : entry.q.slice(0, 80) });
   return selectable(node, 'e', entry.id);
@@ -2667,7 +2712,7 @@ function questionBubble(entry, conv) {
 function messageBubble(m, conv) {
   const mine = user && m.uid === user.uid;
   const node = el('div', { className: `msg chat-msg ${mine ? 'me' : 'them other'}` },
-    !mine && el('div', { className: 'sender', textContent: m.name }),
+    !mine && el('div', { className: 'sender' }, face(conv.memberInfo?.[m.uid] || { name: m.name }, 'face small'), m.name),
     replyQuote(m.replyTo), el('p', { textContent: m.text }), time(m.ts));
   swipeToReply(node, { kind: 'message', id: m.id, name: mine ? 'אני' : m.name, text: m.text.slice(0, 80) });
   return selectable(node, 'm', m.id);
@@ -2781,6 +2826,10 @@ function go(next) {
     // a chat always opens with its letters and answers minimized
     for (const e of entriesOf(next.id)) if (e.a) collapseEntry(e);
     if (conv) { conv.readTs = Date.now(); delete conv.markedUnread; }
+    if (conv && isNew(conv)) { // shared with me directly: opened now, no longer new
+      conv.memberInfo[user.uid].seen = true;
+      cloud.markSeen(conv.id).catch((e) => console.warn('seen', e));
+    }
     save();
   }
   if (next.name !== view.name || next.id !== view.id) stopSpeaking();
@@ -2807,9 +2856,11 @@ function showMenu(anchor, items) {
   hideZoomBar(); hideAcronymPop();
   const menu = $('menu');
   menu.textContent = '';
-  for (const it of items.filter(Boolean)) {
+  for (const it of items.flat().filter(Boolean)) {
     if (it.info) { menu.append(el('div', { className: 'menu-info', textContent: it.info })); continue; }
-    const b = el('button', { type: 'button', className: `menu-item${it.danger ? ' danger' : ''}`, textContent: it.label });
+    if (it.people) { menu.append(el('div', { className: 'menu-info people' }, ...it.people.map((p) => el('span', { className: 'person' }, face(p, 'face small'), p.label)))); continue; }
+    const b = el('button', { type: 'button', className: `menu-item${it.danger ? ' danger' : ''}${it.face ? ' with-face' : ''}`, textContent: it.label });
+    if (it.face) b.prepend(face(it.face, 'face small'));
     b.setAttribute('role', 'menuitem');
     b.addEventListener('click', () => { closeMenu(); it.onClick(); });
     menu.append(b);
@@ -2907,16 +2958,19 @@ function openSettings() {
 // ---- conversation actions (the ⋮ of a chat, or a selected chat in the list) ----
 function convMenuItems(conv) {
   const owner = isOwner(conv);
-  const people = isShared(conv) ? (conv.members || []).map((u) => nameOf(conv, u) + (u === conv.owner ? ' (פותח השיחה)' : '')).join(', ') : '';
+  const people = isShared(conv) ? (conv.members || []).map((u) => ({ ...conv.memberInfo?.[u], label: nameOf(conv, u) + (u === conv.owner ? ' (פותח השיחה)' : '') })) : null;
+  const contacts = owner && user && conv.cloud ? knownContacts(conv) : [];
   const answered = entriesOf(conv.id).filter((e) => e.a);
   const allCollapsed = answered.length && answered.every((e) => e.collapsed);
   return [
-    people && { info: `👥 ${people}` },
+    people && { people },
     { label: '🔍 חיפוש בשיחה', onClick: () => { if (view.id !== conv.id) go({ name: 'chat', id: conv.id }); openChatSearch(); } },
     answered.length && { label: allCollapsed ? '▾ הרחבת כל ההתכתבויות' : '▴ מזעור כל ההתכתבויות', onClick: () => collapseAll(conv, !allCollapsed) },
     entriesOf(conv.id).some((e) => e.fav) && { label: '🏷 סינון לפי תגיות', onClick: () => { tagFilter = tagFilter || '*'; if (view.id !== conv.id) go({ name: 'chat', id: conv.id }); else render(); } },
     owner && { label: '✎ שינוי שם', onClick: () => renameConv(conv) },
     owner && { label: '👥 שיתוף עם אנשי קשר', onClick: () => shareConv(conv) },
+    contacts.length && { info: 'שיתוף ישיר, בלי קישור, עם:' },
+    contacts.map((c) => ({ label: c.name || 'משתתף', face: c, onClick: () => shareWithContact(conv, c) })),
     owner && { label: '🔗 העתקת קישור לשיחה', onClick: () => copyConvLink(conv) },
     owner && (isShared(conv) || conv.inviteToken) && { label: '✋ הפסקת השיתוף', onClick: () => stopSharingConv(conv) },
     { label: conv.archived ? '📤 הוצאה מהארכיון' : '🗄 העברה לארכיון', onClick: () => toggleArchive([conv]) },
@@ -3092,14 +3146,20 @@ function convRow(conv) {
   const favs = entries.filter((e) => e.fav).length;
   const unread = unreadCount(conv);
   const waiting = entries.some((e) => e.pending);
-  const row = el('button', { type: 'button', className: `conv${waiting ? ' waiting' : ''}${unread || conv.markedUnread ? ' has-unread' : ''}` },
-    el('span', { className: 'conv-avatar' }, conv.locked ? '🔒' : isShared(conv) ? '👥' : '✉️', waiting && el('span', { className: 'conv-spin', title: 'ממתין למענה' })),
+  const fresh = isNew(conv);
+  const other = isShared(conv) && !conv.locked && otherOf(conv);
+  const avatar = other ? face(conv.memberInfo?.[other], 'conv-avatar', '👥') : el('span', { className: 'conv-avatar' }, conv.locked ? '🔒' : '✉️');
+  if (waiting) avatar.append(el('span', { className: 'conv-spin', title: 'ממתין למענה' }));
+  const row = el('button', { type: 'button', className: `conv${waiting ? ' waiting' : ''}${unread || conv.markedUnread || fresh ? ' has-unread' : ''}${fresh ? ' new' : ''}` },
+    avatar,
     el('span', { className: 'conv-main' },
       el('span', { className: 'conv-top' },
         el('b', { className: 'conv-title', textContent: conv.title }),
         el('span', { className: 'conv-time', textContent: shortTime(lastTs(conv)) })),
       el('span', { className: 'conv-bottom' },
-        el('span', { className: 'conv-preview', textContent: hit?.text ? `🔍 ${hit.label ? `${hit.label} ` : ''}${hit.text}` : preview }),
+        el('span', { className: 'conv-preview', textContent: hit?.text ? `🔍 ${hit.label ? `${hit.label} ` : ''}${hit.text}`
+          : fresh ? `👥 ${nameOf(conv, conv.owner)} שיתף/ה איתך את השיחה` : preview }),
+        fresh ? el('span', { className: 'conv-new', textContent: 'חדש' }) : null,
         waiting ? el('span', { className: 'conv-wait', textContent: '⏳ מענה בדרך' }) : null,
         favs ? el('span', { className: 'conv-badge', textContent: `★ ${favs}` }) : null,
         unread ? el('span', { className: 'conv-count', textContent: String(unread), title: 'לא נקראו' })

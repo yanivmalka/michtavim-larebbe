@@ -34,6 +34,10 @@ boundaries – no content on intimate matters or matters of femininity.
 
 ### Data model (Firestore, project `michtavim-larebbe`, region `me-west1`)
 - `convs/{id}`: `owner, title, created, lastTs, lastPreview, members[], memberInfo{uid:{name,photo}}, inviteToken`
+- Direct share (no link): in the chat ⋮ the owner picks a contact already known from any shared chat
+  (`knownContacts` → `cloud.addMember`, sets `memberInfo[uid].invitedBy/invitedAt`); for them the chat shows **חדש**
+  (`isNew`, bold row + toast) until opened (`cloud.markSeen` → `memberInfo[uid].seen`). Profile pictures = Google
+  `photoURL` kept in `memberInfo[uid].photo` (`face()`, `referrerPolicy=no-referrer`): chat rows, senders, members, ⚙ account
 - `convs/{id}/entries/{id}`: letters to the Rebbe + answer (`a`) + `followups[]` – **owner writes only**
 - `convs/{id}/messages/{id}`: chat between participants `{uid, name, text, ts, replyTo}`
 - Join link `/join/<convId>.<token>`; joining sets `joinWith` = token. Rules: `firestore.rules` (tested: `npm run test:rules`)

@@ -97,3 +97,11 @@ test('favourites and highlights: each user reads and writes only their own backu
   await assertFails(setDoc(doc(as(FRIEND), 'users/friend/private/favs'), { items: {}, extra: 1 }));
   await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(), 'users/friend/private/favs')));
 });
+
+test('the owner adds a known contact directly; the contact marks it seen', async () => {
+  await assertSucceeds(updateDoc(doc(as(OWNER), 'convs/c1'), { members: arrayUnion(STRANGER), [`memberInfo.${STRANGER}`]: { name: 's', invitedBy: OWNER } }));
+  await assertSucceeds(getDoc(doc(as(STRANGER), 'convs/c1')));
+  await assertSucceeds(updateDoc(doc(as(STRANGER), 'convs/c1'), { [`memberInfo.${STRANGER}.seen`]: true }));
+  await assertFails(updateDoc(doc(as(STRANGER), 'convs/c1'), { [`memberInfo.${FRIEND}.seen`]: true }));
+  await assertFails(updateDoc(doc(as(FRIEND), 'convs/c1'), { members: arrayUnion('someone') }));
+});
